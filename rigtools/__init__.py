@@ -180,7 +180,7 @@ class CYARIGTOOLS_Props_OA(PropertyGroup):
 #UI
 #---------------------------------------------------------------------------------------
 class CYARIGTOOLS_PT_ui(utils.panel):
-    bl_label = "cya rigtools"
+    bl_label = "Rig Tools"
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
@@ -616,8 +616,10 @@ class CYARIGTOOLS_MT_arptools(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
         box = layout.box()
-        box.operator("cyarigtools.arp_duplicator")
+        box.operator("cyarigtools.arp_extracter")
         box.operator("cyarigtools.arp_connect")
+        box.operator("cyarigtools.arp_const",text = 'ue4').rig = 'ue4'
+        box.operator("cyarigtools.arp_const",text = 'mixamo').rig = 'mixamo'
 
 
 
@@ -644,8 +646,8 @@ class CYARIGTOOLS_OT_rigshape_append(bpy.types.Operator):
     bl_idname = "cyarigtools.rigshape_append"
     bl_label = "append"
     def execute(self, context):
-        prefs = bpy.context.preferences.addons[__name__].preferences
-        cmd.rigshape_append( prefs.shape_path )
+        #prefs = bpy.context.preferences.addons[__name__].preferences
+        cmd.rigshape_append()
         return {'FINISHED'}
 
 #Make selected rig shape the same size. The active is the size basis.
@@ -1027,16 +1029,24 @@ class CYARIGTOOLS_OT_arp_connect(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class CYARIGTOOLS_OT_arp_duplicator(bpy.types.Operator):
+class CYARIGTOOLS_OT_arp_extracter(bpy.types.Operator):
     """キャラのボーンを複製する"""
-    bl_idname = "cyarigtools.arp_duplicator"
-    bl_label = "connect"
+    bl_idname = "cyarigtools.arp_extracter"
+    bl_label = "extract"
     def execute(self, context):
-        arp.duplicator()
+        arp.extracter()
         return {'FINISHED'}
 
+class CYARIGTOOLS_OT_arp_const(bpy.types.Operator):
+    """ARPリグでボーンをコンストレインする。
+    mixamo,ARPの順に選択して実行。"""
+    bl_idname = "cyarigtools.arp_const"
+    bl_label = ""
+    rig : StringProperty()
 
-
+    def execute(self, context):
+        arp.const(self.rig)
+        return {'FINISHED'}
 
 
 #---------------------------------------------------------------------------------------
@@ -1129,9 +1139,8 @@ classes = (
     #Rigify Tools
     CYARIGTOOLS_MT_arptools,
     CYARIGTOOLS_OT_arp_connect,
-    CYARIGTOOLS_OT_arp_duplicator
-
-    
+    CYARIGTOOLS_OT_arp_extracter,
+    CYARIGTOOLS_OT_arp_const
 )
 
 def register():

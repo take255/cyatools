@@ -105,7 +105,7 @@ class CYAIMPORTEXPORT_MT_addonpreferences(AddonPreferences):
 #UI
 #---------------------------------------------------------------------------------------
 class CYAIMPORTEXPORT_PT_ui(utils.panel):
-    bl_label = "cyaimportexport"
+    bl_label = "Import Export"
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)

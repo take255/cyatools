@@ -1,4 +1,4 @@
-bonedic = {
+ue4 = {
 'root.x':'pelvis',
 'spine_01.x':'spine_01',
 'spine_02.x':'spine_02',
@@ -15,72 +15,114 @@ bonedic = {
 
 'shoulder.l':'clavicle_l',
 'c_arm_twist_offset.l':'upperarm_l',
-'arm_stretch.l':'upperarm_twist_01_ｌ',
-'forearm_stretch.l':'lowerarm_ｌ',
-'forearm_twist.l':'lowerarm_twist_01_ｌ',
+'arm_stretch.l':'upperarm_twist_01_l',
+'forearm_stretch.l':'lowerarm_l',
+'forearm_twist.l':'lowerarm_twist_01_l',
 'hand.l':'hand_l',
+
+'thigh_twist.l':'thigh_l',
+'thigh_stretch.l':'thigh_twist_01_l',
+'leg_twist.l':'calf_l',
+'leg_stretch.l':'calf_twist_01_l',
+'foot.l':'foot_l',
+'toes_01.l':'ball_l',
+
+'thigh_twist.r':'thigh_r',
+'leg_stretch.r':'thigh_twist_01_r',
+'leg_twist.r':'calf_r',
+'thigh_stretch.r':'calf_twist_01_r',
+'foot.r':'',
+'toes_01.r':'',
+
+#'c_pinky1_base.l':'',
+'pinky1.l':'pinky_01_l',
+'c_pinky2.l':'pinky_02_l',
+'c_pinky3.l':'pinky_03_l',
+#'c_ring1_base.l':'',
+'ring1.l':'ring_01_l',
+'c_ring2.l':'ring_02_l',
+'c_ring3.l':'ring_03_l',
+#'c_middle1_base.l':'',
+'middle1.l':'middle_01_l',
+'c_middle2.l':'middle_02_l',
+'c_middle3.l':'middle_03_l',
+#'c_index1_base.l':'',
+'index1.l':'index_01_l',
+'c_index2.l':'index_02_l',
+'c_index3.l':'index_03_l',
+'thumb1.l':'thumb_01_l',
+'c_thumb2.l':'thumb_02_l',
+'c_thumb3.l':'thumb_03_l',
+
+#'c_pinky1_base.r':'',
+'pinky1.r':'pinky_01_r',
+'c_pinky2.r':'pinky_02_r',
+'c_pinky3.r':'pinky_03_r',
+#'c_ring1_base.r':'',
+'ring1.r':'ring_01_r',
+'c_ring2.r':'ring_02_r',
+'c_ring3.r':'ring_03_r',
+#'c_middle1_base.r':'',
+'middle1.r':'middle_01_r',
+'c_middle2.r':'middle_02_r',
+'c_middle3.r':'middle_03_r',
+#'c_index1_base.r':'',
+'index1.r':'index_01_r',
+'c_index2.r':'index_02_r',
+'c_index3.r':'index_03_r',
+'thumb1.r':'thumb_01_r',
+'c_thumb2.r':'thumb_02_r',
+'c_thumb3.r':'thumb_03_r',
 
 }
 
+#--------------------------------------------------------
+# Auto Rig Pro <> mixamo
+#--------------------------------------------------------
+
+mixamo={
+'root.x':'mixamorig:Hips',
+'spine_01.x':'mixamorig:Spine',
+'spine_02.x':'mixamorig:Spine1',
+'spine_03.x':'mixamorig:Spine2',
+'neck.x':'mixamorig:Neck',
+'head.x':'mixamorig:Head',
+
+#'':'mixamorig:HeadTop_End',
+'shoulder.l':'mixamorig:LeftShoulder',
+'c_arm_twist_offset.l':'mixamorig:LeftArm',
+'forearm_stretch.l':'mixamorig:LeftForeArm',
+'hand.l':'mixamorig:LeftHand',
+'index1.l':'mixamorig:LeftHandIndex1',
+'c_index2.l':'mixamorig:LeftHandIndex2',
+'c_index3.l':'mixamorig:LeftHandIndex3',
+#'':'mixamorig:LeftHandIndex4',
+
+'shoulder.r':'mixamorig:RightShoulder',
+'c_arm_twist_offset.r':'mixamorig:RightArm',
+'forearm_stretch.r':'mixamorig:RightForeArm',
+'hand.r':'mixamorig:RightHand',
+'index1.r':'mixamorig:RightHandIndex1',
+'c_index2.r':'mixamorig:RightHandIndex2',
+'c_index3.r':'mixamorig:RightHandIndex3',
+#'':'mixamorig:RightHandIndex4',
+
+'thigh_twist.l':'mixamorig:LeftUpLeg',
+'leg_twist.l':'mixamorig:LeftLeg',
+'foot.l':'mixamorig:LeftFoot',
+'toes_01.l':'mixamorig:LeftToeBase',
+#'':'mixamorig:LeftToe_End',
+
+'thigh_twist.r':'mixamorig:RightUpLeg',
+'leg_twist.r':'mixamorig:RightLeg',
+'foot.r':'mixamorig:RightFoot',
+'toes_01.r':'mixamorig:RightToeBase',
+#'':'mixamorig:RightToe_End'
 
 
 
+}
 
-# foot.l
-# toes_01.l
-# thigh_twist.l
-# leg_stretch.l
-# leg_twist.l
-# thigh_stretch.l
-
-# foot.r
-# toes_01.r
-# thigh_twist.r
-# leg_stretch.r
-# leg_twist.r
-# thigh_stretch.r
-
-
-
-# c_pinky1_base.l
-# pinky1.l
-# c_pinky2.l
-# c_pinky3.l
-# c_ring1_base.l
-# ring1.l
-# c_ring2.l
-# c_ring3.l
-# c_middle1_base.l
-# middle1.l
-# c_middle2.l
-# c_middle3.l
-# c_index1_base.l
-# index1.l
-# c_index2.l
-# c_index3.l
-# thumb1.l
-# c_thumb2.l
-# c_thumb3.l
-
-# c_pinky1_base.r
-# pinky1.r
-# c_pinky2.r
-# c_pinky3.r
-# c_ring1_base.r
-# ring1.r
-# c_ring2.r
-# c_ring3.r
-# c_middle1_base.r
-# middle1.r
-# c_middle2.r
-# c_middle3.r
-# c_index1_base.r
-# index1.r
-# c_index2.r
-# c_index3.r
-# thumb1.r
-# c_thumb2.r
-# c_thumb3.r
 
 
 # c_skull_01.x

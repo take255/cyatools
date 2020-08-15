@@ -187,10 +187,11 @@ class CYATOOLS_PT_toolPanel(utils.panel):
         self.layout.operator("cyatools.modelingtools", icon='BLENDER')
         self.layout.operator("cyatools.cya_helper_tools", icon='BLENDER')
         self.layout.operator("cyatools.curvetools", icon='BLENDER')
-        self.layout.operator("cyatools.etc", icon='BLENDER')
         self.layout.operator("cyatools.rename", icon='BLENDER')
         self.layout.operator("cyatools.skinningtools", icon='BLENDER')
-        self.layout.operator("cyatools.materialtools", icon='BLENDER')
+        self.layout.operator("cyatools.etc", icon='BLENDER')
+
+        #self.layout.operator("cyatools.materialtools", icon='BLENDER')
         #self.layout.operator("cyatools.particletools", icon='BLENDER')
 
 
@@ -199,7 +200,7 @@ class CYATOOLS_PT_toolPanel(utils.panel):
 #---------------------------------------------------------------------------------------
 class CYATOOLS_MT_helper_tools(Operator):
     bl_idname = "cyatools.cya_helper_tools"
-    bl_label = "cya helper"
+    bl_label = "modeling"
     bl_options = {'REGISTER', 'UNDO'}
 
 
@@ -332,7 +333,7 @@ class CYATOOLS_MT_helper_tools(Operator):
 
 class CYATOOLS_MT_modelingtools(Operator):
     bl_idname = "cyatools.modelingtools"
-    bl_label = "cya mod"
+    bl_label = "modifier"
 
     def execute(self, context):
         return{'FINISHED'}
@@ -551,7 +552,7 @@ class CYATOOLS_MT_skinningtools(Operator):
 
 
         box = col.box()
-        box.label(text = 'copy weight kdTree')
+        box.label(text = 'copy weight')
         col1 = box.column()
 
         row1 = col1.row()
@@ -563,30 +564,27 @@ class CYATOOLS_MT_skinningtools(Operator):
         
         
         box = col.box()
-        box.label(text = 'mirror weight kdTree')
+        box.label(text = 'mirror weight')
         col1 = box.column()
 
         row1 = col1.row()
-        row1.operator("cyatools.skinning_weights_mirror",text = 'mirror_v2' ).mode = 'v2'
+        row1.operator("cyatools.skinning_weights_mirror",text = 'mirror' ).mode = 'v2'
 
 
+        # box = col.box()
+        # box.label(text = 'weight')
+        # col1 = box.column()
 
-        box = col.box()
-        box.label(text = 'weight')
-        col1 = box.column()
-
-        row1 = col1.row()
-        row1.operator("cyatools.skinning_assign_maxweights")
-        row1.operator("cyatools.skinning_weights_transfer").mode = 'v1'
+        # row1 = col1.row()
+        # row1.operator("cyatools.skinning_assign_maxweights")
+        # row1.operator("cyatools.skinning_weights_transfer").mode = 'v1'
         
-        #row1 = col1.row()
-        row1 = col1.split(factor = 0.4, align = False)
-        row1.operator("cyatools.skinning_weights_mirror",text = 'mirror_v1' ).mode = 'v1'
-        row1.prop(props,'weight_margin')
+        # row1 = col1.split(factor = 0.4, align = False)
+        # row1.operator("cyatools.skinning_weights_mirror",text = 'mirror_v1' ).mode = 'v1'
+        # row1.prop(props,'weight_margin')
 
-        row1 = col1.row()
-        #row1.operator("cyatools.skinning_weights_mirror",text = 'mirror_v2' ).mode = 'v2'
-        row1.operator("cyatools.skinning_mirror_transfer")#!!!
+        # row1 = col1.row()
+        # row1.operator("cyatools.skinning_mirror_transfer")#!!!
   
 
         #row = layout.row(align=False)
@@ -632,38 +630,38 @@ class CYATOOLS_MT_skinningtools(Operator):
 #---------------------------------------------------------------------------------------
 #マテリアル関連ツール
 #---------------------------------------------------------------------------------------
-class CYATOOLS_MT_materialtools(Operator):
-    bl_idname = "cyatools.materialtools"
-    bl_label = "material"
+# class CYATOOLS_MT_materialtools(Operator):
+#     bl_idname = "cyatools.materialtools"
+#     bl_label = "material"
 
-    def execute(self, context):
-        return{'FINISHED'}
+#     def execute(self, context):
+#         return{'FINISHED'}
 
-    def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
+#     def invoke(self, context, event):
+#         return context.window_manager.invoke_props_dialog(self)
 
-    def draw(self, context):
-        props = bpy.context.scene.cyatools_oa
-        layout=self.layout
+#     def draw(self, context):
+#         props = bpy.context.scene.cyatools_oa
+#         layout=self.layout
 
-        row = layout.row(align=False)
-        col = row.column()
+#         row = layout.row(align=False)
+#         col = row.column()
 
-        box = col.box()
-        box.label(text = 'vertex color')
-        col = box.column()
-        row = col.row()        
-        row.prop(props, "material_type" )
-        row.prop(props, "material_index" )
+#         box = col.box()
+#         box.label(text = 'vertex color')
+#         col = box.column()
+#         row = col.row()        
+#         row.prop(props, "material_type" )
+#         row.prop(props, "material_index" )
 
-        row = col.row()
-        row.operator("cyatools.material_assign_vertex_color", text = 'assign').mode = 0
-        row.operator("cyatools.material_assign_vertex_color", text = 'assign(selected)').mode = 1
-        row.operator("cyatools.material_convert_vertex_color")
+#         row = col.row()
+#         row.operator("cyatools.material_assign_vertex_color", text = 'assign').mode = 0
+#         row.operator("cyatools.material_assign_vertex_color", text = 'assign(selected)').mode = 1
+#         row.operator("cyatools.material_convert_vertex_color")
 
-        row = col.row()
-        row.operator("cyatools.pick_vertex_color", text = 'pick').mode = True
-        row.operator("cyatools.pick_vertex_color", text = 'put').mode = False
+#         row = col.row()
+#         row.operator("cyatools.pick_vertex_color", text = 'pick').mode = True
+#         row.operator("cyatools.pick_vertex_color", text = 'put').mode = False
 
 
         
@@ -675,7 +673,7 @@ class CYATOOLS_MT_materialtools(Operator):
 #---------------------------------------------------------------------------------------
 class CYATOOLS_MT_etc(Operator):
     bl_idname = "cyatools.etc"
-    bl_label = "cya etc"
+    bl_label = "etc"
 
     def invoke(self, context, event):
         scene.set_current()        
@@ -1514,7 +1512,7 @@ class CYATOOLS_OT_skinning_delete_all_vtxgrp(Operator):
 #---------------------------------------------------------------------------------------
 class CYATOOLS_MT_rename(Operator):
     bl_idname = "cyatools.rename"
-    bl_label = "rename select"
+    bl_label = "rename"
 
     def execute(self, context):
         return{'FINISHED'}
@@ -1723,7 +1721,7 @@ classes = (
     CYATOOLS_MT_modelingtools,
     CYATOOLS_MT_object_applier,
     CYATOOLS_MT_curvetools,
-    CYATOOLS_MT_materialtools,
+    #CYATOOLS_MT_materialtools,
     CYATOOLS_MT_etc,
     #CYATOOLS_MT_particletools,
 

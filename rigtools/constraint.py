@@ -6,6 +6,59 @@ from . import utils
 imp.reload(utils)
 #from bpy.types import PropertyGroup
 
+#this function can expand argument nimber.
+#amt1:source amt2:target
+#const_type , source_name , target_name , space ,axis_array , invert_array , ratio
+#const_type == COPY_LOCATION , source_name , target_name , space ,axis_array , invert_array , ratio
+#const_type == COPY_ROTATION , source_name , target_name , space ,axis_array , invert_array , influence
+#const_type == COPY_TRANSFORMS , source_name , target_name , space ,head_tail
+
+def do_const_2amt(*args):
+    amt = args[0]
+    amt_target = args[1]
+
+    #utils.act(amt)
+    #amt = bpy.context.object
+    #bpy.ops.object.mode_set(mode='POSE')
+    #utils.mode_p()
+
+    const_type = args[2]
+    source = amt.pose.bones[args[3]]
+    target = args[4]
+    space  = args[5]
+
+    
+    c =source.constraints.new(const_type)
+    c.target = amt_target
+    c.subtarget = target
+    c.target_space = space
+    c.owner_space = space
+
+    if const_type == 'COPY_LOCATION':
+        if len(args) > 8:
+            c.head_tail = args[8]
+
+    if const_type == 'COPY_ROTATION':
+        if len(args) > 8:
+            c.influence = args[8]
+
+
+    if const_type != 'COPY_TRANSFORMS':
+        axis_array = args[6]
+        invert_array = args[7]
+
+        c.use_x = axis_array[0]
+        c.use_y = axis_array[1]
+        c.use_z = axis_array[2]
+
+        c.invert_x = invert_array[0]
+        c.invert_y = invert_array[1]
+        c.invert_z = invert_array[2]
+
+    elif const_type == 'COPY_TRANSFORMS': 
+        if len(args) > 6:
+            c.head_tail = args[6]
+    return c
 
 #def constraint(source_name , target_name_array , const_type , space ,axis_x , axis_y , axis_z):
 #コンストレインを返す

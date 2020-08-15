@@ -120,7 +120,7 @@ class CYAOBJECTLIST_UL_uilist(UIList):
 #active_indexをui_list.active_indexで取得できる
 #---------------------------------------------------------------------------------------
 class CYAOBJECTLIST_PT_ui(utils.panel):
-    bl_label = "cya_objectlist"
+    bl_label = "Object List"
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)

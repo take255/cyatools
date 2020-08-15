@@ -28,10 +28,10 @@ def rigshape_revert():
     for bone in utils.get_selected_bones():
         bone.custom_shape = None
 
-def rigshape_append(filepath):
+def rigshape_append():
     #filepath = RIGSHAPEPATH
     current_scene_name = bpy.context.scene.name
-
+    filepath = bpy.utils.user_resource('SCRIPTS','addons') + '/cyatools/rigtools/rig.blend'
     #RigShape_Scn 無ければ作成する
     scene = 'RigShape_Scn'
     if bpy.data.scenes.get(scene) is None:
@@ -46,6 +46,7 @@ def rigshape_append(filepath):
 
     #link object to current scene
     for obj in data_to.objects:
+        print(obj.name)
         if obj is not None:
             utils.sceneLink(obj)
 

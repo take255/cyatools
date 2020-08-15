@@ -70,18 +70,12 @@ def cyamodifierlist_handler(scene):
         cmd.reload()    
         CurrentObj = act.name
 
-    
 
     #モディファイヤの数に変更があればリロード
     mod_count = len(act.modifiers)
     if props.mod_count != mod_count:
         cmd.reload()
-        #Modcount = mod_count
         props.mod_count = mod_count
-
-
-
-
 
 
 def cyamodifierlist_handler_(scene):

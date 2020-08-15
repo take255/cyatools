@@ -1,3 +1,4 @@
 #すべてのフォルダの__pycache__フォルダ以下を無視
 *__pycache__/
 .vscode/
+*.blend1

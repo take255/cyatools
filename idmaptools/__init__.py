@@ -53,7 +53,7 @@ class CYAMATERIALTOOLS_UL_uilist(UIList):
 #---------------------------------------------------------------------------------------
 class CYAMATERIALTOOLS_PT_materialtools(utils.panel):
     # bl_idname = "cyatools.materialtools"
-    bl_label = "IDmap tools"
+    bl_label = "IDmap Tools"
 
     # def execute(self, context):
     #     #cmd.add(cmd.VERTEX_COLOR[0])
