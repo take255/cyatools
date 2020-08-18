@@ -5,8 +5,8 @@ from .. import utils
 imp.reload(utils)
 
 
-def unitscale(mode):
-    pass
+def unitscale(value):
+    bpy.context.scene.unit_settings.scale_length = value
 
 
 # def adjust_arp(mode):

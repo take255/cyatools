@@ -10,7 +10,7 @@ from bpy.types import(
     )
 
 from bpy.props import(
-    # FloatProperty,
+    FloatProperty,
     PointerProperty,
     StringProperty,
     IntProperty,
@@ -59,9 +59,10 @@ class CYAUE4TOOLS_PT_ui(utils.panel):
         box = col.box()
         box.label(text="Unit Scale")
         row = box.row()
-        row.operator( 'cyaue4tools.unitscale',text = "0.01").mode = 0
-        row.operator( 'cyaue4tools.unitscale',text = "1.0").mode = 1
-        row.operator( 'cyaue4tools.unitscale',text = "100").mode = 2
+        for val in (0.01,1.0,100.0):
+            row.operator( 'cyaue4tools.unitscale',text = str(val) ).value = val
+        # row.operator( 'cyaue4tools.unitscale',text = "1.0").mode = 1
+        # row.operator( 'cyaue4tools.unitscale',text = "100").mode = 2
 
 
         box = col.box()
@@ -109,9 +110,9 @@ class CYAUE4TOOLS_OT_unitscale(bpy.types.Operator):
     """ユニットスケールの変更"""
     bl_idname = "cyaue4tools.unitscale"
     bl_label = ""
-    mode : IntProperty()
+    value : FloatProperty()
     def execute(self, context):
-        cmd.unitscale(self.mode)
+        cmd.unitscale(self.value)
         return {'FINISHED'}
 
 
