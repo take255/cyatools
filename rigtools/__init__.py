@@ -189,7 +189,6 @@ class CYARIGTOOLS_PT_ui(utils.panel):
         props = bpy.context.scene.cyarigtools_props        
 
         col = self.layout.column(align=False)
-        col.label(text = 'select bone into ! Posemode !')        
         col.operator("cyarigtools.rigsetuptools",icon = 'OBJECT_DATA')
         col.operator("cyarigtools.edittools",icon = 'OBJECT_DATA')
         col.operator("cyarigtools.renamer",icon = 'OBJECT_DATA')
@@ -615,11 +614,23 @@ class CYARIGTOOLS_MT_arptools(bpy.types.Operator):
 
     def draw(self, context):
         layout = self.layout
+
         box = layout.box()
         box.operator("cyarigtools.arp_extracter")
         box.operator("cyarigtools.arp_connect")
-        box.operator("cyarigtools.arp_const",text = 'ue4').rig = 'ue4'
-        box.operator("cyarigtools.arp_const",text = 'mixamo').rig = 'mixamo'
+
+        box = layout.box()
+        box.label(text="Constraint")
+        row = box.row()
+        row.operator("cyarigtools.arp_const",text = 'ue4').rig = 'ue4'
+        row.operator("cyarigtools.arp_const",text = 'mixamo').rig = 'mixamo'
+
+
+        box = layout.box()
+        box.label(text="Adjust ARP")
+        row = box.row()
+        row.operator( 'cyarigtools.adjust_arp',text = "UE4").mode = 'ue4'
+        row.operator( 'cyarigtools.adjust_arp',text = "MIXAMO").mode = 'mixamo'
 
 
 
@@ -1039,7 +1050,7 @@ class CYARIGTOOLS_OT_arp_extracter(bpy.types.Operator):
 
 class CYARIGTOOLS_OT_arp_const(bpy.types.Operator):
     """ARPリグでボーンをコンストレインする。
-    mixamo,ARPの順に選択して実行。"""
+    ue4もしくはmixamoのリグを選択し,次にARPの順に選択して実行。"""
     bl_idname = "cyarigtools.arp_const"
     bl_label = ""
     rig : StringProperty()
@@ -1047,6 +1058,17 @@ class CYARIGTOOLS_OT_arp_const(bpy.types.Operator):
     def execute(self, context):
         arp.const(self.rig)
         return {'FINISHED'}
+
+class CYARIGTOOLS_OT_adjust_arp(bpy.types.Operator):
+    """UE4,MIXAMOのボーン位置にARPリファレンスボーンを合わせる
+    UE4,またはMIXAMOのアーマチュアを選択し、最後にARPリファレンスボーンを選択して実行する"""
+    bl_idname = "cyarigtools.adjust_arp"
+    bl_label = ""
+    mode : StringProperty()
+    def execute(self, context):
+        arp.adjust_arp(self.mode)
+        return {'FINISHED'}
+
 
 
 #---------------------------------------------------------------------------------------
@@ -1136,11 +1158,12 @@ classes = (
     CYARIGTOOLS_OT_posetool_copy_matrix,
     CYARIGTOOLS_OT_posetool_paste_matrix,
 
-    #Rigify Tools
+    #ARP Tools
     CYARIGTOOLS_MT_arptools,
     CYARIGTOOLS_OT_arp_connect,
     CYARIGTOOLS_OT_arp_extracter,
-    CYARIGTOOLS_OT_arp_const
+    CYARIGTOOLS_OT_arp_const,
+    CYARIGTOOLS_OT_adjust_arp
 )
 
 def register():

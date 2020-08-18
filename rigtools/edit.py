@@ -80,8 +80,8 @@ def genarate_bone_from2():
 #選択したボーンの名前を取得、LR入れ替えた骨を探し　LRの候補を数種類使えるように改良
 #最初か最後に識別子があるかどうかに限定する
 #---------------------------------------------------------------------------------------
-Lsign = ('L_' , '_l')
-Rsign = ('R_' , '_r')
+Lsign = ('L_' , '_l' , '.l' )
+Rsign = ('R_' , '_r' , '.r' )
 
 def genarate_symmetry():
     props = bpy.context.scene.cyarigtools_props

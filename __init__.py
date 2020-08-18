@@ -29,6 +29,7 @@ from . import rigtools
 from . import importexport
 from . import objectlist
 from . import idmaptools
+from . import ue4tools
 # from . import particletools
 
 imp.reload(maintools)
@@ -37,6 +38,7 @@ imp.reload(rigtools)
 imp.reload(importexport)
 imp.reload(objectlist)
 imp.reload(idmaptools)
+imp.reload(ue4tools)
 # imp.reload(particletools)
 
 bl_info = {
@@ -77,6 +79,7 @@ def register():
     importexport.register()
     objectlist.register()
     idmaptools.register()
+    ue4tools.register()
 
 def unregister():
     for cls in classes:
@@ -88,3 +91,4 @@ def unregister():
     importexport.unregister()
     objectlist.unregister()
     idmaptools.unregister()
+    ue4tools.unregister()
