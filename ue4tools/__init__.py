@@ -58,6 +58,9 @@ class CYAUE4TOOLS_PT_ui(utils.panel):
         col = self.layout.column(align=False)
         box = col.box()
         box.label(text="Unit Scale")
+
+        box.prop( bpy.context.scene.unit_settings ,"scale_length")
+
         row = box.row()
         for val in (0.01,1.0,100.0):
             row.operator( 'cyaue4tools.unitscale',text = str(val) ).value = val
@@ -68,7 +71,9 @@ class CYAUE4TOOLS_PT_ui(utils.panel):
         box = col.box()
         box.label(text="Export")
 
-        box.operator("cyaue4tools.export_anim")
+        for mode in ('model','anim'):
+            box.operator("cyaue4tools.export" , text = mode ).mode = mode
+
         row = box.row()
         row.prop(props,"filepath")
         row.operator( 'cyaue4tools.filebrowse' , icon = 'FILE_FOLDER' ,text = "")
@@ -133,12 +138,16 @@ class CYAUE4TOOLS_OT_unitscale(bpy.types.Operator):
 #---------------------------------------------------------------------------------------
 #Export
 #---------------------------------------------------------------------------------------
-class CYAUE4TOOLS_OT_export_anim(bpy.types.Operator):
-    """アニメーションの出力"""
-    bl_idname = "cyaue4tools.export_anim"
+class CYAUE4TOOLS_OT_export(bpy.types.Operator):
+    """FBXファイル出力
+モデルは00_Model~というコレクションに入ったものを出力対象とする。
+00_Model_ch_male01であればch_male01.fbxというファイルを出力する。"""
+
+    bl_idname = "cyaue4tools.export"
     bl_label = "anim export"
+    mode : StringProperty()
     def execute(self, context):
-        cmd.export_anim()
+        cmd.export(self.mode)
         return {'FINISHED'}
 
 
@@ -146,7 +155,7 @@ classes = (
     CYAUE4TOOLS_Props_OA,
     CYAUE4TOOLS_PT_ui,
     CYAUE4TOOLS_MT_filebrowse,
-    CYAUE4TOOLS_OT_export_anim,
+    CYAUE4TOOLS_OT_export,
     CYAUE4TOOLS_OT_unitscale,
     #CYAUE4TOOLS_OT_adjust_arp
 )

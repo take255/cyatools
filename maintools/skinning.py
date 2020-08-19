@@ -449,7 +449,11 @@ signL = 'L_'
 
 signdic = { 'R_':'L_' , 'L_':'R_' , '_l':'_r' , '_r':'_l' , 'Left':'Right' , 'Right':'Left' }
 
-def nameFlip(name):
+sign_prefix = { 'R_':'L_' , 'L_':'R_' , 'Left':'Right' , 'Right':'Left' }
+sign_suffix = { '_l':'_r' , '_r':'_l'}
+
+
+def nameFlip_(name):
     strlen=len(name)
     if(strlen<1):
         return name
@@ -457,13 +461,28 @@ def nameFlip(name):
     for sign in signdic:
         if(name.find( sign ) != -1):
             return name.replace( sign , signdic[sign] )
+    return name
 
-    # if(name.find(signR) != -1):
-    #     return name.replace(signR,signL)
-    # if(name.find(signL) != -1):
-    #     return name.replace(signL,signR)
+
+def nameFlip(name):
+    strlen=len(name)
+    if(strlen<1):
+        return name
+
+    #prefixを調べる
+    for sign in sign_prefix:
+        if name[ : len(sign) ] == sign:
+            new = sign_prefix[sign] + name[ len(sign): ] 
+            return new
+
+    #suffixを調べる
+    for sign in sign_suffix:
+        if name[ -len(sign) : ] == sign:
+            new = name[:-len(sign)] + sign_suffix[sign]
+            return new
 
     return name
+
 
 def calDistance(v1,v2):
     vx=v1.x-v2.x
@@ -539,6 +558,7 @@ def weights_mirror_v2():
         namedic[vg.name] = vg.index
     
     for i in range(bonesize):    
+        print(nameflip[i])
         index_inv[i] = namedic[ nameflip[i] ]
 
     size = len(mesh.vertices)
