@@ -389,7 +389,9 @@ class CYATOOLS_MT_modelingtools(Operator):
         row1.operator( "cyatools.modifier_remove" , icon = 'TRASH')
 
         col = box.column()
-        col.operator( "cyatools.modifier_apply_all" , icon = 'HIDE_ON')
+        row1 = col.row()
+        row1.operator( "cyatools.modifier_apply_all" ,text = 'apply all', icon = 'HIDE_ON').mode = 0
+        row1.operator( "cyatools.modifier_apply_all" ,text = 'delete all', icon = 'HIDE_ON').mode = 1
         
         box = row.box()
         box.label( text = 'constraint (apply)' )
@@ -1130,9 +1132,10 @@ class CYATOOLS_OT_modifier_send_to(Operator):
 class CYATOOLS_OT_modifier_apply_all(Operator):
     """Apply all modifiers."""
     bl_idname = "cyatools.modifier_apply_all"
-    bl_label = "apply all"
+    bl_label = ""
+    mode : IntProperty()
     def execute(self, context):
-        modifier.apply_all()
+        modifier.apply_all(self.mode)
         return {'FINISHED'}
 
 

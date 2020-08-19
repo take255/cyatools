@@ -203,7 +203,7 @@ def select(TYPE):
 #---------------------------------------------------------------------------------------
 #Apply all modifiers
 #---------------------------------------------------------------------------------------
-def apply_all():
+def apply_all(mode):
     props = bpy.context.scene.cyatools_oa    
     modtype = props.modifier_type
 
@@ -211,5 +211,9 @@ def apply_all():
 
     for obj in sel:
         utils.activeObj(obj)
-        for mod in obj.modifiers:                    
-            bpy.ops.object.modifier_apply( modifier = mod.name )
+        for mod in obj.modifiers:
+            if mode == 0:                    
+                bpy.ops.object.modifier_apply( modifier = mod.name )
+            elif mode == 1:
+                bpy.ops.object.modifier_remove( modifier = mod.name )
+                

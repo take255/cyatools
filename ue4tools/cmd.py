@@ -53,8 +53,10 @@ def export(mode):
     outpath = '%s\%s.fbx' % ( props.filepath , name )
     print(outpath)
 
-    # forward = props.axis_forward
-    # up = props.axis_up
+    #スケールを0.01に強制
+    unitscale = bpy.context.scene.unit_settings.scale_length
+    bpy.context.scene.unit_settings.scale_length = 0.01
+
 
     if mode == 'anim':
         scale = 1.0
@@ -108,31 +110,5 @@ def export(mode):
             bake_anim_force_startend_keying = True
             )
 
-
-    # elif props.export_mode == 'ue':
-    #     print(outpath)
-    #     if mode == 'fbx':
-    #         bpy.ops.export_scene.fbx(
-    #             filepath=outpath ,
-    #             use_selection = True ,
-    #             global_scale = props.scale ,
-    #             axis_forward = props.axis_forward ,
-    #             axis_up = props.axis_up,
-    #             mesh_smooth_type = 'FACE',#Added for UE
-    #             add_leaf_bones  = False , #Added for UE
-    #             use_armature_deform_only  = True #Added for UE
-    #             )
-
-    #     elif mode == 'obj':
-    #         bpy.ops.export_scene.obj(
-    #             filepath=outpath ,
-    #             use_selection = True ,
-    #             global_scale = props.scale ,
-    #             axis_forward = props.axis_forward ,
-    #             axis_up = props.axis_up
-    #             )
-
-
-    # if mode == 'fbx':
-    #     bpy.ops.export_scene.fbx(filepath=outpath ,global_scale = props.scale , bake_anim_step=2.0 , bake_anim_simplify_factor=0.0 , use_selection = True)
-        
+    #ユニットスケールをもとに戻す
+    bpy.context.scene.unit_settings.scale_length = unitscale

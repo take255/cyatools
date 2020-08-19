@@ -299,10 +299,26 @@ def check_item(op):
 
     for node in itemlist:
         if op == 'selected':
-            if node.name in obset:
-                node.bool_val = True
-            else:
-                node.bool_val = False
+            if utils.current_mode() == 'OBJECT':            
+                if node.name in obset:
+                    node.bool_val = True
+                else:
+                    node.bool_val = False
+
+            if utils.current_mode() == 'EDIT':
+                obset = set([ob.name for ob in bpy.context.selected_bones])
+                if node.name in obset:
+                    node.bool_val = True
+                else:
+                    node.bool_val = False
+
+            if utils.current_mode() == 'POSE':
+                obset = set([ob.name for ob in bpy.context.selected_pose_bones])
+                if node.name in obset:
+                    if node.name in obset:
+                        node.bool_val = True
+                    else:
+                        node.bool_val = False                    
 
         elif op == 'select':
             if node.bool_val == True:
