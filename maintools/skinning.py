@@ -558,7 +558,6 @@ def weights_mirror_v2():
         namedic[vg.name] = vg.index
     
     for i in range(bonesize):    
-        print(nameflip[i])
         index_inv[i] = namedic[ nameflip[i] ]
 
     size = len(mesh.vertices)
@@ -567,6 +566,13 @@ def weights_mirror_v2():
     rside_indices = [i for i,v in enumerate(mesh.vertices) if v.co.x < -0.0001]
 
     lside_pos = [[i,(-v.co.x , v.co.y , v.co.z )] for i,v in enumerate(mesh.vertices) if v.co.x < -0.0001]
+
+
+    # print('rside>' ,rside_indices)
+    # print('lsidepos>')
+    # for p in lside_pos:
+    #     print(p)
+
 
     for i, v in enumerate(mesh.vertices):
         kd.insert(v.co, i)
@@ -579,20 +585,23 @@ def weights_mirror_v2():
     bpy.ops.object.mode_set(mode = 'OBJECT')
 
     for p in lside_pos:
-        for vg in obj.vertex_groups:
-            vg.remove([p[0]])
-
+        #中心付近の頂点で近接を探索したときに自分自身のインデックスがかえってくる
+        #そのまま処理すると、その頂点のウェイトが消失する
+        #対策としてそういう場合は処理をスキップしてエラーを防ぐ
         co, index, dist = kd.find( p[1] )
-        v = obj.data.vertices[index]
+        #print(index,co,p[0] != index)
 
-        mirror_weight = [(index2name[index_inv[vge.group]], vge.weight) for vge in v.groups]
+        if p[0] != index:#自分自身のインデックスが帰ってきたらスキップ
+            for vg in obj.vertex_groups:
+                vg.remove([p[0]])
 
+            v = obj.data.vertices[index]
+            mirror_weight = [(index2name[index_inv[vge.group]], vge.weight) for vge in v.groups]
 
-
-        for w in mirror_weight:
-            vg = obj.vertex_groups[ w[0] ]
-            #頂点インデックス、ウェイト値
-            vg.add( [p[0]], w[1] , 'REPLACE' )
+            for w in mirror_weight:
+                vg = obj.vertex_groups[ w[0] ]
+                #頂点インデックス、ウェイト値
+                vg.add( [p[0]], w[1] , 'REPLACE' )
 
 
 

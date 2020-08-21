@@ -120,7 +120,7 @@ def const(rig):
 
         #print(l)
 
-    
+
     #コンストレイン
     utils.mode_o()
     utils.act(tgt)
@@ -294,16 +294,16 @@ def adjust_arp(mode):
     #tgtをアクティブにしてボーンを取得
     #ボーンの位置を取得する
     utils.act(tgt)
-    utils.mode_e()
+    utils.mode_p()
     bonelist = []
 
     #d_swap = {v: k for k, v in bonedic.items()}
 
-    allbonename = [b.name for b in tgt.data.edit_bones]
+    allbonename = [b.name for b in tgt.pose.bones]
     for bname in bonedic:
         print(bname,bname in allbonename)
         if bname in allbonename:
-            b = tgt.data.edit_bones[bname]
+            b = tgt.pose.bones[bname]
 
             # buf = bonedic[bname].split('.')
             # name = '%s_ref.%s' % (buf[0],buf[1])
@@ -311,8 +311,10 @@ def adjust_arp(mode):
 
             head = Vector(b.head)
             tail = Vector(b.tail)
-            roll =b.roll
-            bonelist.append( [ name , head , tail , roll ] )
+            #roll =b.roll
+            m = Matrix(b.matrix)
+
+            bonelist.append( [ name , head , tail , m ] )
 
     #arpの骨にtgtの骨を追加
     utils.mode_o()
@@ -325,7 +327,7 @@ def adjust_arp(mode):
             b = arp.data.edit_bones[l[0]]
             b.head = l[1]
             b.tail = l[2]
-            b.roll = l[3]
+            b.matrix = l[3]
 
             print(l)
 

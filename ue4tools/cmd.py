@@ -27,10 +27,25 @@ def export(mode):
     name = ''
 
     if mode == 'anim':
-        fullpath = bpy.data.filepath
-        buf = fullpath.split('\\')
-        name = buf[-1].split('.')[0]
-        #export_cmd('anim',animname)
+        # fullpath = bpy.data.filepath
+        # buf = fullpath.split('\\')
+        # name = buf[-1].split('.')[0]
+
+        utils.deselectAll()
+        #コレクション00_Model~に含まれているモデルを対象にする
+        #コレクション名：00_Anim_male01_run01　＞　ファイル名：ani_male01_run01.fbx
+        for c in bpy.data.collections:
+            #print(c.name,c.name.find('00_Model'))
+            if c.name.find('00_Anim_') != -1:
+                name = 'ani_' + c.name.replace('00_Anim_','')
+                for ob in bpy.context.scene.objects: 
+                    cols = [x.name for x in ob.users_collection]
+                    print(ob.name,cols,c in cols)
+                    if c.name in cols: 
+                        utils.select(ob,True)
+                        utils.activeObj(ob)
+
+
 
     elif mode == 'model':
         utils.deselectAll()

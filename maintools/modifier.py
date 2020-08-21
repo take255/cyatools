@@ -10,6 +10,7 @@ TYPE = (
 ('BEVEL','BEVEL',''),
 ('BOOLEAN','BOOLEAN',''),
 ('CURVE','CURVE','') ,
+('DECIMATE','DECIMATE','') ,
 ('LATTICE','LATTICE','') ,
 ('MIRROR','MIRROR',''),
 ('SHRINKWRAP','SHRINKWRAP','') ,
