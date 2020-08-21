@@ -65,9 +65,38 @@ class CYATOOLS_MT_addonpreferences(AddonPreferences):
         col = layout.column()
         col.prop(self, 'shape_path',text = 'shape_path', expand=True)
 
+#メッセージダイアログ
+#スペース区切りで改行する
+class CYATOOLS_MT_messagebox(bpy.types.Operator):
+    bl_idname = "cyatools.messagebox"
+    bl_label = ""
+ 
+    message : bpy.props.StringProperty(
+        name = "message",
+        description = "message",
+        default = ''
+    )
+ 
+    def execute(self, context):
+        self.report({'INFO'}, self.message)
+        print(self.message)
+        return {'FINISHED'}
+ 
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width = 400)
+ 
+    def draw(self, context):
+        buf = self.message.split(' ')
+        for s in buf:
+            self.layout.label(text = s)
+        #self.layout.label("")
+
+
 classes = (
     CYATOOLS_MT_addonpreferences,
+    CYATOOLS_MT_messagebox
 )
+
 
 def register():
     for cls in classes:

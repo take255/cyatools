@@ -72,9 +72,9 @@ def const(rig):
     selected.remove(arp)
     tgt = selected[0]
 
+    #ボーン軸向きがおかしくなるのでミラーをオフにしておく
+    bpy.context.object.data.use_mirror_x = False
 
-    print(arp)
-    print(tgt)
     
     #tgtをアクティブにしてボーンを取得
     #ボーンの位置を取得する
@@ -84,6 +84,11 @@ def const(rig):
     bonelist = []
 
     d_swap = {v: k for k, v in bonedic.items()}
+
+    #コンストレインを全削除
+    for bone in tgt.pose.bones:
+        for const in bone.constraints:
+            bone.constraints.remove( const )
 
     allbonename = [b.name for b in tgt.pose.bones]
     for bname in bonedic.values():
@@ -106,15 +111,25 @@ def const(rig):
     
     
     bpy.context.object.data.layers[30] = True
+    
+    #ボーンが存在していたら削除
+    bpy.ops.armature.select_all(action='DESELECT')
+    constbones = [x.name for x in arp.data.edit_bones]
     for l in bonelist:
-        #print(l[0])
+        if l[0] in constbones:
+            arp.data.edit_bones[l[0]].select = True
+            #b.select = True
+    
+    bpy.ops.armature.delete()
+
+
+    #ボーン生成
+    for l in bonelist:
         b = arp.data.edit_bones.new(l[0])
-        print(b.name)
         
         b.head = l[2]
         b.tail = l[3]
         b.matrix = l[1]
-        # b.roll = l[3]
 
         b.parent = arp.data.edit_bones[l[4]]
 
@@ -269,7 +284,9 @@ def fit_metarig():
                     #bone.head = m_array[bone.name][0]
                     #print(bone.name,bone.matrix )
 
-
+def check_transform():
+    loc = bpy.context.object.location
+    
 #---------------------------------------------------------------------
 # UE4,MIXAMOのボーン位置にARPリファレンスボーンを合わせる
 # UE4,またはMIXAMOのアーマチュアを選択し、最後にARPリファレンスボーンを選択して実行する
@@ -282,6 +299,8 @@ def adjust_arp(mode):
         bonedic =  arpbone.mixamo_
         root = 'mixamorig:Hips'
 
+    #ARPリグのトランスフォームフリーズ
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
     selected = utils.selected()
     arp = utils.getActiveObj()
@@ -293,11 +312,19 @@ def adjust_arp(mode):
     
     #tgtをアクティブにしてボーンを取得
     #ボーンの位置を取得する
+    #ターゲットのトランスフォームフリーズ
     utils.act(tgt)
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
     utils.mode_p()
     bonelist = []
 
     #d_swap = {v: k for k, v in bonedic.items()}
+
+    #コンストレインを全削除
+    for bone in tgt.pose.bones:
+        for const in bone.constraints:
+            bone.constraints.remove( const )
 
     allbonename = [b.name for b in tgt.pose.bones]
     for bname in bonedic:
@@ -331,3 +358,6 @@ def adjust_arp(mode):
 
             print(l)
 
+
+    msg = '処理完了 リグのトランスフォームをフリーズしました'
+    bpy.ops.cyatools.messagebox('INVOKE_DEFAULT', message = msg)
