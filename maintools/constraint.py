@@ -5,11 +5,11 @@ from . import utils
 imp.reload(utils)
 
 TYPE = (
+('COPY_LOCATION','COPY_LOCATION','') ,
+('COPY_ROTATION','COPY_ROTATION','') ,
+('COPY_SCALE','COPY_ROTATION',''),
 ('COPY_TRANSFORMS','COPY_TRANSFORMS','') ,
-('COPY_TRANSFORMS','COPY_TRANSFORMS','') ,
-('CURVE','CURVE','') ,
-('ARRAY','ARRAY',''),
-('BOOLEAN','BOOLEAN',''),
+('LIMIT_DISTANCE','LIMIT_DISTANCE',''),
 )
 
 #Constraint---------------------------------------------------------------------------------------

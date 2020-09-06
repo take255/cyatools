@@ -1,15 +1,3 @@
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTIBILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
 import bpy
 import imp
 from bpy.app.handlers import persistent
@@ -618,6 +606,7 @@ class CYARIGTOOLS_MT_arptools(bpy.types.Operator):
         box = layout.box()
         box.operator("cyarigtools.arp_extracter")
         box.operator("cyarigtools.arp_connect")
+        box.operator("cyarigtools.arp_disable_ikstretch")
 
         box = layout.box()
         box.label(text="Constraint")
@@ -1069,6 +1058,13 @@ class CYARIGTOOLS_OT_adjust_arp(bpy.types.Operator):
         arp.adjust_arp(self.mode)
         return {'FINISHED'}
 
+class CYARIGTOOLS_OT_arp_disable_ikstretch(bpy.types.Operator):
+    """選択したアーマチュアのすべてのik stretchを無効化します。"""
+    bl_idname = "cyarigtools.arp_disable_ikstretch"
+    bl_label = "disable ikstretch"
+    def execute(self, context):
+        arp.disable_ikstretch()
+        return {'FINISHED'}
 
 
 #---------------------------------------------------------------------------------------
@@ -1163,7 +1159,8 @@ classes = (
     CYARIGTOOLS_OT_arp_connect,
     CYARIGTOOLS_OT_arp_extracter,
     CYARIGTOOLS_OT_arp_const,
-    CYARIGTOOLS_OT_adjust_arp
+    CYARIGTOOLS_OT_adjust_arp,
+    CYARIGTOOLS_OT_arp_disable_ikstretch
 )
 
 def register():

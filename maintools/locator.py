@@ -500,17 +500,6 @@ def show_collection_by_name(layer ,name , state):
 
             show_collection_by_name(ly , name , state)
 
-#---------------------------------------------------------------------------------------
-#選択オブジェクトのコレクションをハイド
-#---------------------------------------------------------------------------------------
-def collection_hide():
-    selected = utils.selected()
-    layer = bpy.context.window.view_layer.layer_collection
-
-    for ob in selected:
-        for col in ob.users_collection:
-            show_collection_by_name(layer ,col.name , True)
-
 
 #---------------------------------------------------------------------------------------
 #軸変換　まず　x->y　を作ってみる

@@ -361,3 +361,17 @@ def adjust_arp(mode):
 
     msg = '処理完了 リグのトランスフォームをフリーズしました'
     bpy.ops.cyatools.messagebox('INVOKE_DEFAULT', message = msg)
+
+
+def disable_ikstretch():
+    amt = utils.getActiveObj()
+    utils.mode_p()
+    for b in amt.pose.bones:
+        for const in b.constraints:
+            if const.type == 'IK':
+                const.use_stretch = False
+
+
+
+    msg = '処理完了 すべてのikStretchを無効化しました'
+    bpy.ops.cyatools.messagebox('INVOKE_DEFAULT', message = msg)

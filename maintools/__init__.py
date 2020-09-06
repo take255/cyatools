@@ -27,7 +27,7 @@ from bpy.props import(
 
 from .. import utils
 from . import modifier
-from . import display
+#from . import display
 from . import apply
 from . import curve
 from . import scene
@@ -44,7 +44,7 @@ from . import modeling
 
 imp.reload(utils)
 imp.reload(modifier)
-imp.reload(display)
+#imp.reload(display)
 imp.reload(apply)
 imp.reload(curve)
 imp.reload(scene)
@@ -113,11 +113,11 @@ class CYATOOLS_Props_OA(PropertyGroup):
 
     #モデリング関連:showhide_bool 選択したオブジェクトだけ表示
     # 表示
-    focus_bool : BoolProperty(name="focus" ,  default = False)
+    # focus_bool : BoolProperty(name="focus" ,  default = False)
 
-    const_bool : BoolProperty(name="const" , update = display.tgl_constraint)
-    showhide_bool : BoolProperty(name="child" , update = display.tgl_child)
-    showhide_collection_bool : BoolProperty(name="" , update = display.tgl_collection)
+    # const_bool : BoolProperty(name="const" , update = display.tgl_constraint)
+    # showhide_bool : BoolProperty(name="child" , update = display.tgl_child)
+    # showhide_collection_bool : BoolProperty(name="" , update = display.tgl_collection)
 
     displayed_obj : StringProperty(name="Target", maxlen=63)    
     displayed_allobjs : CollectionProperty(type=PropertyGroup)
@@ -217,28 +217,28 @@ class CYATOOLS_MT_helper_tools(Operator):
         props = bpy.context.scene.cyatools_oa
         layout=self.layout
 
-        box = layout.box()
-        box.label( text = 'display toggle' )
+        # box = layout.box()
+        # box.label( text = 'display toggle' )
 
 
-        row1 = box.row()
-        box2 = row1.box()
+        # row1 = box.row()
+        # box2 = row1.box()
 
-        row2 = box2.row()
-        row2.prop(props, "const_bool" , icon='CONSTRAINT')#コンストレインのON、OFF
-        row2.prop(props, "showhide_bool" , icon='EMPTY_DATA')#選択した子供のみ表示
+        # row2 = box2.row()
+        # row2.prop(props, "const_bool" , icon='CONSTRAINT')#コンストレインのON、OFF
+        # row2.prop(props, "showhide_bool" , icon='EMPTY_DATA')#選択した子供のみ表示
 
         
-        box2.prop(props, "focus_bool")
+        # box2.prop(props, "focus_bool")
 
 
-        box1 = row1.box()
-        box1.label( text = 'collection' )
+        # box1 = row1.box()
+        # box1.label( text = 'collection' )
 
-        row1 = box1.row()
-        row1.prop(props, "showhide_collection_bool" , icon='GROUP')
-        row1.operator( "cyatools.preserve_collections" , icon = 'IMPORT')
-        row1.operator( "cyatools.collections_hide" )
+        # row1 = box1.row()
+        # row1.prop(props, "showhide_collection_bool" , icon='GROUP')
+        # row1.operator( "cyatools.preserve_collections" , icon = 'IMPORT')
+        # row1.operator( "cyatools.collections_hide" )
 
 
         #second column--------------------------------------------------
@@ -287,7 +287,7 @@ class CYATOOLS_MT_helper_tools(Operator):
         box3.operator( "cyatools.instance_instancer" , icon = 'MODIFIER')
         box3.operator( "cyatools.instance_substantial" , icon = 'MODIFIER')
         box3.operator( "cyatools.instance_replace" , icon = 'MODIFIER')
-        box3.operator( "cyatools.instance_invert_last_selection" , icon = 'MODIFIER')
+        #box3.operator( "cyatools.instance_invert_last_selection" , icon = 'MODIFIER')
 
         box4 = col.box()
         box4.label( text = 'swap axis' )
@@ -333,7 +333,7 @@ class CYATOOLS_MT_helper_tools(Operator):
 
 class CYATOOLS_MT_modelingtools(Operator):
     bl_idname = "cyatools.modelingtools"
-    bl_label = "modifier"
+    bl_label = "modifier / constraint"
 
     def execute(self, context):
         return{'FINISHED'}
@@ -348,7 +348,7 @@ class CYATOOLS_MT_modelingtools(Operator):
         props = bpy.context.scene.cyatools_oa
         layout=self.layout
         box = layout.box()
-        box.label( text = 'modifier' , icon = 'MODIFIER')
+        box.label( text = 'modifier edit' , icon = 'MODIFIER')
 
         row = box.row()
         box1 = row.box()
@@ -375,7 +375,8 @@ class CYATOOLS_MT_modelingtools(Operator):
         box3.prop(props, "array_offset_z" )
 
 
-        row = layout.row()
+        #row = layout.row()
+        row = layout.split(factor = 0.5, align = False)
         box = row.box()
         box.label( text = 'modifier (assign/apply/show/hide)' )
         box.prop(props, "modifier_type" , icon='RESTRICT_VIEW_OFF')
@@ -394,7 +395,7 @@ class CYATOOLS_MT_modelingtools(Operator):
         row1.operator( "cyatools.modifier_apply_all" ,text = 'delete all', icon = 'HIDE_ON').mode = 1
         
         box = row.box()
-        box.label( text = 'constraint (apply)' )
+        box.label( text = 'constraint (assign)' )
         box.prop(props, "const_type" , icon='RESTRICT_VIEW_OFF')
         row1 = box.row()
         row1.alignment = 'RIGHT'
@@ -403,7 +404,7 @@ class CYATOOLS_MT_modelingtools(Operator):
 
 class CYATOOLS_MT_curvetools(Operator):
     bl_idname = "cyatools.curvetools"
-    bl_label = "cya curve"
+    bl_label = "curve"
 
     def execute(self, context):
         return{'FINISHED'}
@@ -535,15 +536,8 @@ class CYATOOLS_MT_skinningtools(Operator):
         row = layout.row(align=False)
         col = row.column()
 
-        # row1 = col.row()
-        # box = row1.box()
-        # box.label(text = 'view')
-        # box.prop(props, "bone_xray_bool", icon='BLENDER', toggle=True)
-
-
         box = col.box()
         box.label(text = 'influence')
-        #col1 = box.column()
         row1 = box.row()
         row1.operator("cyatools.skinning_bind")
         row1.prop(props, "bind_auto_bool")
@@ -608,8 +602,8 @@ class CYATOOLS_MT_skinningtools(Operator):
         row.operator("cyatools.skinning_delete_unselected_vtxgroup")
 
         box = box.box()
-        box.label(text = '文字を指定して削除')
-        box.operator("cyatools.skinning_delete_by_word")
+        box.label(text = 'Delete vtx grp with word')
+        box.operator("cyatools.skinning_delete_with_word")
         box.prop(props, "vertexgrp_string", icon='BLENDER', toggle=True)
 
 
@@ -625,49 +619,8 @@ class CYATOOLS_MT_skinningtools(Operator):
         #row = layout.row(align=False)
         # box = row.box()
         # box.label(text = '文字を指定して削除')
-        # box.operator("cyatools.skinning_delete_by_word")
+        # box.operator("cyatools.skinning_delete_with_word")
         # box.prop(props, "vertexgrp_string", icon='BLENDER', toggle=True)
-
-
-#---------------------------------------------------------------------------------------
-#マテリアル関連ツール
-#---------------------------------------------------------------------------------------
-# class CYATOOLS_MT_materialtools(Operator):
-#     bl_idname = "cyatools.materialtools"
-#     bl_label = "material"
-
-#     def execute(self, context):
-#         return{'FINISHED'}
-
-#     def invoke(self, context, event):
-#         return context.window_manager.invoke_props_dialog(self)
-
-#     def draw(self, context):
-#         props = bpy.context.scene.cyatools_oa
-#         layout=self.layout
-
-#         row = layout.row(align=False)
-#         col = row.column()
-
-#         box = col.box()
-#         box.label(text = 'vertex color')
-#         col = box.column()
-#         row = col.row()        
-#         row.prop(props, "material_type" )
-#         row.prop(props, "material_index" )
-
-#         row = col.row()
-#         row.operator("cyatools.material_assign_vertex_color", text = 'assign').mode = 0
-#         row.operator("cyatools.material_assign_vertex_color", text = 'assign(selected)').mode = 1
-#         row.operator("cyatools.material_convert_vertex_color")
-
-#         row = col.row()
-#         row.operator("cyatools.pick_vertex_color", text = 'pick').mode = True
-#         row.operator("cyatools.pick_vertex_color", text = 'put').mode = False
-
-
-        
-
 
 
 #---------------------------------------------------------------------------------------
@@ -908,13 +861,13 @@ class CYATOOLS_OT_instance_replace(Operator):
         locator.instance_replace()
         return {'FINISHED'}
 
-class CYATOOLS_OT_instance_invert_last_selection(Operator):
-    """Inverse selected objects using last selection."""
-    bl_idname = "cyatools.instance_invert_last_selection"
-    bl_label = "invert using last selection"
-    def execute(self, context):
-        locator.invert_last_selection()
-        return {'FINISHED'}
+# class CYATOOLS_OT_instance_invert_last_selection(Operator):
+#     """Inverse selected objects using last selection."""
+#     bl_idname = "cyatools.instance_invert_last_selection"
+#     bl_label = "invert using last selection"
+#     def execute(self, context):
+#         locator.invert_last_selection()
+#         return {'FINISHED'}
 
 
 #---------------------------------------------------------------------------------------
@@ -1122,9 +1075,9 @@ class CYATOOLS_OT_modifier_select_boolean(Operator):
         return {'FINISHED'}
 
 class CYATOOLS_OT_modifier_send_to(Operator):
-    """選択したモデルのモディファイヤ関連オブジェクトを一か所に集める"""
+    """選択したモデルのモディファイヤ関連オブジェクトをコレクションに集める"""
     bl_idname = "cyatools.modifier_send_to"
-    bl_label = "send to"
+    bl_label = "gather into collection"
     def execute(self, context):
         modifier.send_to()
         return {'FINISHED'}
@@ -1143,7 +1096,8 @@ class CYATOOLS_OT_modifier_apply_all(Operator):
 #Constraint
 #---------------------------------------------------------------------------------------
 class CYATOOLS_OT_constraint_asign(Operator):
-    """モディファイヤをアサインする"""
+    """コンストレインをアサインする
+"""
     bl_idname = "cyatools.constraint_asign"
     bl_label = ""
 
@@ -1157,22 +1111,22 @@ class CYATOOLS_OT_constraint_asign(Operator):
 #---------------------------------------------------------------------------------------
 
 #選択したモデルの所属するコレクションをハイド
-class CYATOOLS_OT_collections_hide(Operator):
-    """選択したオブジェクトが属するコレクションをハイド"""
-    bl_idname = "cyatools.collections_hide"
-    bl_label = "hide"
-    def execute(self, context):
-        locator.collection_hide()
-        return {'FINISHED'}
+# class CYATOOLS_OT_collections_hide(Operator):
+#     """選択したオブジェクトが属するコレクションをハイド"""
+#     bl_idname = "cyatools.collections_hide"
+#     bl_label = "hide"
+#     def execute(self, context):
+#         locator.collection_hide()
+#         return {'FINISHED'}
 
-#現在のコレクション表示状態を保持する
-class CYATOOLS_OT_preserve_collections(Operator):
-    """現在のコレクション表示状態を保持する"""
-    bl_idname = "cyatools.preserve_collections"
-    bl_label = ""
-    def execute(self, context):
-        display.preserve_collections()
-        return {'FINISHED'}
+# #現在のコレクション表示状態を保持する
+# class CYATOOLS_OT_preserve_collections(Operator):
+#     """現在のコレクション表示状態を保持する"""
+#     bl_idname = "cyatools.preserve_collections"
+#     bl_label = ""
+#     def execute(self, context):
+#         display.preserve_collections()
+#         return {'FINISHED'}
 
 # Add bone at the selected objects
 class CYATOOLS_OT_locator_add_bone(Operator):
@@ -1396,7 +1350,7 @@ class CYATOOLS_OT_skinning_add_influence_bone(Operator):
         return {'FINISHED'}
 
 class CYATOOLS_OT_skinning_copy_influence_bone(Operator):
-    """まず、コピー先のモデル最後にコピー元のモデルを選択して実行する。"""
+    """まず、コピー先のモデル最後にコピー元のモデルを選択して実行する"""
     bl_idname = "cyatools.skinning_copy_influence_bone"
     bl_label = "copy inf"
     def execute(self, context):
@@ -1405,7 +1359,8 @@ class CYATOOLS_OT_skinning_copy_influence_bone(Operator):
 
 
 class CYATOOLS_OT_skinning_bind(Operator):
-    """Armature Modifierを追加する\そのさい頂点グループは作らないので注意\nモデルとArmatureを選択して実行する。"""
+    """Armature Modifierを追加する
+モデルとArmatureを選択して実行する"""
     bl_idname = "cyatools.skinning_bind"
     bl_label = "bind"
     def execute(self, context):
@@ -1413,6 +1368,9 @@ class CYATOOLS_OT_skinning_bind(Operator):
         return {'FINISHED'}
 
 class CYATOOLS_OT_skinning_weights_mirror(Operator):
+    """ウェイトのミラーコピー
+X+側から X-側へウェイトをコピーする
+    """
     bl_idname = "cyatools.skinning_weights_mirror"
     bl_label = "mirror"
     mode : StringProperty()
@@ -1421,7 +1379,8 @@ class CYATOOLS_OT_skinning_weights_mirror(Operator):
         return {'FINISHED'}
 
 class CYATOOLS_OT_skinning_assign_maxweights(Operator):
-    """選択ボーンに100%ウェイトを振る:\nまずモデルを選択する。次にアーマチュアを選択してエディットモードに入りジョイントを選択する。"""
+    """選択ボーンに100%ウェイトを振る
+まずモデルを選択する。次にアーマチュアを選択してエディットモードに入りジョイントを選択する。"""
     bl_idname = "cyatools.skinning_assign_maxweights"
     bl_label = "100%"
     def execute(self, context):
@@ -1430,7 +1389,10 @@ class CYATOOLS_OT_skinning_assign_maxweights(Operator):
 
 class CYATOOLS_OT_skinning_weights_transfer(Operator):
     """複数モデルのウェイト転送
-    コピー先を複数選択し、最後にコピー元のモデルを選択して実行"""
+コピー先を複数選択し、最後にコピー元のモデルを選択して実行
+batchにチェックを入れるとsuffixにいれた文字が後ろについた
+モデルをコピー元とする(ex:model_back>model)
+"""
 
     bl_idname = "cyatools.skinning_weights_transfer"
     bl_label = "transfer"
@@ -1439,13 +1401,13 @@ class CYATOOLS_OT_skinning_weights_transfer(Operator):
         skinning.weights_transfer(self.mode)
         return {'FINISHED'}
 
-class CYATOOLS_OT_skinning_mirror_transfer(Operator):
-    """複数モデルのウェイト転送。コピー先を複数選択し、最後にコピー元のモデルを選択して実行"""
-    bl_idname = "cyatools.skinning_mirror_transfer"
-    bl_label = "mirror transfer"
-    def execute(self, context):
-        skinning.mirror_transfer()
-        return {'FINISHED'}
+# class CYATOOLS_OT_skinning_mirror_transfer(Operator):
+#     """複数モデルのウェイト転送。コピー先を複数選択し、最後にコピー元のモデルを選択して実行"""
+#     bl_idname = "cyatools.skinning_mirror_transfer"
+#     bl_label = "mirror transfer"
+#     def execute(self, context):
+#         skinning.mirror_transfer()
+#         return {'FINISHED'}
 
 
 class CYATOOLS_OT_skinning_apply_not_armature_modifiers(Operator):
@@ -1459,26 +1421,28 @@ class CYATOOLS_OT_skinning_apply_not_armature_modifiers(Operator):
 class CYATOOLS_OT_skinning_delete_allweights(Operator):
     """すべての頂点グループのウェイトを０にする"""
     bl_idname = "cyatools.skinning_delete_allweights"
-    bl_label = "全ウェイト"
+    bl_label = "all weight"
     def execute(self, context):
         skinning.delete_allweights()
         return {'FINISHED'}
 
 class CYATOOLS_OT_skinning_delete_unselectedweights(Operator):
-    """選択されているのボーン以外のウェイトを０にする。まずモデルを選択し、その後アーマチュアを選択、エディットモードに入りボーンを選択。"""
+    """選択されているのボーン以外のウェイトを０にする
+まずモデルを選択し、次にアーマチュアを選択
+エディットモードに入りボーンを選択して実行"""
     bl_idname = "cyatools.skinning_delete_unselectedweights"
     bl_label = "unselected"
     def execute(self, context):
         skinning.delete_unselectedweights()
         return {'FINISHED'}
 
-class CYATOOLS_OT_skinning_delete_by_word(Operator):
-    """指定された文字列以外のバーテックスグループを削除する"""
-    bl_idname = "cyatools.skinning_delete_by_word"
-    bl_label = "指定された文字列以外削除"
+class CYATOOLS_OT_skinning_delete_with_word(Operator):
+    """指定された文字列が含まれていないバーテックスグループを削除する"""
+    bl_idname = "cyatools.skinning_delete_with_word"
+    bl_label = "Keep groups including words "
 
     def execute(self, context):
-        skinning.delete_by_word()
+        skinning.delete_with_word()
         return {'FINISHED'}
 
 class CYATOOLS_OT_skinning_delete_not_exist_vtxgrp(Operator):
@@ -1743,8 +1707,8 @@ classes = (
     CYATOOLS_OT_group,
     CYATOOLS_OT_restore_child,
     CYATOOLS_OT_preserve_child,
-    CYATOOLS_OT_collections_hide,
-    CYATOOLS_OT_preserve_collections,
+    # CYATOOLS_OT_collections_hide,
+    # CYATOOLS_OT_preserve_collections,
     CYATOOLS_OT_collection_sort,
     CYATOOLS_OT_locator_tobone,
     CYATOOLS_OT_locator_tobone_keep,
@@ -1763,7 +1727,7 @@ classes = (
     CYATOOLS_OT_instance_instancer,
     CYATOOLS_OT_instance_substantial,
     CYATOOLS_OT_instance_replace,
-    CYATOOLS_OT_instance_invert_last_selection,
+    #CYATOOLS_OT_instance_invert_last_selection,
 
     # modifier
     CYATOOLS_OT_modifier_asign,
@@ -1829,10 +1793,10 @@ classes = (
     CYATOOLS_OT_skinning_apply_not_armature_modifiers,
     CYATOOLS_OT_skinning_delete_allweights,
     CYATOOLS_OT_skinning_delete_unselectedweights,
-    CYATOOLS_OT_skinning_delete_by_word,
+    CYATOOLS_OT_skinning_delete_with_word,
     CYATOOLS_OT_skinning_delete_not_exist_vtxgrp,
     CYATOOLS_OT_skinning_delete_all_vtxgrp,
-    CYATOOLS_OT_skinning_mirror_transfer,
+    #CYATOOLS_OT_skinning_mirror_transfer,
     CYATOOLS_OT_skinning_delete_unselected_vtxgroup,
 
     #マテリアル
