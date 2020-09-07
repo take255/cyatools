@@ -652,3 +652,62 @@ def delete_rig():
         b.select = True
     
     bpy.ops.armature.delete()
+
+
+#---------------------------------------------------------------------------------------
+# add bones at the selected objects
+#---------------------------------------------------------------------------------------
+class AddBoneObj():
+    def __init__( self , ob ):
+        m = Matrix(ob.matrix_world)
+        m.transpose()
+        self.x = [ m[0][0], m[0][1], m[0][2] ]
+        self.y = [ m[1][0], m[1][1], m[1][2] ]
+        self.z = Vector([ m[2][0], m[2][1], m[2][2] ])
+        self.head = Vector([ m[3][0], m[3][1], m[3][2] ])
+
+        self.name = ob.name
+
+        self.axis_forward = {}
+
+        self.axis_forward['X']  = Vector([ m[0][0], m[0][1], m[0][2] ])
+        self.axis_forward['-X'] = Vector([ -m[0][0], -m[0][1], -m[0][2] ])
+        self.axis_forward['Y']  = Vector([ m[1][0], m[1][1], m[1][2] ])
+        self.axis_forward['-Y'] = Vector([ -m[1][0], -m[1][1], -m[1][2] ])
+        self.axis_forward['Z'] = Vector([ m[2][0], m[2][1], m[2][2] ])
+        self.axis_forward['-Z']  = Vector([ -m[2][0], -m[2][1], -m[2][2] ])
+
+
+def add_bone():
+    props = bpy.context.scene.cyarigtools_props
+    amt = utils.getActiveObj()
+
+    af = props.axis_forward
+    au = props.axis_up
+
+    m_array = []
+    for ob in utils.selected():
+        if ob != amt:
+            m_array.append( AddBoneObj(ob) )  
+    
+    utils.act(amt)
+    utils.mode_e()
+
+    for m in m_array:
+        b = amt.data.edit_bones.new( m.name )
+        b.head = m.head
+        b.tail = m.head + m.axis_forward[ af ]
+        print(m.axis_forward[ af ])
+        bpy.ops.armature.select_all(action='DESELECT')
+        
+
+# First, select object next select armature. Enter edit mode and select bone to align.
+def snap_bone_at_obj():
+    amt = utils.getActiveObj()
+    bone = utils.get_active_bone()
+
+    for ob in utils.selected():
+        if ob != amt:
+            loc = ob.location
+    
+    bone.head = loc

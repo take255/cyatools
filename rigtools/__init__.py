@@ -40,6 +40,7 @@ imp.reload(constraint)
 imp.reload(arp)
 
 
+AXIS = (('X','X','X'), ('Y','Y','Y'), ('Z','Z','Z'), ('-X','-X','-X'), ('-Y','-Y','-Y'), ('-Z','-Z','-Z'))
 
 RIGSHAPEPATH = "E:\data\googledrive\lib\model/rig.blend"
 
@@ -161,6 +162,8 @@ class CYARIGTOOLS_Props_OA(PropertyGroup):
     # leg_ikfk_l : FloatProperty( name = "l", min=0.0 , max=1.0, default=1.0 , update = cmd.rig_change_ctr )
     # leg_ikfk_r : FloatProperty( name = "r", min=0.0 , max=1.0, default=1.0 , update = cmd.rig_change_ctr )
 
+    axis_forward : EnumProperty(items = AXIS , name = 'forward',default = '-Z' )
+    axis_up : EnumProperty(items = AXIS , name = 'up' ,default = 'Y')
 
 
 
@@ -524,7 +527,25 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         row = col.row()
         row.operator("cyarigtools.edit_adjust_roll")
         row.operator("cyarigtools.edit_align_roll_global")
-            
+
+        #Add bone at the selected objects
+        # First, select some objects ,select bone in the end.
+        box3 = col1.box()
+        box3.label( text = 'bone and object' )
+        row = box3.row()
+        row.operator( "cyarigtools.locator_add_bone")
+        row.operator( "cyarigtools.locator_snap_bone_at_obj")
+
+        row1 = box3.row()
+        row1.prop(props, 'axis_forward',text = 'fwd')
+        row1.prop(props, 'axis_up')
+
+
+
+
+
+
+
         box = col_root.box()
         box.label(text = 'constraint')
         split = box.split(factor = 0.5, align = False)
@@ -543,6 +564,8 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         row = box.row()
         row.operator("cyarigtools.edit_connect_chain")
         row.operator("cyarigtools.edit_delete_rig")
+
+
 
 
 #---------------------------------------------------------------------------------------
@@ -1066,6 +1089,30 @@ class CYARIGTOOLS_OT_arp_disable_ikstretch(bpy.types.Operator):
         arp.disable_ikstretch()
         return {'FINISHED'}
 
+#---------------------------------------------------------------------------------------
+#Add bone
+#---------------------------------------------------------------------------------------
+
+# Add bone at the selected objects
+class CYARIGTOOLS_OT_locator_add_bone(Operator):
+    """選択したモデルの位置にボーンを生成
+複数のモデルを選択後、アーマチュアをアクティブにして実行"""
+    bl_idname = "cyarigtools.locator_add_bone"
+    bl_label = "add bone at obj"
+    def execute(self, context):
+        edit.add_bone()
+        return {'FINISHED'}
+
+class CYARIGTOOLS_OT_locator_snap_bone_at_obj(Operator):
+    """オブジェクトの位置にボーンをスナップ
+モデルを選択後、アーマチュアを選択しエディットモードに入る
+ボーンを選択して実行するとオブジェクトの位置にボーンが吸着する"""
+    bl_idname = "cyarigtools.locator_snap_bone_at_obj"
+    bl_label = "snap bone"
+    def execute(self, context):
+        edit.snap_bone_at_obj()
+        return {'FINISHED'}
+
 
 #---------------------------------------------------------------------------------------
 # other tools
@@ -1138,6 +1185,9 @@ classes = (
     CYARIGTOOLS_OT_edit_roll_degree,
     CYARIGTOOLS_OT_edit_align_roll_global,
     CYARIGTOOLS_OT_edit_axis_swap,
+    CYARIGTOOLS_OT_locator_add_bone,
+    CYARIGTOOLS_OT_locator_snap_bone_at_obj,
+
 
     #other tools
     CYARIGTOOLS_OT_edit_connect_chain,

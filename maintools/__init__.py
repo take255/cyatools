@@ -52,7 +52,7 @@ imp.reload(modeling)
 
 #頂点カラーデータ
 #MATERIAL_TYPE = ( ('METAL','METAL','') , ('LEATHER','LEATHER','') , ('CLOTH','CLOTH','') , ('OTHERS','OTHERS','') , ('BUFFER','BUFFER','') )
-AXIS = (('X','X','X'), ('Y','Y','Y'), ('Z','Z','Z'), ('-X','-X','-X'), ('-Y','-Y','-Y'), ('-Z','-Z','-Z'))
+#AXIS = (('X','X','X'), ('Y','Y','Y'), ('Z','Z','Z'), ('-X','-X','-X'), ('-Y','-Y','-Y'), ('-Z','-Z','-Z'))
 
 
 #シーンを追加したとき、それぞれのシーンにあるシーンリストを更新してあげる必要がある
@@ -117,8 +117,8 @@ class CYATOOLS_Props_OA(PropertyGroup):
 
     #Helper Tools
     # add bone at the selected object.
-    axis_forward : EnumProperty(items = AXIS , name = 'forward',default = '-Z' )
-    axis_up : EnumProperty(items = AXIS , name = 'up' ,default = 'Y')
+    # axis_forward : EnumProperty(items = AXIS , name = 'forward',default = '-Z' )
+    # axis_up : EnumProperty(items = AXIS , name = 'up' ,default = 'Y')
     mirror_mode : EnumProperty(items=(
         ('normal', 'normal', ''),
         ('const', 'const', ''),
@@ -183,7 +183,6 @@ class CYATOOLS_PT_toolPanel(utils.panel):
         self.layout.operator("cyatools.curvetools", icon='CURVE_DATA')
         self.layout.operator("cyatools.rename", icon='SYNTAX_OFF')
         self.layout.operator("cyatools.skinningtools", icon='MOD_SKIN')
-        # self.layout.operator("cyatools.etc", icon='BLENDER')
 
 #---------------------------------------------------------------------------------------
 #Helper Tools
@@ -198,12 +197,12 @@ class CYATOOLS_MT_modeling_tools(Operator):
         return{'FINISHED'}
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self ,width = 400)
+        return context.window_manager.invoke_props_dialog(self ,width = 300)
 
     def draw(self, context):
         props = bpy.context.scene.cyatools_oa
         layout=self.layout
-        row = layout.split(factor = 0.4, align = False)
+        row = layout.split(factor = 0.6, align = False)
 
         col = row.column()
         box2 = col.box()
@@ -213,11 +212,6 @@ class CYATOOLS_MT_modeling_tools(Operator):
         box2.operator( "cyatools.group" , icon = 'GROUP')
         box2.operator( "cyatools.locator_tobone" , icon = 'CONSTRAINT_BONE')
         box2.operator( "cyatools.locator_tobone_keep" , icon = 'CONSTRAINT_BONE')
-
-        # box3 = col.box()
-        # box3.label( text = 'child' )
-        # box3.operator( "cyatools.preserve_child" , icon = 'PINNED')
-        # box3.operator( "cyatools.restore_child" , icon = 'UNPINNED')
 
         #トランスフォーム
         box3 = col.box()
@@ -237,7 +231,6 @@ class CYATOOLS_MT_modeling_tools(Operator):
         box5.operator( "cyatools.material_reload_texture", icon = 'TEXTURE')
         box5.operator( "cyatools.material_remove_submaterial", icon = 'NODE_MATERIAL')
         
-
         #instacne
         col = row.column()
         box3 = col.box()
@@ -256,7 +249,8 @@ class CYATOOLS_MT_modeling_tools(Operator):
 
 
         box4 = col.box()
-        box4.label( text = 'instance mirror transform' )
+        box4.label( text = ' mirror instance' )
+        # box4.label( text = ' transform' )
         col = box4.column()
         row = col.row()
         row.operator( "cyatools.instance_mirror" , text = 'x' ).op = 'x'
@@ -267,23 +261,24 @@ class CYATOOLS_MT_modeling_tools(Operator):
 
 
 
-        box6 = col.box()
-        box6.label( text = 'instance mirror geom' )
-        row = box6.row()
-        row.operator( "cyatools.instance_mirror_geom" , text = 'x' ).op = 'x'
-        row.operator( "cyatools.instance_mirror_geom" , text = 'y' ).op = 'y'
-        row.operator( "cyatools.instance_mirror_geom" , text = 'z' ).op = 'z'
+        # box6 = col.box()
+        # box6.label( text = 'mirror instance' )
+        # box6.label( text = 'geometry' )
+        # row = box6.row()
+        # row.operator( "cyatools.instance_mirror_geom" , text = 'x' ).op = 'x'
+        # row.operator( "cyatools.instance_mirror_geom" , text = 'y' ).op = 'y'
+        # row.operator( "cyatools.instance_mirror_geom" , text = 'z' ).op = 'z'
 
         # Add bone at the selected objects
         # First, select some objects ,select bone in the end.
-        box3 = col.box()
-        box3.label( text = 'bone' )
-        box3.operator( "cyatools.locator_add_bone" , icon = 'PINNED')
-        row1 = box3.row()
-        row1.prop(props, 'axis_forward', icon='BLENDER' )
-        row1.prop(props, 'axis_up', icon='BLENDER')
+        # box3 = col.box()
+        # box3.label( text = 'bone' )
+        # box3.operator( "cyatools.locator_add_bone" , icon = 'PINNED')
+        # row1 = box3.row()
+        # row1.prop(props, 'axis_forward', icon='BLENDER' )
+        # row1.prop(props, 'axis_up', icon='BLENDER')
 
-        box3.operator( "cyatools.locator_snap_bone_at_obj" , icon = 'PINNED')
+        # box3.operator( "cyatools.locator_snap_bone_at_obj" , icon = 'PINNED')
         
 
 class CYATOOLS_MT_modifier_tools(Operator):
@@ -1029,21 +1024,21 @@ class CYATOOLS_OT_constraint_asign(Operator):
 #---------------------------------------------------------------------------------------
 
 # Add bone at the selected objects
-class CYATOOLS_OT_locator_add_bone(Operator):
-    """# Add bone at the selected objects"""
-    bl_idname = "cyatools.locator_add_bone"
-    bl_label = "add bone"
-    def execute(self, context):
-        locator.add_bone()
-        return {'FINISHED'}
+# class CYATOOLS_OT_locator_add_bone(Operator):
+#     """# Add bone at the selected objects"""
+#     bl_idname = "cyatools.locator_add_bone"
+#     bl_label = "add bone"
+#     def execute(self, context):
+#         locator.add_bone()
+#         return {'FINISHED'}
 
-class CYATOOLS_OT_locator_snap_bone_at_obj(Operator):
-    """# Add bone at the selected objects"""
-    bl_idname = "cyatools.locator_snap_bone_at_obj"
-    bl_label = "snap bone"
-    def execute(self, context):
-        locator.snap_bone_at_obj()
-        return {'FINISHED'}
+# class CYATOOLS_OT_locator_snap_bone_at_obj(Operator):
+#     """# Add bone at the selected objects"""
+#     bl_idname = "cyatools.locator_snap_bone_at_obj"
+#     bl_label = "snap bone"
+#     def execute(self, context):
+#         locator.snap_bone_at_obj()
+#         return {'FINISHED'}
 
 
 
@@ -1062,7 +1057,10 @@ class CYATOOLS_OT_swap_axis(Operator):
 
 #オブジェクトをX軸ミラーコンストレインする
 class CYATOOLS_OT_instance_mirror(Operator):
-    """インスタンスをX軸ミラーする"""
+    """インスタンスをミラーする
+normal : 反転したインスタンスを作成
+const : トランスフォームに反転高速する
+rot : スケールを用いず回転で反転する"""
     bl_idname = "cyatools.instance_mirror"
     bl_label = "constraint mirror"
     op : StringProperty(default='x')
@@ -1071,14 +1069,15 @@ class CYATOOLS_OT_instance_mirror(Operator):
         return {'FINISHED'}
 
 #インスタンスをミラーするが、トランスフォームのコンストレインをしない
-class CYATOOLS_OT_instance_mirror_geom(Operator):
-    """インスタンスをX軸ミラーする\nトランスフォームのコンストレインをしない"""
-    bl_idname = "cyatools.instance_mirror_geom"
-    bl_label = ""
-    op : StringProperty(default='x')
-    def execute(self, context):
-        locator.mirror_geom(self.op)
-        return {'FINISHED'}
+# class CYATOOLS_OT_instance_mirror_geom(Operator):
+#     """インスタンスをミラーする
+# トランスフォームのコンストレインをしない"""
+#     bl_idname = "cyatools.instance_mirror_geom"
+#     bl_label = ""
+#     op : StringProperty(default='x')
+#     def execute(self, context):
+#         locator.mirror_geom(self.op)
+#         return {'FINISHED'}
 
 
 #オブジェクトをX軸だけapply
@@ -1159,74 +1158,6 @@ class CYATOOLS_OT_material_remove_submaterial(Operator):
         return {'FINISHED'}
 
 #---------------------------------------------------------------------------------------
-#etc
-#---------------------------------------------------------------------------------------
-
-# class CYATOOLS_OT_transform_rotate_axis(Operator):
-#     """ローカル軸を中心に回転"""
-#     bl_idname = "cyatools.transform_rotate_axis"
-#     bl_label = ""
-#     axis : StringProperty(default='x90') 
-#     def execute(self, context):
-#         etc.transform_rotate_axis(self.axis)
-#         return {'FINISHED'}
-
-# class CYATOOLS_OT_transform_scale_abs(Operator):
-#     """スケールを正にする"""
-#     bl_idname = "cyatools.transform_scale_abs"
-#     bl_label = "scale abs"
-#     def execute(self, context):
-#         etc.transform_scale_abs()
-#         return {'FINISHED'}
-
-# class CYATOOLS_OT_constraint_to_bone(Operator):
-#     """選択されているボーンでコンストレインする\nモデル、アーマチュアの順に選択しEditモードでボーンを選択して実行する"""
-#     bl_idname = "cyatools.constraint_to_bone"
-#     bl_label = "constraint to bone"
-#     def execute(self, context):
-#         etc.constraint_to_bone()
-#         return {'FINISHED'}
-
-# class CYATOOLS_OT_invert_pose_blendshape(Operator):
-#     """スキンバインドされたブレンドシェイプを元の姿勢に戻す。\nブレンドシェイプのスキンモデルとアーマチャーを選択して実行する。"""
-#     bl_idname = "cyatools.invert_pose_blendshape"
-#     bl_label = "Invert Pose"
-#     def execute(self, context):    
-#         blendshape.invert()
-#         return {'FINISHED'}        
-
-#---------------------------------------------------------------------------------------
-#リファレンス関連ツール
-#---------------------------------------------------------------------------------------
-
-# #複数のモデルを同時にプロキシ化
-# class CYATOOLS_OT_refernce_make_proxy(Operator):
-#     """選択した複数のモデルをプロキシする"""
-#     bl_idname = "cyatools.reference_make_proxy"
-#     bl_label = "make proxy"
-#     def execute(self, context):
-#         etc.refernce_make_proxy()
-#         return {'FINISHED'}
-
-# #シンボリックリンク作成
-# class CYATOOLS_OT_refernce_make_link(Operator):
-#     bl_idname = "cyatools.refernce_make_link_draw"
-#     bl_label = "make symbolic link"
-#     filepath : bpy.props.StringProperty(subtype="DIR_PATH")
-#     directory : bpy.props.StringProperty(subtype="DIR_PATH")
-
-#     def invoke(self, context, event):
-#         context.window_manager.fileselect_add(self)
-#         return {'RUNNING_MODAL'}
-
-#     def execute(self, context):
-#         print(self.directory)
-#         etc.refernce_make_link(self.directory)
-#         return {'FINISHED'}
-
-
-
-#---------------------------------------------------------------------------------------
 #スキニングツール
 #---------------------------------------------------------------------------------------
 class CYATOOLS_OT_skinning_add_influence_bone(Operator):
@@ -1288,14 +1219,6 @@ batchにチェックを入れると、文字列をsuffixとしたモデルを
     def execute(self, context):
         skinning.weights_transfer(self.mode)
         return {'FINISHED'}
-
-# class CYATOOLS_OT_skinning_mirror_transfer(Operator):
-#     """複数モデルのウェイト転送。コピー先を複数選択し、最後にコピー元のモデルを選択して実行"""
-#     bl_idname = "cyatools.skinning_mirror_transfer"
-#     bl_label = "mirror transfer"
-#     def execute(self, context):
-#         skinning.mirror_transfer()
-#         return {'FINISHED'}
 
 
 class CYATOOLS_OT_skinning_apply_without_armature_modifiers(Operator):
@@ -1536,8 +1459,8 @@ classes = (
     CYATOOLS_OT_collection_sort,
     CYATOOLS_OT_locator_tobone,
     CYATOOLS_OT_locator_tobone_keep,
-    CYATOOLS_OT_locator_add_bone,
-    CYATOOLS_OT_locator_snap_bone_at_obj,
+    # CYATOOLS_OT_locator_add_bone,
+    # CYATOOLS_OT_locator_snap_bone_at_obj,
 
     
     #モデリング
@@ -1567,7 +1490,7 @@ classes = (
     # constraint
     CYATOOLS_OT_constraint_asign,
     CYATOOLS_OT_instance_mirror,
-    CYATOOLS_OT_instance_mirror_geom,
+    #CYATOOLS_OT_instance_mirror_geom,
 
     # object applier
     CYATOOLS_MT_new_scene,
