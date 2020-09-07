@@ -1,17 +1,3 @@
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTIBILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-
 import bpy
 from bpy.app.handlers import persistent
 import imp
@@ -39,7 +25,6 @@ from . import cmd
 imp.reload(utils)
 imp.reload(cmd)
 
-
 bl_info = {
 "name": "cyaobjectlist",
 "author": "kisecyakeshi",
@@ -47,7 +32,6 @@ bl_info = {
 "blender": (2, 80, 0),
 "description": "cyaobjectlist",
 "category": "Object"}
-
 
 try: 
     bpy.utils.unregister_class(CYAOBJECTLIST_Props_item)
@@ -70,7 +54,6 @@ def cyaobjectlist_handler(scene):
             mode = utils.current_mode()
             if mode == 'OBJECT':
                 bpy.ops.object.select_all(action='DESELECT')
-                #utils.selectByName(itemlist[index].name,True)
                 ob = utils.objectByName(itemlist[index].name)
                 utils.act(ob)
 
@@ -83,8 +66,6 @@ def cyaobjectlist_handler(scene):
                 bpy.ops.armature.select_all(action='DESELECT')
                 utils.bone.selectByName(itemlist[index].name,True)
                 utils.mode_p()
-                #bpy.ops.object.select_all(action='DESELECT')
-                #utils.selectByName(itemlist[index].name,True)
 
 
 class CYAOBJECTLIST_Props_OA(PropertyGroup):
@@ -144,21 +125,42 @@ class CYAOBJECTLIST_PT_ui(utils.panel):
         col.operator("cyaobjectlist.remove_not_exist", icon='ERROR')
 
         row = layout.row(align=True)
-        row.label( text = 'check' )
-        for x in ('show' , 'hide' , 'select' , 'selected'):
-            row.operator("cyaobjectlist.check_item", text = x ).op = x
+        #row.label( text = 'check' )
+        row.label( text = '' ,icon = 'CHECKMARK')
+
+        array = (
+        ('show','HIDE_OFF'),
+        ('hide','HIDE_ON'),
+        ('select','RESTRICT_SELECT_ON'),
+        ('selected','DECORATE_LIBRARY_OVERRIDE'),
+        ('invert','HOLDOUT_ON')
+        )
+
+        for x in array:
+            row.operator("cyaobjectlist.check_item",icon = x[1] ).op = x[0]
+
+        # for x in ('show' , 'hide' , 'select' , 'selected'):
+        #     row.operator("cyaobjectlist.check_item", text = x ).op = x
+
+        #row = layout.row(align=True)
+        #row.label( text = 'remove' )
+        row.label( text = '' ,icon = 'TRASH')
+        # for x in ('checked' , 'unchecked'):
+        #     row.operator("cyaobjectlist.remove_check_item", text = x ).op = x
+
+        array = (
+        ('checked','CHECKMARK'),
+        ('unchecked','CHECKBOX_DEHLT'),
+        )
+
+        for x in array:
+            row.operator("cyaobjectlist.remove_check_item", icon = x[1] ).op = x[0]
+
+
+        # row = layout.row(align=True)
+        # row.operator("cyaobjectlist.invert")
 
         row = layout.row(align=True)
-        row.label( text = 'remove' )
-        for x in ('checked' , 'unchecked'):
-            row.operator("cyaobjectlist.remove_check_item", text = x ).op = x
-
-
-        row = layout.row(align=True)
-        row.operator("cyaobjectlist.invert")
-
-        row = layout.row(align=True)
-        #row.label( text = 'bone' )
         row.operator("cyaobjectlist.rename")#リネームのウインドウを表示
         row.operator("cyaobjectlist.bonetool")#リネームのウインドウを表示
         
@@ -238,8 +240,6 @@ class CYAOBJECTLIST_MT_bonetool(Operator):
     def draw(self, context):
         props = bpy.context.scene.cyaobjectlist_props
         layout=self.layout
-        #layout.prop(props, "rename_string")
-        #layout.operator("cyaobjectlist.rename_bonecluster")
 
         row = layout.row()
         box = row.box()
@@ -336,7 +336,8 @@ class CYAOBJECTLIST_OT_clear(Operator):
 
 
 class CYAOBJECTLIST_OT_check_item(Operator):
-    """アイテムの移動"""
+    """チェックされたアイテムの操作
+1:表示　2:非表示　3:選択　4:選択中のものにチェック　5:反転"""
     bl_idname = "cyaobjectlist.check_item"
     bl_label = ""
     op : StringProperty()
@@ -344,16 +345,18 @@ class CYAOBJECTLIST_OT_check_item(Operator):
         cmd.check_item(self.op)
         return {'FINISHED'}
 
-class CYAOBJECTLIST_OT_invert(Operator):
-    """チェックアイテムの並び順反転"""
-    bl_idname = "cyaobjectlist.invert"
-    bl_label = "invert"
-    def execute(self, context):
-        cmd.invert()
-        return {'FINISHED'}
+# class CYAOBJECTLIST_OT_invert(Operator):
+#     """チェックアイテムの並び順反転"""
+#     bl_idname = "cyaobjectlist.invert"
+#     bl_label = "invert"
+#     def execute(self, context):
+#         cmd.invert()
+#         return {'FINISHED'}
 
 class CYAOBJECTLIST_OT_remove_check_item(Operator):
-    """チェック状態でリストから削除"""
+    """リストから削除
+1:チェックされたアイテム
+2:チェックされていないアイテム"""
     bl_idname = "cyaobjectlist.remove_check_item"
     bl_label = ""
     op : StringProperty()
@@ -459,7 +462,7 @@ classes = (
     CYAOBJECTLIST_OT_clear,
 
     CYAOBJECTLIST_OT_check_item,
-    CYAOBJECTLIST_OT_invert,
+    #CYAOBJECTLIST_OT_invert,
     CYAOBJECTLIST_OT_remove_check_item,
 
     #rename
@@ -472,7 +475,6 @@ classes = (
     CYAOBJECTLIST_OT_rename_add_sequential_renumber,
 
     CYAOBJECTLIST_OT_rename_add_word,
-    #CYAOBJECTLIST_OT_rename_add_sequential_renumber,
 
     #bone 
     CYAOBJECTLIST_OT_parent_chain

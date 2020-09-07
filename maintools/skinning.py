@@ -225,9 +225,8 @@ def copy_influence_bone():
                 bpy.context.object.vertex_groups.new(name = group)
 
 
-
 #アーマチュア以外のモディファイヤをapply
-def apply_not_armature_modifiers():
+def apply_without_armature_modifiers():
     sel = bpy.context.selected_objects
     scene_obj = bpy.context.scene.objects
     for ob in sel:
@@ -237,7 +236,6 @@ def apply_not_armature_modifiers():
             if mod.type != 'ARMATURE':
                 print(mod.name)
                 bpy.ops.object.modifier_apply(modifier=mod.name)
-
 
 
 def delete_all_vtxgrp():

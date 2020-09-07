@@ -239,28 +239,6 @@ def rename_bonecluster():
         #ui_list.active_index = len(itemlist) - 1
 
 
-#チェックを入れたものの並びを反転する。
-#インデックスを保持したままはめんどいので、ソートしたらリストの末尾に追加
-def invert():
-    ui_list = bpy.context.window_manager.cyaobjectlist_list
-    itemlist = ui_list.itemlist    
-
-    array = []
-    indexarray = []
-    for i,node in enumerate(itemlist):
-        if node.bool_val == True:
-            array.append(node.name)
-            indexarray.append(i)
-
-    for index in reversed(indexarray):
-        itemlist.remove(index)
-
-    for bone in reversed(array):
-        item = itemlist.add()
-        item.name = bone
-        item.bool_val = True
-        ui_list.active_index = len(itemlist) - 1
-
 def remove_check_item(op):
     ui_list = bpy.context.window_manager.cyaobjectlist_list
     itemlist = ui_list.itemlist    
@@ -340,6 +318,29 @@ def check_item(op):
         elif op == 'hide':
             if node.bool_val == True:
                 utils.showhide(node,True)
+
+
+#チェックを入れたものの並びを反転する。
+#インデックスを保持したままはめんどいので、ソートしたらリストの末尾に追加
+#def invert():
+    # ui_list = bpy.context.window_manager.cyaobjectlist_list
+    # itemlist = ui_list.itemlist    
+        elif op == 'invert':
+            array = []
+            indexarray = []
+            for i,node in enumerate(itemlist):
+                if node.bool_val == True:
+                    array.append(node.name)
+                    indexarray.append(i)
+
+            for index in reversed(indexarray):
+                itemlist.remove(index)
+
+            for bone in reversed(array):
+                item = itemlist.add()
+                item.name = bone
+                item.bool_val = True
+                ui_list.active_index = len(itemlist) - 1
 
 
 #---------------------------------------------------------------------------------------

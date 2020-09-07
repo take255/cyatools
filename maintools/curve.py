@@ -4,27 +4,35 @@ from mathutils import Vector
 from . import utils
 
 
-#ベベル込みのカーブを作成する
+#def create_with_bevel(dir):
+#直線カーブを作る
+#with bevelがOnなら、ベベル込みのカーブを作成する
 #ベベルはcurve_collenctionに格納される￥
-def create_with_bevel(dir):
-    #ベベル用のサークル
-    bpy.ops.curve.primitive_bezier_circle_add()
-    circleobj = bpy.context.active_object
-    circleobj.scale = (0.05,0.05,0.05) 
-    circleobj.data.resolution_u = 6
+def create_liner(dir):
+    props = bpy.context.scene.cyatools_oa
 
     #カーブの作成
-    curve  = create_liner(dir)
-    curve.data.bevel_object = circleobj
-    curve.data.use_fill_caps = True
-    try:
-        obj.data.use_uv_as_generated = True    
-    except:
-        pass
+    curve  = liner_curve(dir)
+
+    if props.with_bevel == True:
+        #ベベル用のサークル生成
+        bpy.ops.curve.primitive_bezier_circle_add()
+        circleobj = bpy.context.active_object
+        circleobj.scale = (0.05,0.05,0.05) 
+        circleobj.data.resolution_u = 6
 
 
-#直線カーブを作る
-def create_liner(dir):
+        curve.data.bevel_object = circleobj
+    #curve.data.use_fill_caps = True
+        try:
+            obj.data.use_uv_as_generated = True    
+        except:
+            pass
+
+
+def liner_curve(dir):
+    props = bpy.context.scene.cyatools_oa
+
     bpy.ops.curve.primitive_bezier_curve_add()
     act  = utils.getActiveObj()
     pos = act.location
@@ -40,7 +48,9 @@ def create_liner(dir):
         act.data.splines.active.bezier_points[1].co = Vector((0,0,1))
 
     bpy.ops.curve.handle_type_set(type = 'AUTOMATIC')
-    bpy.ops.curve.spline_type_set(type='POLY')
+
+    if props.curve_liner == True:
+        bpy.ops.curve.spline_type_set(type='POLY')
     utils.mode_o()
     return act
 

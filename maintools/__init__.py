@@ -27,41 +27,31 @@ from bpy.props import(
 
 from .. import utils
 from . import modifier
-#from . import display
 from . import apply
 from . import curve
 from . import scene
 from . import constraint
 from . import locator
-from . import etc
 from . import rename
 from . import skinning
-from . import blendshape
-#from . import material
 from . import transform
 from . import modeling
-#from . import particle
 
 imp.reload(utils)
 imp.reload(modifier)
-#imp.reload(display)
 imp.reload(apply)
 imp.reload(curve)
 imp.reload(scene)
 imp.reload(constraint)
 imp.reload(locator)
-imp.reload(etc)
 imp.reload(rename)
 imp.reload(skinning)
-imp.reload(blendshape)
-#imp.reload(material)
 imp.reload(transform)
 imp.reload(modeling)
-#imp.reload(particle)
 
 
 #頂点カラーデータ
-MATERIAL_TYPE = ( ('METAL','METAL','') , ('LEATHER','LEATHER','') , ('CLOTH','CLOTH','') , ('OTHERS','OTHERS','') , ('BUFFER','BUFFER','') )
+#MATERIAL_TYPE = ( ('METAL','METAL','') , ('LEATHER','LEATHER','') , ('CLOTH','CLOTH','') , ('OTHERS','OTHERS','') , ('BUFFER','BUFFER','') )
 AXIS = (('X','X','X'), ('Y','Y','Y'), ('Z','Z','Z'), ('-X','-X','-X'), ('-Y','-Y','-Y'), ('-Z','-Z','-Z'))
 
 
@@ -166,8 +156,12 @@ class CYATOOLS_Props_OA(PropertyGroup):
     batch_weight_transfer_string : StringProperty(name = "suffix")
 
     #マテリアル関連
-    material_type : EnumProperty(items = MATERIAL_TYPE , name = 'type' )
+    #material_type : EnumProperty(items = MATERIAL_TYPE , name = 'type' )
     material_index : IntProperty( name = "number", min=0, max=10, default=1 )
+
+    #カーブツール
+    with_bevel : BoolProperty(name="with bevel" ,  default = True)
+    curve_liner : BoolProperty(name="liner" ,  default = False)
 
     #揺れ骨関連
     #cloth_open : BoolProperty( name = "open" )
@@ -183,23 +177,19 @@ class CYATOOLS_Props_OA(PropertyGroup):
 class CYATOOLS_PT_toolPanel(utils.panel):   
     bl_label ='Main Tools'
     def draw(self, context):
-        self.layout.operator("cyatools.apply", icon='BLENDER')
-        self.layout.operator("cyatools.modelingtools", icon='BLENDER')
-        self.layout.operator("cyatools.cya_helper_tools", icon='BLENDER')
-        self.layout.operator("cyatools.curvetools", icon='BLENDER')
-        self.layout.operator("cyatools.rename", icon='BLENDER')
-        self.layout.operator("cyatools.skinningtools", icon='BLENDER')
-        self.layout.operator("cyatools.etc", icon='BLENDER')
-
-        #self.layout.operator("cyatools.materialtools", icon='BLENDER')
-        #self.layout.operator("cyatools.particletools", icon='BLENDER')
-
+        self.layout.operator("cyatools.apply", icon='EVENT_A')
+        self.layout.operator("cyatools.modifier_tools", icon='MODIFIER')
+        self.layout.operator("cyatools.cya_modeling_tools", icon='MESH_CUBE')
+        self.layout.operator("cyatools.curvetools", icon='CURVE_DATA')
+        self.layout.operator("cyatools.rename", icon='SYNTAX_OFF')
+        self.layout.operator("cyatools.skinningtools", icon='MOD_SKIN')
+        # self.layout.operator("cyatools.etc", icon='BLENDER')
 
 #---------------------------------------------------------------------------------------
 #Helper Tools
 #---------------------------------------------------------------------------------------
-class CYATOOLS_MT_helper_tools(Operator):
-    bl_idname = "cyatools.cya_helper_tools"
+class CYATOOLS_MT_modeling_tools(Operator):
+    bl_idname = "cyatools.cya_modeling_tools"
     bl_label = "modeling"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -208,86 +198,54 @@ class CYATOOLS_MT_helper_tools(Operator):
         return{'FINISHED'}
 
     def invoke(self, context, event):
-        #アクティブオブジェクトのコンストレインの状態を取得
-        display.get_constraint_status()
-        modifier.get_param()
         return context.window_manager.invoke_props_dialog(self ,width = 400)
 
     def draw(self, context):
         props = bpy.context.scene.cyatools_oa
         layout=self.layout
-
-        # box = layout.box()
-        # box.label( text = 'display toggle' )
-
-
-        # row1 = box.row()
-        # box2 = row1.box()
-
-        # row2 = box2.row()
-        # row2.prop(props, "const_bool" , icon='CONSTRAINT')#コンストレインのON、OFF
-        # row2.prop(props, "showhide_bool" , icon='EMPTY_DATA')#選択した子供のみ表示
-
-        
-        # box2.prop(props, "focus_bool")
-
-
-        # box1 = row1.box()
-        # box1.label( text = 'collection' )
-
-        # row1 = box1.row()
-        # row1.prop(props, "showhide_collection_bool" , icon='GROUP')
-        # row1.operator( "cyatools.preserve_collections" , icon = 'IMPORT')
-        # row1.operator( "cyatools.collections_hide" )
-
-
-        #second column--------------------------------------------------
-        #box1 = layout.box()
-        #row = layout.row()
         row = layout.split(factor = 0.4, align = False)
 
         col = row.column()
         box2 = col.box()
         box2.label( text = 'locator' )
-        box2.operator( "cyatools.replace_locator" , icon = 'MODIFIER')
-        box2.operator( "cyatools.replace_locator_facenormal" , icon = 'MODIFIER')
-        box2.operator( "cyatools.group" , icon = 'MODIFIER')
-        box2.operator( "cyatools.locator_tobone" , icon = 'MODIFIER')
-        box2.operator( "cyatools.locator_tobone_keep" , icon = 'MODIFIER')
+        box2.operator( "cyatools.replace_locator" , icon = 'OUTLINER_DATA_EMPTY')
+        box2.operator( "cyatools.replace_locator_facenormal" , icon = 'NORMALS_FACE')
+        box2.operator( "cyatools.group" , icon = 'GROUP')
+        box2.operator( "cyatools.locator_tobone" , icon = 'CONSTRAINT_BONE')
+        box2.operator( "cyatools.locator_tobone_keep" , icon = 'CONSTRAINT_BONE')
 
-        box3 = col.box()
-        box3.label( text = 'child' )
-        box3.operator( "cyatools.preserve_child" , icon = 'PINNED')
-        box3.operator( "cyatools.restore_child" , icon = 'UNPINNED')
+        # box3 = col.box()
+        # box3.label( text = 'child' )
+        # box3.operator( "cyatools.preserve_child" , icon = 'PINNED')
+        # box3.operator( "cyatools.restore_child" , icon = 'UNPINNED')
 
         #トランスフォーム
         box3 = col.box()
         box3.label( text = 'transform' )
-        box3.operator( "cyatools.trasnform_apply_x" , icon = 'PINNED')
-        box3.operator( "cyatools.trasnform_reset_cursor_rot" , icon = 'PINNED')
-        box3.operator( "cyatools.modeling_pivot_by_facenormal" , icon = 'PINNED')
+        box3.operator( "cyatools.trasnform_apply_x" , icon = 'AXIS_SIDE')
+        box3.operator( "cyatools.trasnform_reset_cursor_rot" , icon = 'CON_ROTLIKE')
+        box3.operator( "cyatools.modeling_pivot_by_facenormal" , icon = 'NORMALS_FACE')
 
         box5 = col.box()
         box5.label( text = 'modeling' )
-        box5.operator( "cyatools.modeling_del_half_x")
-        box5.operator( "cyatools.modeling_select_linked_faces")
-        box5.operator( "cyatools.modeling_mirror_l_to_r")
+        box5.operator( "cyatools.modeling_del_half_x" , icon = 'MOD_TRIANGULATE')
+        box5.operator( "cyatools.modeling_select_linked_faces" , icon = 'SNAP_FACE')
+        box5.operator( "cyatools.modeling_mirror_l_to_r" , icon = 'MOD_MIRROR')
 
         box5 = col.box()
         box5.label( text = 'material' )
-        box5.operator( "cyatools.material_reload_texture")
-        box5.operator( "cyatools.material_remove_submaterial")
+        box5.operator( "cyatools.material_reload_texture", icon = 'TEXTURE')
+        box5.operator( "cyatools.material_remove_submaterial", icon = 'NODE_MATERIAL')
         
 
         #instacne
         col = row.column()
         box3 = col.box()
         box3.label( text = 'instance' )
-        box3.operator( "cyatools.instance_select_collection" , icon = 'MODIFIER')
-        box3.operator( "cyatools.instance_instancer" , icon = 'MODIFIER')
-        box3.operator( "cyatools.instance_substantial" , icon = 'MODIFIER')
-        box3.operator( "cyatools.instance_replace" , icon = 'MODIFIER')
-        #box3.operator( "cyatools.instance_invert_last_selection" , icon = 'MODIFIER')
+        box3.operator( "cyatools.instance_select_collection" , icon = 'RESTRICT_SELECT_OFF')
+        box3.operator( "cyatools.instance_instancer" , icon = 'DUPLICATE')
+        box3.operator( "cyatools.instance_substantial" , icon = 'MOD_SUBSURF')
+        box3.operator( "cyatools.instance_replace" , icon = 'LIBRARY_DATA_OVERRIDE')
 
         box4 = col.box()
         box4.label( text = 'swap axis' )
@@ -301,7 +259,6 @@ class CYATOOLS_MT_helper_tools(Operator):
         box4.label( text = 'instance mirror transform' )
         col = box4.column()
         row = col.row()
-        #row = box4.row()
         row.operator( "cyatools.instance_mirror" , text = 'x' ).op = 'x'
         row.operator( "cyatools.instance_mirror" , text = 'y' ).op = 'y'
         row.operator( "cyatools.instance_mirror" , text = 'z' ).op = 'z'
@@ -329,10 +286,8 @@ class CYATOOLS_MT_helper_tools(Operator):
         box3.operator( "cyatools.locator_snap_bone_at_obj" , icon = 'PINNED')
         
 
-
-
-class CYATOOLS_MT_modelingtools(Operator):
-    bl_idname = "cyatools.modelingtools"
+class CYATOOLS_MT_modifier_tools(Operator):
+    bl_idname = "cyatools.modifier_tools"
     bl_label = "modifier / constraint"
 
     def execute(self, context):
@@ -340,7 +295,6 @@ class CYATOOLS_MT_modelingtools(Operator):
 
     def invoke(self, context, event):
         #アクティブオブジェクトのコンストレインの状態を取得
-        display.get_constraint_status()
         modifier.get_param()
         return context.window_manager.invoke_props_dialog(self , width=400)
 
@@ -352,22 +306,22 @@ class CYATOOLS_MT_modelingtools(Operator):
 
         row = box.row()
         box1 = row.box()
-        box1.label( text = 'Edit'  , icon='MOD_ARRAY')
+        box1.label( text = 'Select'  , icon='RESTRICT_SELECT_ON')
 
-        box1.operator( "cyatools.selectmodifiercurve" , icon = 'MODIFIER')
-        box1.operator( "cyatools.selectmodifierboolean" , icon = 'MODIFIER')
-        box1.operator( "cyatools.modifier_send_to" , icon = 'MODIFIER')
+        box1.operator( "cyatools.selectmodifiercurve" , icon = 'RESTRICT_SELECT_OFF')
+        box1.operator( "cyatools.selectmodifierboolean" , icon = 'RESTRICT_SELECT_OFF')
+        box1.operator( "cyatools.modifier_send_to" , icon = 'OUTLINER_OB_GROUP_INSTANCE')
 
 
         box2 = row.box()
-        box2.label( text = 'mod'  , icon='MOD_ARRAY')
+        box2.label( text = 'modify'  , icon='MODIFIER_OFF')
 
-        box2.prop(props, "solidify_thickness" , icon='RESTRICT_VIEW_OFF')
-        box2.prop(props, "shrinkwrap_offset" , icon='RESTRICT_VIEW_OFF')
-        box2.prop(props, "bevel_width" , icon='RESTRICT_VIEW_OFF')
+        box2.prop(props, "solidify_thickness")
+        box2.prop(props, "shrinkwrap_offset" )
+        box2.prop(props, "bevel_width")
 
         box3 = row.box()
-        box3.label( text = 'Array'  , icon='MOD_ARRAY')
+        box3.label( text = 'array modify'  , icon='MOD_ARRAY')
 
         box3.prop(props, "array_count")
         box3.prop(props, "array_offset_x" )
@@ -418,30 +372,23 @@ class CYATOOLS_MT_curvetools(Operator):
         row = layout.split(factor = 0.4, align = False)
 
         box1 = row.box()
-        box1.label( text = 'create' )
-        box1a = box1.box()
-        box1a.label( text = 'with Bevel' )
-        row1a = box1a.row()
+        box1.label( text = 'create liner' )
+        row1 = box1.row()
 
         for x in ( 'x' , 'y' , 'z' ):
-            row1a.operator( "cyatools.curve_create_with_bevel" ,text = x).dir = x
-
-        box1a = box1.box()
-        box1a.label( text = 'liner' )
-        row1a = box1a.row()
-
-        for x in ( 'x' , 'y' , 'z' ):
-            row1a.operator( "cyatools.curve_create_liner" ,text = x).dir = x
+            row1.operator( "cyatools.curve_create_liner" ,text = x).dir = x
+        box1.prop( props,"with_bevel")
+        box1.prop( props,"curve_liner")
 
         box2 = row.box()
         box2.label( text = 'bevel assign' )
-        box2.operator( "cyatools.curve_assign_bevel" , icon = 'MODIFIER')
-        box2.operator( "cyatools.curve_assign_circle_bevel" , icon = 'MODIFIER')
-        box2.operator( "cyatools.curve_assign_liner_bevel" , icon = 'MODIFIER')
+        box2.operator( "cyatools.curve_assign_bevel" , icon = 'RESTRICT_SELECT_OFF')
+        box2.operator( "cyatools.curve_assign_circle_bevel" , icon = 'CURVE_NCIRCLE')
+        box2.operator( "cyatools.curve_assign_liner_bevel" , icon = 'IPO_LINEAR')
 
         box3 = row.box()
         box3.label( text = 'select' )
-        box3.operator( "cyatools.curve_select_bevel" , icon = 'MODIFIER')
+        box3.operator( "cyatools.curve_select_bevel" , icon = 'MOD_BEVEL')
 
 
 class CYATOOLS_MT_object_applier(Operator):
@@ -539,12 +486,12 @@ class CYATOOLS_MT_skinningtools(Operator):
         box = col.box()
         box.label(text = 'influence')
         row1 = box.row()
-        row1.operator("cyatools.skinning_bind")
+        row1.operator("cyatools.skinning_bind" , icon = 'OUTLINER_DATA_ARMATURE')
         row1.prop(props, "bind_auto_bool")
 
         row1 = box.row()
-        row1.operator("cyatools.skinning_add_influence_bone")
-        row1.operator("cyatools.skinning_copy_influence_bone")
+        row1.operator("cyatools.skinning_add_influence_bone"  , icon = 'BONE_DATA')
+        row1.operator("cyatools.skinning_copy_influence_bone" , icon = 'COMMUNITY')
 
 
         box = col.box()
@@ -552,7 +499,7 @@ class CYATOOLS_MT_skinningtools(Operator):
         col1 = box.column()
 
         row1 = col1.row()
-        row1.operator("cyatools.skinning_weights_transfer").mode = 'v2'
+        row1.operator("cyatools.skinning_weights_transfer" , icon = 'COMMUNITY').mode = 'v2'
         row1.prop(props, "batch_weight_transfer_bool")
 
         row1 = col1.row()
@@ -564,8 +511,7 @@ class CYATOOLS_MT_skinningtools(Operator):
         col1 = box.column()
 
         row1 = col1.row()
-        row1.operator("cyatools.skinning_weights_mirror",text = 'mirror' ).mode = 'v2'
-
+        row1.operator("cyatools.skinning_weights_mirror",text = 'mirror'  , icon = 'MOD_MIRROR').mode = 'v2'
 
         # box = col.box()
         # box.label(text = 'weight')
@@ -590,7 +536,7 @@ class CYATOOLS_MT_skinningtools(Operator):
 
         row = box.row()
         row.alignment = 'EXPAND'
-        row.operator("cyatools.skinning_apply_not_armature_modifiers")#!!!
+        row.operator("cyatools.skinning_apply_without_armature_modifiers" , icon = 'MODIFIER')#!!!
 
         row = box.row()
         row.alignment = 'EXPAND'
@@ -599,12 +545,12 @@ class CYATOOLS_MT_skinningtools(Operator):
 
         row = box.row()
         row.alignment = 'EXPAND'
-        row.operator("cyatools.skinning_delete_unselected_vtxgroup")
+        row.operator("cyatools.skinning_delete_unselected_vtxgroup" , icon = 'RESTRICT_SELECT_OFF')
 
         box = box.box()
         box.label(text = 'Delete vtx grp with word')
         box.operator("cyatools.skinning_delete_with_word")
-        box.prop(props, "vertexgrp_string", icon='BLENDER', toggle=True)
+        box.prop(props, "vertexgrp_string", icon='FONT_DATA', toggle=True)
 
 
         box = col.box()
@@ -623,80 +569,78 @@ class CYATOOLS_MT_skinningtools(Operator):
         # box.prop(props, "vertexgrp_string", icon='BLENDER', toggle=True)
 
 
-#---------------------------------------------------------------------------------------
-#移植したツールをひとまずここにあつめる。
-#---------------------------------------------------------------------------------------
-class CYATOOLS_MT_etc(Operator):
-    bl_idname = "cyatools.etc"
-    bl_label = "etc"
 
-    def invoke(self, context, event):
-        scene.set_current()        
-        return context.window_manager.invoke_props_dialog(self, width=450)
+
+#---------------------------------------------------------------------------------------
+#リネームツール
+#リネームとオブジェクト選択に関するツール群
+#---------------------------------------------------------------------------------------
+class CYATOOLS_MT_rename(Operator):
+    bl_idname = "cyatools.rename"
+    bl_label = "rename"
 
     def execute(self, context):
         return{'FINISHED'}
 
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self , width = 400 )
 
     def draw(self, context):
         props = bpy.context.scene.cyatools_oa
         layout=self.layout
 
-        col = layout.column()
-        box = col.box()
-        row = box.row(align=False)
+        col_root = layout.column()
+        split = col_root.split(factor = 0.5, align = False)
+        box = split.box()
+        box.label(text="rename select")
+
+        col = box.column()
+        col.prop(props, "rename_string")
+                
+        row1 = col.row()
+        row1.alignment = 'LEFT'
+        row1.operator("cyatools.rename_select" , icon = 'VIEW_PAN')
+        row1.operator("cyatools.rename_dropper" , icon = 'EYEDROPPER')
+        row1.operator("cyatools.rename_common_renumber" , icon = 'LINENUMBERS_ON')
+        row1.prop(props, "rename_start_num")
+
+        split1 = col.split(factor = 0.5, align = False)
+        split1.operator("cyatools.rename_by_rule")
+
+        row2 =split1.row()
+        row2.operator("cyatools.rename_add" , text = 'Prefix').op = 'PREFIX'
+        row2.operator("cyatools.rename_add", text = 'Suffix').op = 'SUFFIX'
+        
+        box = split.box()
+        col = box.column()
+        col.operator("cyatools.rename_replace")
+        col.prop(props, "from_string")
+        col.prop(props, "to_string")
+        
+        box = col_root.box()
+        row = box.row()
 
         box1 = row.box()
-        row1 = box1.row()
-        row1.alignment = 'LEFT'
-        row1.label( text = 'x90d:' )
-        row1.operator("cyatools.transform_rotate_axis", icon='LOOP_FORWARDS').axis = 'x90d'
-        row1.operator("cyatools.transform_rotate_axis", icon='LOOP_BACK').axis = 'x-90d'
+        box1.label(text="replace")
+        col = box1.column()        
+        for s in ('high>low' , 'low>high' , '.>_' , 'delete_number'):
+            col.operator("cyatools.rename_replace_defined", text = s).op = s
 
         box1 = row.box()
-        row1 = box1.row()
-        row1.alignment = 'LEFT'
-        row1.label( text = 'y90d:' )
-        row1.operator("cyatools.transform_rotate_axis", icon='LOOP_FORWARDS').axis = 'y90d'
-        row1.operator("cyatools.transform_rotate_axis", icon='LOOP_BACK').axis = 'y-90d'
+        box1.label(text="shape name")
+        col = box1.column()        
+        for s in ('object','maya'):
+            col.operator("cyatools.rename_mesh", text = s).op = s
 
         box1 = row.box()
-        row1 = box1.row()
-        row1.alignment = 'LEFT'
-        row1.label( text = 'z90d:' )
-        row1.operator("cyatools.transform_rotate_axis", icon='LOOP_FORWARDS').axis = 'z90d'
-        row1.operator("cyatools.transform_rotate_axis", icon='LOOP_BACK').axis = 'z-90d'
-
-        box1 = row.box()
-        row1 = box1.row()
-        row1.alignment = 'LEFT'
-        row1.label( text = '180:' )
-
-        row1.operator("cyatools.transform_rotate_axis", icon='LOOP_BACK').axis = 'x180d'
-        row1.operator("cyatools.transform_rotate_axis", icon='LOOP_BACK').axis = 'y180d'
-        row1.operator("cyatools.transform_rotate_axis", icon='LOOP_BACK').axis = 'z180d'
-
-        box = col.box()
-        row = box.row()        
-        row.operator("cyatools.transform_scale_abs", icon='LOOP_BACK')
-        row.operator("cyatools.constraint_to_bone", icon='LOOP_BACK')
-        row.operator("cyatools.reference_make_proxy", icon='LOOP_BACK')
-        row.operator("cyatools.refernce_make_link_draw", icon='LOOP_BACK')
-
-        box = col.box()
-        row = box.row()        
-
-        box.operator("cyatools.invert_pose_blendshape")
-
-        # row = box.row()
-        # row.operator("cyatools.create_mesh_from_bone")
-        # row.prop(props,"cloth_open")
+        box1.label(text="add")
+        col = box1.column()        
+        for s in ('org',):
+            col.operator("cyatools.rename_add_defined", text = s).op = s
 
 #---------------------------------------------------------------------------------------
 #Operator
 #---------------------------------------------------------------------------------------
-
-
 #---------------------------------------------------------------------------------------
 #Curve Tool
 #---------------------------------------------------------------------------------------
@@ -729,21 +673,14 @@ class CYATOOLS_OT_curve_assign_liner_bevel(Operator):
             return {'FINISHED'}
 
 class CYATOOLS_OT_curve_create_liner(Operator):
-        """直線カーブを作成"""
+        """カーブ作成
+with bebelをOnにするとサークルでベベルする
+linerをOnにするとカーブがPolyLineになる"""
         bl_idname = "cyatools.curve_create_liner"
         bl_label = "add liner"
         dir : StringProperty()
         def execute(self, context):
             curve.create_liner(self.dir)
-            return {'FINISHED'}
-
-class CYATOOLS_OT_curve_create_with_bevel(Operator):
-        """ベベル込みのカーブを作成する。"""
-        bl_idname = "cyatools.curve_create_with_bevel"
-        bl_label = "bevel curve"
-        dir : StringProperty()        
-        def execute(self, context):
-            curve.create_with_bevel(self.dir)
             return {'FINISHED'}
 
 class CYATOOLS_OT_curve_select_bevel(Operator):
@@ -804,25 +741,6 @@ class CYATOOLS_OT_locator_tobone_keep(Operator):
 
     def execute(self, context):
         locator.tobone_keep()
-        return {'FINISHED'}
-
-
-#親子付けの際、ワールドのトランスフォームを維持したいので親のマトリックスを掛け合わせる
-class CYATOOLS_OT_preserve_child(Operator):
-    """一時的に子供を別ノードに逃がす。親を選択して実行する"""
-    bl_idname = "cyatools.preserve_child"
-    bl_label = "preserve"
-    def execute(self, context):
-        locator.preserve_child()
-        return {'FINISHED'}
-
-#親子付けの際、ワールドのトランスフォームを維持したいので親のマトリックスを掛け合わせる
-class CYATOOLS_OT_restore_child(Operator):
-    """一時的に逃がした子供を復旧させる。もとの親を選択して実行する。"""
-    bl_idname = "cyatools.restore_child"
-    bl_label = "resore"
-    def execute(self, context):
-        locator.restore_child()
         return {'FINISHED'}
 
 
@@ -1110,24 +1028,6 @@ class CYATOOLS_OT_constraint_asign(Operator):
 #helper
 #---------------------------------------------------------------------------------------
 
-#選択したモデルの所属するコレクションをハイド
-# class CYATOOLS_OT_collections_hide(Operator):
-#     """選択したオブジェクトが属するコレクションをハイド"""
-#     bl_idname = "cyatools.collections_hide"
-#     bl_label = "hide"
-#     def execute(self, context):
-#         locator.collection_hide()
-#         return {'FINISHED'}
-
-# #現在のコレクション表示状態を保持する
-# class CYATOOLS_OT_preserve_collections(Operator):
-#     """現在のコレクション表示状態を保持する"""
-#     bl_idname = "cyatools.preserve_collections"
-#     bl_label = ""
-#     def execute(self, context):
-#         display.preserve_collections()
-#         return {'FINISHED'}
-
 # Add bone at the selected objects
 class CYATOOLS_OT_locator_add_bone(Operator):
     """# Add bone at the selected objects"""
@@ -1262,79 +1162,67 @@ class CYATOOLS_OT_material_remove_submaterial(Operator):
 #etc
 #---------------------------------------------------------------------------------------
 
-#オブジェクトをX軸ミラーコンストレインする
-class CYATOOLS_OT_transform_rotate_axis(Operator):
-    """ローカル軸を中心に回転"""
-    bl_idname = "cyatools.transform_rotate_axis"
-    bl_label = ""
-    axis : StringProperty(default='x90') 
-    def execute(self, context):
-        etc.transform_rotate_axis(self.axis)
-        return {'FINISHED'}
+# class CYATOOLS_OT_transform_rotate_axis(Operator):
+#     """ローカル軸を中心に回転"""
+#     bl_idname = "cyatools.transform_rotate_axis"
+#     bl_label = ""
+#     axis : StringProperty(default='x90') 
+#     def execute(self, context):
+#         etc.transform_rotate_axis(self.axis)
+#         return {'FINISHED'}
 
-#オブジェクトをX軸ミラーコンストレインする
-class CYATOOLS_OT_transform_scale_abs(Operator):
-    """スケールを正にする"""
-    bl_idname = "cyatools.transform_scale_abs"
-    bl_label = "scale abs"
-    def execute(self, context):
-        etc.transform_scale_abs()
-        return {'FINISHED'}
+# class CYATOOLS_OT_transform_scale_abs(Operator):
+#     """スケールを正にする"""
+#     bl_idname = "cyatools.transform_scale_abs"
+#     bl_label = "scale abs"
+#     def execute(self, context):
+#         etc.transform_scale_abs()
+#         return {'FINISHED'}
 
-#オブジェクトをX軸ミラーコンストレインする
-class CYATOOLS_OT_constraint_to_bone(Operator):
-    """選択されているボーンでコンストレインする\nモデル、アーマチュアの順に選択しEditモードでボーンを選択して実行する"""
-    bl_idname = "cyatools.constraint_to_bone"
-    bl_label = "constraint to bone"
-    def execute(self, context):
-        etc.constraint_to_bone()
-        return {'FINISHED'}
+# class CYATOOLS_OT_constraint_to_bone(Operator):
+#     """選択されているボーンでコンストレインする\nモデル、アーマチュアの順に選択しEditモードでボーンを選択して実行する"""
+#     bl_idname = "cyatools.constraint_to_bone"
+#     bl_label = "constraint to bone"
+#     def execute(self, context):
+#         etc.constraint_to_bone()
+#         return {'FINISHED'}
 
-class CYATOOLS_OT_invert_pose_blendshape(Operator):
-    """スキンバインドされたブレンドシェイプを元の姿勢に戻す。\nブレンドシェイプのスキンモデルとアーマチャーを選択して実行する。"""
-    bl_idname = "cyatools.invert_pose_blendshape"
-    bl_label = "Invert Pose"
-    def execute(self, context):    
-        blendshape.invert()
-        return {'FINISHED'}        
-
-# class CYATOOLS_OT_create_mesh_from_bone(Operator):
-#     """選択ボーンからメッシュを作成する。ルートを選択して実行。名前でソートされる。"""
-#     bl_idname = "cyatools.create_mesh_from_bone"
-#     bl_label = "create mesh from bone"
+# class CYATOOLS_OT_invert_pose_blendshape(Operator):
+#     """スキンバインドされたブレンドシェイプを元の姿勢に戻す。\nブレンドシェイプのスキンモデルとアーマチャーを選択して実行する。"""
+#     bl_idname = "cyatools.invert_pose_blendshape"
+#     bl_label = "Invert Pose"
 #     def execute(self, context):    
-#         etc.create_mesh_from_bone()
+#         blendshape.invert()
 #         return {'FINISHED'}        
-
 
 #---------------------------------------------------------------------------------------
 #リファレンス関連ツール
 #---------------------------------------------------------------------------------------
 
-#複数のモデルを同時にプロキシ化
-class CYATOOLS_OT_refernce_make_proxy(Operator):
-    """選択した複数のモデルをプロキシする"""
-    bl_idname = "cyatools.reference_make_proxy"
-    bl_label = "make proxy"
-    def execute(self, context):
-        etc.refernce_make_proxy()
-        return {'FINISHED'}
+# #複数のモデルを同時にプロキシ化
+# class CYATOOLS_OT_refernce_make_proxy(Operator):
+#     """選択した複数のモデルをプロキシする"""
+#     bl_idname = "cyatools.reference_make_proxy"
+#     bl_label = "make proxy"
+#     def execute(self, context):
+#         etc.refernce_make_proxy()
+#         return {'FINISHED'}
 
-#シンボリックリンク作成
-class CYATOOLS_OT_refernce_make_link(Operator):
-    bl_idname = "cyatools.refernce_make_link_draw"
-    bl_label = "make symbolic link"
-    filepath : bpy.props.StringProperty(subtype="DIR_PATH")
-    directory : bpy.props.StringProperty(subtype="DIR_PATH")
+# #シンボリックリンク作成
+# class CYATOOLS_OT_refernce_make_link(Operator):
+#     bl_idname = "cyatools.refernce_make_link_draw"
+#     bl_label = "make symbolic link"
+#     filepath : bpy.props.StringProperty(subtype="DIR_PATH")
+#     directory : bpy.props.StringProperty(subtype="DIR_PATH")
 
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
+#     def invoke(self, context, event):
+#         context.window_manager.fileselect_add(self)
+#         return {'RUNNING_MODAL'}
 
-    def execute(self, context):
-        print(self.directory)
-        etc.refernce_make_link(self.directory)
-        return {'FINISHED'}
+#     def execute(self, context):
+#         print(self.directory)
+#         etc.refernce_make_link(self.directory)
+#         return {'FINISHED'}
 
 
 
@@ -1390,8 +1278,8 @@ class CYATOOLS_OT_skinning_assign_maxweights(Operator):
 class CYATOOLS_OT_skinning_weights_transfer(Operator):
     """複数モデルのウェイト転送
 コピー先を複数選択し、最後にコピー元のモデルを選択して実行
-batchにチェックを入れるとsuffixにいれた文字が後ろについた
-モデルをコピー元とする(ex:model_back>model)
+batchにチェックを入れると、文字列をsuffixとしたモデルを
+コピー元として転送する(ex:model_back > model)
 """
 
     bl_idname = "cyatools.skinning_weights_transfer"
@@ -1410,18 +1298,18 @@ batchにチェックを入れるとsuffixにいれた文字が後ろについた
 #         return {'FINISHED'}
 
 
-class CYATOOLS_OT_skinning_apply_not_armature_modifiers(Operator):
+class CYATOOLS_OT_skinning_apply_without_armature_modifiers(Operator):
     """アーマチュア以外のモディファイヤをApplyする。"""
-    bl_idname = "cyatools.skinning_apply_not_armature_modifiers"
-    bl_label = "apply not armature"
+    bl_idname = "cyatools.skinning_apply_without_armature_modifiers"
+    bl_label = "apply without armature"
     def execute(self, context):
-        skinning.apply_not_armature_modifiers()
+        skinning.apply_without_armature_modifiers()
         return {'FINISHED'}
 
 class CYATOOLS_OT_skinning_delete_allweights(Operator):
     """すべての頂点グループのウェイトを０にする"""
     bl_idname = "cyatools.skinning_delete_allweights"
-    bl_label = "all weight"
+    bl_label = "all"
     def execute(self, context):
         skinning.delete_allweights()
         return {'FINISHED'}
@@ -1462,8 +1350,6 @@ class CYATOOLS_OT_skinning_delete_unselected_vtxgroup(Operator):
         skinning.delete_unselected_vtxgroup()
         return {'FINISHED'}
 
-
-
 class CYATOOLS_OT_skinning_delete_all_vtxgrp(Operator):
     """現在アサインされているバーテックスグループをすべて削除する"""
     bl_idname = "cyatools.skinning_delete_all_vtxgrp"
@@ -1472,75 +1358,9 @@ class CYATOOLS_OT_skinning_delete_all_vtxgrp(Operator):
         skinning.delete_all_vtxgrp()
         return {'FINISHED'}
 
-
 #---------------------------------------------------------------------------------------
-#リネームツール
-#リネームとオブジェクト選択に関するツール群
+#Rename
 #---------------------------------------------------------------------------------------
-class CYATOOLS_MT_rename(Operator):
-    bl_idname = "cyatools.rename"
-    bl_label = "rename"
-
-    def execute(self, context):
-        return{'FINISHED'}
-
-    def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self , width = 400 )
-
-    def draw(self, context):
-        props = bpy.context.scene.cyatools_oa
-        layout=self.layout
-
-        col_root = layout.column()
-        split = col_root.split(factor = 0.5, align = False)
-        box = split.box()
-        box.label(text="rename select")
-
-        col = box.column()
-        col.prop(props, "rename_string")
-                
-        row1 = col.row()
-        row1.alignment = 'LEFT'
-        row1.operator("cyatools.rename_select" , icon = 'VIEW_PAN')
-        row1.operator("cyatools.rename_dropper" , icon = 'EYEDROPPER')
-        row1.operator("cyatools.rename_common_renumber" , icon = 'LINENUMBERS_ON')
-        row1.prop(props, "rename_start_num")
-
-        split1 = col.split(factor = 0.5, align = False)
-        split1.operator("cyatools.rename_by_rule")
-
-        row2 =split1.row()
-        row2.operator("cyatools.rename_add" , text = 'Prefix').op = 'PREFIX'
-        row2.operator("cyatools.rename_add", text = 'Suffix').op = 'SUFFIX'
-        
-        box = split.box()
-        col = box.column()
-        col.operator("cyatools.rename_replace")
-        col.prop(props, "from_string")
-        col.prop(props, "to_string")
-        
-        box = col_root.box()
-
-        row = box.row()
-
-        box1 = row.box()
-        box1.label(text="replace")
-        col = box1.column()        
-        for s in ('high>low' , 'low>high' , '.>_' , 'delete_number'):
-            col.operator("cyatools.rename_replace_defined", text = s).op = s
-
-        box1 = row.box()
-        box1.label(text="shape name")
-        col = box1.column()        
-        for s in ('object','maya'):
-            col.operator("cyatools.rename_mesh", text = s).op = s
-
-        box1 = row.box()
-        box1.label(text="add")
-        col = box1.column()        
-        for s in ('org',):
-            col.operator("cyatools.rename_add_defined", text = s).op = s
-
 
 class CYATOOLS_OT_rename_continuous_renumber(Operator):
     """入力した文字列の末尾に連番を振るリネーム"""
@@ -1551,9 +1371,11 @@ class CYATOOLS_OT_rename_continuous_renumber(Operator):
         return {'FINISHED'}
 
 class CYATOOLS_OT_rename_by_rule(Operator):
-    """複数選択し、最後に選択したノード名のネーミングルールに従ってリネームする。"""
+    """複数選択、アクティブなノード名のネーミングルールに従ってリネームする
+アクティブノードがmodel_01なら、他のモデル名に
+model_02,model_03と連番でリネームする"""
     bl_idname = "cyatools.rename_by_rule"
-    bl_label = "rename by rule"
+    bl_label = "follow active"
     def execute(self, context):
         rename.by_rule()
         return {'FINISHED'}
@@ -1578,16 +1400,17 @@ class CYATOOLS_OT_rename_replace(Operator):
 
 class CYATOOLS_OT_rename_replace_defined(Operator):
     bl_idname = "cyatools.rename_replace_defined"
-    bl_label = ""
+    bl_label = "名前の一部を差し替える"
     op : StringProperty()
     def execute(self, context):
         rename.replace_defined(self.op)
         return {'FINISHED'}
 
 class CYATOOLS_OT_rename_mesh(Operator):
-    """メッシュの名前をオブジェクト名に合わせる"""
+    """mesh : メッシュの名前をオブジェクト名に合わせる
+maya : メッシュ名をオブジェクト名に合わせ、末尾にShapeをつける"""
     bl_idname = "cyatools.rename_mesh"
-    bl_label = "メッシュ名をオブジェクト名に修正"
+    bl_label = ""
     op : StringProperty()
     def execute(self, context):
         rename.mesh(self.op)
@@ -1595,7 +1418,7 @@ class CYATOOLS_OT_rename_mesh(Operator):
 
 class CYATOOLS_OT_rename_add_defined(Operator):
     bl_idname = "cyatools.rename_add_defined"
-    bl_label = ""
+    bl_label = "名前の末尾にボタンの文字を追加"
     op : StringProperty()
     def execute(self, context):
         rename.add_defined(self.op)
@@ -1684,16 +1507,17 @@ classes = (
 
     # UI Panel
     CYATOOLS_PT_toolPanel,
-    CYATOOLS_MT_helper_tools,
-    CYATOOLS_MT_modelingtools,
+    CYATOOLS_MT_modeling_tools,
+
+    CYATOOLS_MT_modifier_tools,
     CYATOOLS_MT_object_applier,
     CYATOOLS_MT_curvetools,
     #CYATOOLS_MT_materialtools,
-    CYATOOLS_MT_etc,
+    #CYATOOLS_MT_etc,
     #CYATOOLS_MT_particletools,
 
     # Curve Tool
-    CYATOOLS_OT_curve_create_with_bevel,
+    #CYATOOLS_OT_curve_create_with_bevel,
     CYATOOLS_OT_curve_create_liner,
     CYATOOLS_OT_curve_assign_bevel,
     CYATOOLS_OT_curve_assign_circle_bevel,
@@ -1705,8 +1529,8 @@ classes = (
     CYATOOLS_OT_replace_locator,
     CYATOOLS_OT_replace_locator_facenormal,
     CYATOOLS_OT_group,
-    CYATOOLS_OT_restore_child,
-    CYATOOLS_OT_preserve_child,
+    # CYATOOLS_OT_restore_child,
+    # CYATOOLS_OT_preserve_child,
     # CYATOOLS_OT_collections_hide,
     # CYATOOLS_OT_preserve_collections,
     CYATOOLS_OT_collection_sort,
@@ -1761,13 +1585,12 @@ classes = (
     CYATOOLS_OT_trasnform_reset_cursor_rot,
 
     # etc
-    CYATOOLS_OT_transform_rotate_axis,
-    CYATOOLS_OT_transform_scale_abs,
-    CYATOOLS_OT_constraint_to_bone,
-    CYATOOLS_OT_refernce_make_proxy,
-    CYATOOLS_OT_refernce_make_link,
-    CYATOOLS_OT_invert_pose_blendshape,
-    #CYATOOLS_OT_create_mesh_from_bone,
+    # CYATOOLS_OT_transform_rotate_axis,
+    # CYATOOLS_OT_transform_scale_abs,
+    # CYATOOLS_OT_constraint_to_bone,
+    # CYATOOLS_OT_refernce_make_proxy,
+    # CYATOOLS_OT_refernce_make_link,
+    # CYATOOLS_OT_invert_pose_blendshape,
 
     #リネーム
     CYATOOLS_MT_rename,
@@ -1790,7 +1613,7 @@ classes = (
     CYATOOLS_OT_skinning_weights_mirror,
     CYATOOLS_OT_skinning_assign_maxweights,
     CYATOOLS_OT_skinning_weights_transfer,
-    CYATOOLS_OT_skinning_apply_not_armature_modifiers,
+    CYATOOLS_OT_skinning_apply_without_armature_modifiers,
     CYATOOLS_OT_skinning_delete_allweights,
     CYATOOLS_OT_skinning_delete_unselectedweights,
     CYATOOLS_OT_skinning_delete_with_word,
