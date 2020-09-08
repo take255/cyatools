@@ -3,7 +3,6 @@ import imp
 import math
 from mathutils import ( Vector , Matrix )
 
-
 from . import utils
 imp.reload(utils)
 
@@ -164,52 +163,6 @@ class VecComp:
         representaion method
         """
         return self.axis
-
-
-
-# class BoneDirectionTools(bpy.types.Operator):
-#     bl_idname = "rigtool.bonedirectiontools"
-#     bl_label = "ボーン向きツール"
-
-#     def execute(self, context):
-#         return {'FINISHED'}
-
-#     def invoke(self, context, event):
-#         return context.window_manager.invoke_props_dialog(self)
-
-#     def draw(self, context):
-#         scn = context.scene
-
-#         row = self.layout.row(align=False)
-#         box = row.box()
-#         box.label(text = 'シングルボーン')
-
-#         box.operator("rigtool.position_at_joint")
-#         box.operator("rigtool.direct_at_joint")
-#         box.operator("rigtool.align_bone_on_firstbone")
-#         box.operator("rigtool.aim_near_global_axis")
-
-
-#         row = self.layout.row(align=False)
-#         box = row.box()
-#         box.label(text = '複数ボーン')
-
-#         box.operator("rigtool.setup_twobone_plane")
-#         box.operator("rigtool.align_bone_on_plane")
-#         box.operator("rigtool.adjust_roll_value")
-#         box.operator("rigtool.align_bone_at_flontview")
-
-
-#         row = self.layout.row(align=False)
-#         box = row.box()
-#         box.label(text = 'ロール')
-
-#         row = box.row(align=True)
-#         row.operator("rigtool.roll_90degree")
-#         row.operator("rigtool.roll_90degree_neg")
-#         row.operator("rigtool.roll_180degree")
-#         row.operator("rigtool.roll_fit_grobal_plane")
-
 
 
 #---------------------------------------------------------------------------------------
@@ -469,55 +422,6 @@ def axis_swap(axis):
 
         bone.head = head
         bone.tail = head + tail
-
-
-        # z = Vector((mat[0][2],mat[1][2],mat[2][2]))
-        # z.normalize()
-
-        # #Xvectorを回転の正負判定に使う
-        # #Ｘ軸と法線の内積が正なら＋、負ならー
-        # x = Vector((mat[0][0],mat[1][0],mat[2][0]))
-        # sign= x.dot(nor)/math.fabs(x.dot(nor))
-
-        # cos_sita= z.dot(nor)
-        # sita = math.acos( cos_sita );
-
-        # if props.axismethod == 'old':
-        #     bone.roll = sita*sign
-
-        # elif props.axismethod == 'new':
-        #     bone.roll = sita*sign + math.pi/2
-
-# #X-axis MirrorがＯＮになっているとうまく実行できないので注意
-# class Roll_90degree(bpy.types.Operator):
-#     """ロールを90°回転させる。"""
-#     bl_idname = "rigtool.roll_90degree"
-#     bl_label = "90°"
-
-#     def execute(self, context):
-#         for bone in bpy.context.selected_bones:
-#             bone.roll += math.pi/2
-#         return {'FINISHED'}
-
-# class Roll_90degree_neg(bpy.types.Operator):
-#     """ロールを-90°回転させる。"""
-#     bl_idname = "rigtool.roll_90degree_neg"
-#     bl_label = "-90°"
-
-#     def execute(self, context):
-#         for bone in bpy.context.selected_bones:
-#             bone.roll -= math.pi/2
-#         return {'FINISHED'}
-
-# class Roll_180degree(bpy.types.Operator):
-#     """ロールを-90°回転させる。"""
-#     bl_idname = "rigtool.roll_180degree"
-#     bl_label = "180°"
-
-#     def execute(self, context):
-#         for bone in bpy.context.selected_bones:
-#             bone.roll += math.pi
-#         return {'FINISHED'}
 
 
 #---------------------------------------------------------------------------------------
