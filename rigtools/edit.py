@@ -4,24 +4,8 @@ import math
 from mathutils import ( Vector , Matrix )
 
 
-#from . import lib
 from . import utils
-
 imp.reload(utils)
-
-
-#選択されたチェインのルートから先端までのボーンを作成
-#ロールは一番目のボーンに合わせる
-def genarate_bone_from_chain( first , second , bonename):
-    utils.mode_e()
-    amt = bpy.context.object
-    target = amt.data.edit_bones.new(bonename)
-    target.head = amt.data.edit_bones[first].head
-    target.tail = amt.data.edit_bones[second].tail
-    target.roll = amt.data.edit_bones[first].roll
-    #target.parent = root
-    return target.name
-
 
 #---------------------------------------------------------------------------------------
 #長さ調整
@@ -34,8 +18,6 @@ def length_uniform():
     selected = utils.get_selected_bones()
     active = utils.get_active_bone()
 
-    #utils.mode_e()
-    #act_bone = amt.data.edit_bones[ props.allbones[-1].name ]
     vec = Vector(active.head) - Vector(active.tail)
     length = vec.length
 
@@ -63,17 +45,17 @@ def length_half():
 #最初に選択したボーンの根本から、最後に選択したボーンの先端までのボーンを生成する
 #---------------------------------------------------------------------------------------
 def genarate_bone_from2():
-    props = bpy.context.scene.cyarigtools_props
-    print(props.handler_through)
 
-    first = props.allbones[0].name
-    last = props.allbones[-1].name
+    amt = bpy.context.object
 
-    props.handler_through = True
-    #root = utils.rigroot()
-    target = genarate_bone_from_chain(first , last , 'ctr.Bone')
+    selected = utils.bone.sort()
+    bone1 = amt.data.edit_bones[selected[0]]
+    bone2 = amt.data.edit_bones[selected[1]]
 
-    props.handler_through = False
+    target = amt.data.edit_bones.new(bone1.name)
+    target.head = bone1.head
+    target.tail = bone2.tail
+    target.roll = bone1.roll
     
 
 #---------------------------------------------------------------------------------------

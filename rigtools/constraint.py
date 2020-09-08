@@ -347,7 +347,7 @@ TRANSFORM_TYPE = (('LOCATION','LOCATION',''),('ROTATION','ROTATION',''),('SCALE'
 class KIARIGTOOLS_MT_constrainttools(bpy.types.Operator):
     """複数ボーンをコンストレインする\nリストに対象のボーンを登録して実行する\nボタンを押すとUIが起動する\n選択されたものをコンストレイン元とし、チェックされたものを対象とする。"""
     bl_idname = "cyarigtools.constrainttools"
-    bl_label = "constraint tools"
+    bl_label = "add constraint"
 
     const_type : bpy.props.EnumProperty(items = (
     ('COPY_TRANSFORMS','TRANSFORM',''),

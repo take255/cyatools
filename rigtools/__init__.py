@@ -68,25 +68,6 @@ def cyarigtools_handler(scene):
 
     props.armature_name = amt.name
 
-
-    #amt = bpy.data.objects["Armature"]
-    # for b in amt.pose.bones:
-    #     if b.name == 'ctr.arm.l':
-    #         val = b.get('ikfk_l')
-    #         if val != None:
-    #             props.arm_ikfk_l = val
-            # arm_stretch_l : FloatProperty( name = "stretch_l", min=0.001 , max=1.0, default=1.0)
-            # arm_ikfk_l : FloatProperty( name = "ikfk_l", min=0.0 , max=1.0, default=1.0)
-
-            #print(b.ikfk_l)
-
-
-    # if props.handler_through:
-    #     return
-
-    # if utils.current_mode() == 'OBJECT':
-    #     return
-
     selected = utils.get_selected_bones()
     #ボーンが何も選択されていなければリストをクリアする
     if selected == []:
@@ -96,7 +77,6 @@ def cyarigtools_handler(scene):
         if utils.current_mode() == 'POSE':
             act_bone = bpy.context.active_pose_bone.name
         elif utils.current_mode() == 'EDIT':
-            #print(bpy.context.active_bone.name)
             act_bone = bpy.context.active_bone.name
             
 
@@ -113,14 +93,8 @@ def cyarigtools_handler(scene):
             if not bone.name in [x.name for x in selected]:
                 index_notExists.append(i)
 
-
         for index in reversed(index_notExists):
              props.allbones.remove(index)
-
-
-        # print(utils.get_selected_bones())
-        # for bone in props.allbones:
-        #     print(bone.name)
 
 
 #---------------------------------------------------------------------------------------
@@ -152,15 +126,6 @@ class CYARIGTOOLS_Props_OA(PropertyGroup):
                 prop_val = '%s_%s_%s' % (r,p,lr)
                 exec('%s : FloatProperty(  name = \"%s\",min=0.0 , max=1.0, default=1.0 , update = cmd.rig_change_ctr )' % ( prop_val ,lr ) )
 
-    # arm_stretch_l : FloatProperty(  name = "l",min=0.0 , max=1.0, default=1.0 , update = cmd.rig_change_ctr )
-    # arm_stretch_r : FloatProperty( name = "r", min=0.0 , max=1.0, default=1.0 , update = cmd.rig_change_ctr )
-    # arm_ikfk_l : FloatProperty( name = "l", min=0.0 , max=1.0, default=1.0 , update = cmd.rig_change_ctr )
-    # arm_ikfk_r : FloatProperty( name = "r", min=0.0 , max=1.0, default=1.0 , update = cmd.rig_change_ctr )
-
-    # leg_stretch_l : FloatProperty(  name = "l",min=0.0 , max=1.0, default=1.0 , update = cmd.rig_change_ctr )
-    # leg_stretch_r : FloatProperty( name = "r", min=0.0 , max=1.0, default=1.0 , update = cmd.rig_change_ctr )
-    # leg_ikfk_l : FloatProperty( name = "l", min=0.0 , max=1.0, default=1.0 , update = cmd.rig_change_ctr )
-    # leg_ikfk_r : FloatProperty( name = "r", min=0.0 , max=1.0, default=1.0 , update = cmd.rig_change_ctr )
 
     axis_forward : EnumProperty(items = AXIS , name = 'forward',default = '-Z' )
     axis_up : EnumProperty(items = AXIS , name = 'up' ,default = 'Y')
@@ -221,23 +186,8 @@ class CYARIGTOOLS_MT_rigcontrolpanel(bpy.types.Operator):
                     if val != None:
                         exec('props.%s_ikfk_%s = val' % ( part , lr ))
 
-        # for b in amt.pose.bones:
-        #     if b.name == 'ctr.arm.l':
-        #         val = b.get('ikfk_l')
-        #         if val != None:
-        #             props.arm_ikfk_l = val
-        #         val = b.get('stretch_l')
-        #         if val != None:
-        #             props.arm_ikfk_l = val
-
-
-        #     elif b.name == 'ctr.arm.r':
-        #         val = b.get('ikfk_r')
-        #         if val != None:
-        #             props.arm_ikfk_r = val
 
         return context.window_manager.invoke_props_dialog(self , width=400)
-
 
     def draw(self, context):
         props = bpy.context.scene.cyarigtools_props        
@@ -245,7 +195,6 @@ class CYARIGTOOLS_MT_rigcontrolpanel(bpy.types.Operator):
         col = self.layout.column(align=False)
 
         box = col.box()
-        #box.label(text = 'rigtool')
 
         box.prop(props, "armature_name")
         row = box.row()
@@ -253,8 +202,6 @@ class CYARIGTOOLS_MT_rigcontrolpanel(bpy.types.Operator):
         row.operator("cyarigtools.posetool_paste_matrix",icon = 'OBJECT_DATA')
 
         row  = col.column()
-        # rig_ui( props ,  row , 'arm' , 'l')
-        # rig_ui( props ,  row , 'leg' , 'l')
 
         box = row.box()
         row = box.row()
@@ -292,7 +239,6 @@ class CYARIGTOOLS_MT_rigcontrolpanel(bpy.types.Operator):
 
 
 def rig_ui_( props , row , parts , lr ):
-    #row = box.row()
     box1 = row.box()
     box1.label(text = '%s' % parts )
 
@@ -327,39 +273,6 @@ def rig_ui_( props , row , parts , lr ):
     row.operator("cyarigtools.rigctr_arm",icon = 'OBJECT_DATA')
     row.operator("cyarigtools.rigctr_arm",icon = 'OBJECT_DATA')
 
-
-
-    # box3 = box1.box()
-    # box3.label(text = 'ikfk')
-    # row = box3.row()
-    # row.prop(props, "%s_ikfk_%s"  % (parts , lr) )
-    # row.operator("cyarigtools.rigctr_arm",icon = 'OBJECT_DATA')
-    # row.operator("cyarigtools.rigctr_arm",icon = 'OBJECT_DATA')
-
-    # box3 = box1.box()
-    # box3.label(text = 'ikfk')
-    # row = box3.row()
-    # row.prop(props, "%s_ikfk_%s"  % (parts , lr) )
-    # row.operator("cyarigtools.rigctr_arm",icon = 'OBJECT_DATA')
-    # row.operator("cyarigtools.rigctr_arm",icon = 'OBJECT_DATA')
-
-
-
-#---------------------------------------------------------------------------------------
-#UI Preference
-#---------------------------------------------------------------------------------------
-# class CYARIGTOOLS_MT_addonpreferences(AddonPreferences):
-#     bl_idname = __name__
- 
-#     shape_path : StringProperty(default = RIGSHAPEPATH )
-
-#     def draw(self, context):
-#         layout = self.layout
-#         layout.label(text='Rig Shape Path')
-#         col = layout.column()
-#         col.prop(self, 'shape_path',text = 'shape_path', expand=True)
-
-
 #---------------------------------------------------------------------------------------
 #リグセットアップツール
 #---------------------------------------------------------------------------------------
@@ -380,15 +293,10 @@ class CYARIGTOOLS_MT_rigsetuptools(bpy.types.Operator):
         box = col_root.box()
         box.prop(props,'axismethod')
 
-
-
-        #row = self.layout.row(align=False)
         row = col_root.row(align=False)
         box = row.box()
 
         box.label(text = 'rigshape')
-        #row1 = box.row(align=True)
-        #row1.alignment = 'EXPAND'
         box.operator("cyarigtools.rigshape_selector",icon = 'OBJECT_DATA')
         box.operator("cyarigtools.rigshape_revert",icon = 'BONE_DATA')
         box.prop(props, "rigshape_scale", icon='BLENDER', toggle=True)
@@ -468,11 +376,10 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         box = col_root.box()
         box.prop(props,'axismethod')
 
-        row = col_root.split(factor = 0.3, align = False)
+        row = col_root.split(factor = 0.4, align = False)
 
-        #row = col_root.row()
+        #上部左
         col = row.box()
-
         box = col.box()
         box.label(text = 'length')
         box.operator("cyarigtools.edit_length_uniform")
@@ -481,12 +388,25 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         box = col.box()
         box.label(text = 'modify')
         box.operator("cyarigtools.edit_genarate_symmetry")
+        row.operator("cyarigtools.edit_connect_chain")
 
 
         box = col.box()
         box.label(text = 'generate')
         box.operator("cyarigtools.edit_genarate_bone_from2")
 
+        box = col.box()
+        box.label(text = 'constraint')
+        box.prop(props,"const_influence")
+        box.prop(props,"const_showhide")
+
+        box1 = box.box()
+        box1.label(text = 'delete')
+        row1 = box1.row()
+        row1.operator("cyarigtools.edit_constraint_cleanup")
+        row1.operator("cyarigtools.edit_constraint_empty_cleanup")
+
+        #上部中央
         box = row.box()
         col1 = box.column()
         row1 = col1.row()
@@ -503,8 +423,6 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         box1.operator("cyarigtools.edit_align_on_plane")
         box1.operator("cyarigtools.edit_align_at_flontview")
 
-
-        #box = col_root.box()
         box = col1.box()
         box.label(text = 'direction')
         col = box.column()
@@ -540,30 +458,11 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         row1.prop(props, 'axis_forward',text = 'fwd')
         row1.prop(props, 'axis_up')
 
-
-
-
-
-
-
-        box = col_root.box()
-        box.label(text = 'constraint')
-        split = box.split(factor = 0.5, align = False)
-        col = split.column()
-        col.prop(props,"const_influence")
-        col.prop(props,"const_showhide")
-
-        box = split.box()
-        box.label(text = 'delete')
-        row = box.row()
-        row.operator("cyarigtools.edit_constraint_cleanup")
-        row.operator("cyarigtools.edit_constraint_empty_cleanup")
-
-        box = col_root.box()
-        box.label(text = 'other commands')
-        row = box.row()
-        row.operator("cyarigtools.edit_connect_chain")
-        row.operator("cyarigtools.edit_delete_rig")
+        # box = col_root.box()
+        # box.label(text = 'other commands')
+        # row = box.row()
+        # row.operator("cyarigtools.edit_connect_chain")
+        # row.operator("cyarigtools.edit_delete_rig")
 
 
 
@@ -865,7 +764,7 @@ class CYARIGTOOLS_OT_edit_length_half(bpy.types.Operator):
 class CYARIGTOOLS_OT_edit_genarate_bone_from2(bpy.types.Operator):
     """最初に選択したボーンの根本から、最後に選択したボーンの先端までのボーンを生成する"""
     bl_idname = "cyarigtools.edit_genarate_bone_from2"
-    bl_label = "gen from 2"
+    bl_label = "new from 2bone"
     def execute(self, context):
         edit.genarate_bone_from2()
         return {'FINISHED'}
