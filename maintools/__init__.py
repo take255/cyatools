@@ -36,6 +36,7 @@ from . import rename
 from . import skinning
 from . import transform
 from . import modeling
+from . import etc
 
 imp.reload(utils)
 imp.reload(modifier)
@@ -48,6 +49,7 @@ imp.reload(rename)
 imp.reload(skinning)
 imp.reload(transform)
 imp.reload(modeling)
+imp.reload(etc)
 
 
 #頂点カラーデータ
@@ -101,13 +103,6 @@ class CYATOOLS_Props_OA(PropertyGroup):
 
     new_scene_name : StringProperty(name="new scene", maxlen=63)
 
-    #モデリング関連:showhide_bool 選択したオブジェクトだけ表示
-    # 表示
-    # focus_bool : BoolProperty(name="focus" ,  default = False)
-
-    # const_bool : BoolProperty(name="const" , update = display.tgl_constraint)
-    # showhide_bool : BoolProperty(name="child" , update = display.tgl_child)
-    # showhide_collection_bool : BoolProperty(name="" , update = display.tgl_collection)
 
     displayed_obj : StringProperty(name="Target", maxlen=63)    
     displayed_allobjs : CollectionProperty(type=PropertyGroup)
@@ -115,15 +110,16 @@ class CYATOOLS_Props_OA(PropertyGroup):
     displayed_collection : StringProperty(name="Coll", maxlen=63)    
     displayed_allcollections : CollectionProperty(type=PropertyGroup)
 
-    #Helper Tools
-    # add bone at the selected object.
-    # axis_forward : EnumProperty(items = AXIS , name = 'forward',default = '-Z' )
-    # axis_up : EnumProperty(items = AXIS , name = 'up' ,default = 'Y')
+    #モデリングツール
     mirror_mode : EnumProperty(items=(
         ('normal', 'normal', ''),
         ('const', 'const', ''),
         ('rot', 'rot', '')))
 
+    vertex_size : IntProperty(name="vtx size" ,update = modeling.vertex_size,min=1,max = 32)
+    facedot_size : IntProperty(name="facedot size" ,update = modeling.facedot_size,min=1,max = 10)
+    outline_width : IntProperty(name="outline width" ,update = modeling.outline_width,min=1,max = 5)
+    origin_size : IntProperty(name="origin size" ,update = modeling.origin_size,min=4,max = 10)
 
     #モディファイヤ関連
     mod_init : BoolProperty(default = True)
@@ -156,20 +152,12 @@ class CYATOOLS_Props_OA(PropertyGroup):
     batch_weight_transfer_string : StringProperty(name = "suffix")
 
     #マテリアル関連
-    #material_type : EnumProperty(items = MATERIAL_TYPE , name = 'type' )
     material_index : IntProperty( name = "number", min=0, max=10, default=1 )
 
     #カーブツール
     with_bevel : BoolProperty(name="with bevel" ,  default = True)
     curve_liner : BoolProperty(name="liner" ,  default = False)
 
-    #揺れ骨関連
-    #cloth_open : BoolProperty( name = "open" )
-
-
-    #パーティクル関連
-    # collection_name : StringProperty(name="Collection", maxlen=63 )
-    # allcollections : CollectionProperty(type=PropertyGroup) 
 
 #---------------------------------------------------------------------------------------
 #UI
@@ -185,7 +173,7 @@ class CYATOOLS_PT_toolPanel(utils.panel):
         self.layout.operator("cyatools.skinningtools", icon='MOD_SKIN')
 
 #---------------------------------------------------------------------------------------
-#Helper Tools
+#Modeling Tools
 #---------------------------------------------------------------------------------------
 class CYATOOLS_MT_modeling_tools(Operator):
     bl_idname = "cyatools.cya_modeling_tools"
@@ -197,6 +185,13 @@ class CYATOOLS_MT_modeling_tools(Operator):
         return{'FINISHED'}
 
     def invoke(self, context, event):
+        view3d = bpy.context.preferences.themes[0].view_3d
+        props = bpy.context.scene.cyatools_oa
+        props.vertex_size = view3d.vertex_size
+        props.facedot_size = view3d.facedot_size
+        props.outline_width = view3d.outline_width
+        props.origin_size = view3d.object_origin_size
+
         return context.window_manager.invoke_props_dialog(self ,width = 300)
 
     def draw(self, context):
@@ -251,35 +246,21 @@ class CYATOOLS_MT_modeling_tools(Operator):
         box4 = col.box()
         box4.label( text = ' mirror instance' )
         # box4.label( text = ' transform' )
-        col = box4.column()
-        row = col.row()
+        col1 = box4.column()
+        row = col1.row()
         row.operator( "cyatools.instance_mirror" , text = 'x' ).op = 'x'
         row.operator( "cyatools.instance_mirror" , text = 'y' ).op = 'y'
         row.operator( "cyatools.instance_mirror" , text = 'z' ).op = 'z'
-        row = col.row()
+        row = col1.row()
         row.prop(props, 'mirror_mode' , expand=True)
-
-
-
-        # box6 = col.box()
-        # box6.label( text = 'mirror instance' )
-        # box6.label( text = 'geometry' )
-        # row = box6.row()
-        # row.operator( "cyatools.instance_mirror_geom" , text = 'x' ).op = 'x'
-        # row.operator( "cyatools.instance_mirror_geom" , text = 'y' ).op = 'y'
-        # row.operator( "cyatools.instance_mirror_geom" , text = 'z' ).op = 'z'
-
-        # Add bone at the selected objects
-        # First, select some objects ,select bone in the end.
-        # box3 = col.box()
-        # box3.label( text = 'bone' )
-        # box3.operator( "cyatools.locator_add_bone" , icon = 'PINNED')
-        # row1 = box3.row()
-        # row1.prop(props, 'axis_forward', icon='BLENDER' )
-        # row1.prop(props, 'axis_up', icon='BLENDER')
-
-        # box3.operator( "cyatools.locator_snap_bone_at_obj" , icon = 'PINNED')
         
+        box4 = col.box()
+        box4.label( text = 'component size' )
+        box4.prop(props, 'vertex_size' , expand=True)
+        box4.prop(props, 'facedot_size' , expand=True)
+        box4.prop(props, 'outline_width' , expand=True)
+        box4.prop(props, 'origin_size' , expand=True)
+
 
 class CYATOOLS_MT_modifier_tools(Operator):
     bl_idname = "cyatools.modifier_tools"
@@ -340,15 +321,36 @@ class CYATOOLS_MT_modifier_tools(Operator):
 
         col = box.column()
         row1 = col.row()
-        row1.operator( "cyatools.modifier_apply_all" ,text = 'apply all', icon = 'HIDE_ON').mode = 0
-        row1.operator( "cyatools.modifier_apply_all" ,text = 'delete all', icon = 'HIDE_ON').mode = 1
+        row1.operator( "cyatools.modifier_apply_all" ,text = 'apply all', icon = 'PROP_ON').mode = 0
+        row1.operator( "cyatools.modifier_apply_all" ,text = 'delete all', icon = 'CANCEL').mode = 1
         
         box = row.box()
         box.label( text = 'constraint (assign)' )
         box.prop(props, "const_type" , icon='RESTRICT_VIEW_OFF')
         row1 = box.row()
         row1.alignment = 'RIGHT'
-        row1.operator( "cyatools.constraint_asign" , icon = 'VIEW_PAN')
+
+        mode = (
+        ('assign','VIEW_PAN'),
+        ('apply','CHECKBOX_HLT'),
+        ('show','HIDE_OFF'),
+        ('hide','HIDE_ON'),
+        ('remove','TRASH'),
+        )
+
+        for m in mode:
+            row1.operator( "cyatools.constraint_asign" , icon = m[1]).mode = m[0]
+        # row1.operator( "cyatools.modifier_apply" , icon = 'CHECKBOX_HLT')
+        # row1.operator( "cyatools.modifier_show" , icon = 'HIDE_OFF')
+        # row1.operator( "cyatools.modifier_hide" , icon = 'HIDE_ON')
+        # row1.operator( "cyatools.modifier_remove" , icon = 'TRASH')
+
+        col = box.column()
+        row1 = col.row()
+        for i,m in enumerate((('apply','PROP_ON'),('delate','CANCEL'))):
+            row1.operator( "cyatools.constraint_apply_all" ,text = m[0] + ' all', icon = m[1] ).mode = i
+        #row1.operator( "cyatools.constraint_apply_all" ,text = 'delete all', icon = 'HIDE_ON').mode = 1
+
 
 
 class CYATOOLS_MT_curvetools(Operator):
@@ -359,7 +361,7 @@ class CYATOOLS_MT_curvetools(Operator):
         return{'FINISHED'}
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
+        return context.window_manager.invoke_props_dialog(self,width = 400)
 
     def draw(self, context):
         props = bpy.context.scene.cyatools_oa
@@ -380,6 +382,11 @@ class CYATOOLS_MT_curvetools(Operator):
         box2.operator( "cyatools.curve_assign_bevel" , icon = 'RESTRICT_SELECT_OFF')
         box2.operator( "cyatools.curve_assign_circle_bevel" , icon = 'CURVE_NCIRCLE')
         box2.operator( "cyatools.curve_assign_liner_bevel" , icon = 'IPO_LINEAR')
+
+        box2 = row.box()
+        box2.label( text = 'taper assign' )
+        box2.operator( "cyatools.curve_assign_taper_selected" , icon = 'RESTRICT_SELECT_OFF')
+        box2.operator( "cyatools.curve_assign_taper" , icon = 'CURVE_BEZCURVE')
 
         box3 = row.box()
         box3.label( text = 'select' )
@@ -666,6 +673,29 @@ class CYATOOLS_OT_curve_assign_liner_bevel(Operator):
         def execute(self, context):
             curve.assign_liner_bevel()
             return {'FINISHED'}
+
+class CYATOOLS_OT_curve_assign_taper_selected(Operator):
+        """カーブにテーパーをアサイン
+カーブ、テーパーカーブの順に選択して実行"""
+        bl_idname = "cyatools.curve_assign_taper_selected"
+        bl_label = "select"
+        
+        def execute(self, context):
+            curve.assign_taper_selected()
+            return {'FINISHED'}
+
+class CYATOOLS_OT_curve_assign_taper(Operator):
+        """カーブにテーパーをアサイン
+カーブ、テーパーカーブの順に選択して実行"""
+        bl_idname = "cyatools.curve_assign_taper"
+        bl_label = "curve"
+        
+        def execute(self, context):
+            curve.assign_taper()
+            return {'FINISHED'}
+
+
+
 
 class CYATOOLS_OT_curve_create_liner(Operator):
         """カーブ作成
@@ -1009,15 +1039,25 @@ class CYATOOLS_OT_modifier_apply_all(Operator):
 #Constraint
 #---------------------------------------------------------------------------------------
 class CYATOOLS_OT_constraint_asign(Operator):
-    """コンストレインをアサインする
+    """メニューで選択したタイプのみ適用する
+1:複数選択し、アクティブなもので他のものをコンストレインする
+2: 適用　3:表示　4:非表示　5:削除    
 """
     bl_idname = "cyatools.constraint_asign"
     bl_label = ""
-
+    mode : StringProperty()
     def execute(self, context):
-        constraint.assign()
+        constraint.assign(self.mode)
         return {'FINISHED'}
 
+class CYATOOLS_OT_constraint_apply_all(Operator):
+    """Apply all modifiers."""
+    bl_idname = "cyatools.constraint_apply_all"
+    bl_label = ""
+    mode : IntProperty()
+    def execute(self, context):
+        constraint.apply_all(self.mode)
+        return {'FINISHED'}
 
 #---------------------------------------------------------------------------------------
 #helper
@@ -1446,6 +1486,8 @@ classes = (
     CYATOOLS_OT_curve_assign_circle_bevel,
     CYATOOLS_OT_curve_assign_liner_bevel,
     CYATOOLS_OT_curve_select_bevel,
+    CYATOOLS_OT_curve_assign_taper_selected,
+    CYATOOLS_OT_curve_assign_taper,
 
 
     # helper
@@ -1490,7 +1532,7 @@ classes = (
     # constraint
     CYATOOLS_OT_constraint_asign,
     CYATOOLS_OT_instance_mirror,
-    #CYATOOLS_OT_instance_mirror_geom,
+    CYATOOLS_OT_constraint_apply_all,
 
     # object applier
     CYATOOLS_MT_new_scene,

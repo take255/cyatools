@@ -9,6 +9,33 @@ from . import utils
 imp.reload(utils)
 
 
+#---------------------------------------------------------------------------------------
+#コンポーネント表示のアップデート
+#---------------------------------------------------------------------------------------
+def vertex_size(self,context):
+    view3d = bpy.context.preferences.themes[0].view_3d
+    props = bpy.context.scene.cyatools_oa
+    view3d.vertex_size = props.vertex_size
+
+def facedot_size(self,context):
+    view3d = bpy.context.preferences.themes[0].view_3d
+    props = bpy.context.scene.cyatools_oa
+    view3d.facedot_size = props.facedot_size
+
+def outline_width(self,context):
+    view3d = bpy.context.preferences.themes[0].view_3d
+    props = bpy.context.scene.cyatools_oa
+    view3d.outline_width = props.outline_width
+
+def origin_size(self,context):
+    view3d = bpy.context.preferences.themes[0].view_3d
+    props = bpy.context.scene.cyatools_oa
+    view3d.object_origin_size = props.origin_size
+
+
+#---------------------------------------------------------------------------------------
+#片側メッシュ削除
+#---------------------------------------------------------------------------------------
 def del_half_x():
     bpy.ops.object.editmode_toggle()
     bpy.ops.mesh.select_all(action='DESELECT')#全選択解除してからの
@@ -16,13 +43,6 @@ def del_half_x():
 
     bpy.ops.mesh.bisect(plane_co=(0, 0, 0), plane_no=(1, 0, 0), use_fill=False, clear_inner=True)
     bpy.ops.object.editmode_toggle()
-
-    # bpy.ops.object.select_all(action='DESELECT')
-
-    
-    # bpy.ops.object.editmode_toggle()
-    # bpy.ops.mesh.bisect(plane_co=(0, 0, 0), plane_no=(1, 0, 0), use_fill=True, clear_outer=True)
-    # bpy.ops.object.editmode_toggle()    
 
 def select_linked_faces():
     currentmode = utils.current_mode()

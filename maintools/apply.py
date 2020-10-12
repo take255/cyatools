@@ -234,7 +234,7 @@ def convert_hair(hairarray, new_name , ob):
 
         new_obj.data.bevel_object = circleobj
         new_obj.data.taper_object = taperobj
-        new_obj.data.use_uv_as_generated = True
+        #new_obj.data.use_uv_as_generated = True
         new_obj.data.resolution_u = 1
 
 

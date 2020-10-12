@@ -45,14 +45,16 @@ def export(mode):
                         utils.select(ob,True)
                         utils.activeObj(ob)
 
+                export_core( mode , name )
+
 
 
     elif mode == 'model':
-        utils.deselectAll()
         #コレクション00_Model~に含まれているモデルを対象にする
         for c in bpy.data.collections:
             print(c.name,c.name.find('00_Model'))
             if c.name.find('00_Model_') != -1:
+                utils.deselectAll()
                 name = c.name.replace('00_Model_','')
                 for ob in bpy.context.scene.objects: 
                     cols = [x.name for x in ob.users_collection]
@@ -61,9 +63,10 @@ def export(mode):
                         utils.select(ob,True)
                         utils.activeObj(ob)
 
+                export_core( mode , name )
 
-    if name =='':
-        return
+def export_core( mode , name ):
+    props = bpy.context.scene.cyaue4tools_props 
 
     outpath = '%s\%s.fbx' % ( props.filepath , name )
     print(outpath)
@@ -71,7 +74,6 @@ def export(mode):
     #スケールを0.01に強制
     unitscale = bpy.context.scene.unit_settings.scale_length
     bpy.context.scene.unit_settings.scale_length = 0.01
-
 
     if mode == 'anim':
         scale = 1.0

@@ -388,7 +388,7 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         box = col.box()
         box.label(text = 'modify')
         box.operator("cyarigtools.edit_genarate_symmetry")
-        row.operator("cyarigtools.edit_connect_chain")
+        box.operator("cyarigtools.edit_connect_chain")
 
 
         box = col.box()
