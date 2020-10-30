@@ -525,24 +525,26 @@ class CYARIGTOOLS_MT_arptools(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
 
-        box = layout.box()
-        box.operator("cyarigtools.arp_extracter")
-        box.operator("cyarigtools.arp_connect")
-        box.operator("cyarigtools.arp_disable_ikstretch")
+        row = layout.row(align=False)
 
-        box = layout.box()
+        box = row.box()
         box.label(text="Constraint")
-        row = box.row()
-        row.operator("cyarigtools.arp_const",text = 'ue4').rig = 'ue4'
-        row.operator("cyarigtools.arp_const",text = 'mixamo').rig = 'mixamo'
+        #row = box.row()
+        box.operator("cyarigtools.arp_const",text = 'UE4').rig = 'ue4'
+        box.operator("cyarigtools.arp_const",text = 'MIXAMO').rig = 'mixamo'
 
 
-        box = layout.box()
+        box = row.box()
         box.label(text="Adjust ARP")
-        row = box.row()
-        row.operator( 'cyarigtools.adjust_arp',text = "UE4").mode = 'ue4'
-        row.operator( 'cyarigtools.adjust_arp',text = "MIXAMO").mode = 'mixamo'
+        #row = box.row()
+        box.operator( 'cyarigtools.adjust_arp',text = "UE4").mode = 'ue4'
+        box.operator( 'cyarigtools.adjust_arp',text = "MIXAMO").mode = 'mixamo'
 
+        box = row.box()
+        box.label(text="edit")
+        #box.operator("cyarigtools.arp_extracter")
+        #box.operator("cyarigtools.arp_connect")
+        box.operator("cyarigtools.arp_disable_ikstretch")
 
 
 

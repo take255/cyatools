@@ -230,6 +230,7 @@ def const_(rig):
         setup_ik.move_layer(l,30)
 
 
+#実装されてない
 def extracter():
     print(arpbone.bonedic)
 
@@ -290,6 +291,7 @@ def check_transform():
 #---------------------------------------------------------------------
 # UE4,MIXAMOのボーン位置にARPリファレンスボーンを合わせる
 # UE4,またはMIXAMOのアーマチュアを選択し、最後にARPリファレンスボーンを選択して実行する
+#リグがアプライされていなければ注意を出す
 #---------------------------------------------------------------------
 def adjust_arp(mode):
     if mode == 'ue4':
@@ -300,10 +302,23 @@ def adjust_arp(mode):
         root = 'mixamorig:Hips'
 
     #ARPリグのトランスフォームフリーズ
-    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    #act = utils.getActiveObj()
+    #bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
+    init_matrix = Matrix()
     selected = utils.selected()
+    #notFreezed = False
+
+    #フリーズされていなければ処理を中断
+    for ob in selected:
+        if ob.matrix_world != init_matrix:
+            msg = 'トランスフォームがフリーズされていません。'
+            bpy.ops.cyatools.messagebox('INVOKE_DEFAULT', message = msg)
+            return
+
     arp = utils.getActiveObj()
+    arp.data.use_mirror_x = False #角度がおかしくなるのでミラーオプションを切る。多分 r>lの順に処理すれば切らなくても大丈夫
+
     selected.remove(arp)
     tgt = selected[0]
 
@@ -314,7 +329,7 @@ def adjust_arp(mode):
     #ボーンの位置を取得する
     #ターゲットのトランスフォームフリーズ
     utils.act(tgt)
-    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    #bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
     utils.mode_p()
     bonelist = []
@@ -359,7 +374,7 @@ def adjust_arp(mode):
             print(l)
 
 
-    msg = '処理完了 リグのトランスフォームをフリーズしました'
+    msg = '処理完了'
     bpy.ops.cyatools.messagebox('INVOKE_DEFAULT', message = msg)
 
 

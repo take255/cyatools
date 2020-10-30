@@ -769,7 +769,7 @@ Collections = set()
 def get_col( x ):
     Collections.add(x.name)
     for col in x.children.keys():
-        self.get_col(x.children[col])
+        get_col(x.children[col])
 
 #ファイル名として正しく修正
 def correct_name(name):
@@ -804,9 +804,13 @@ def export_format(mode):
         
         outpath += '%s.%s' % (correct_name( col.name ) , mode)
 
+        print('>>collection')
         #選択されたコレクションにリンクされたオブジェクトを取得
         for ob in bpy.context.scene.objects: 
-            if ob.users_collection[0].name in Collections: 
+            c = [x.name for x in ob.users_collection if x.name in Collections]
+
+            if len(c) > 0: 
+                print(ob.name)
                 utils.select(ob,True)
 
         export_cmd(outpath , mode)

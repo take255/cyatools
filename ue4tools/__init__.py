@@ -138,10 +138,17 @@ class CYAUE4TOOLS_OT_unitscale(bpy.types.Operator):
 #---------------------------------------------------------------------------------------
 #Export
 #---------------------------------------------------------------------------------------
+
+#モデルとアニメーションでコレクション＞FBXのリネームが統一されていないのがちょっと問題。
+#ModelをCharaに、武器をWeaponにするか？
+
 class CYAUE4TOOLS_OT_export(bpy.types.Operator):
     """FBXファイル出力
-モデルは00_Model~というコレクションに入ったものを出力対象とする。
-00_Model_ch_male01であればch_male01.fbxというファイルを出力する。"""
+命名規則
+モデル:00_Model~
+アニメーション:00_Anim~
+00_Model_cha_male01であればcha_male01.fbxというファイルを出力する。
+"""
 
     bl_idname = "cyaue4tools.export"
     bl_label = "anim export"
