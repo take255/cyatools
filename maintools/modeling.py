@@ -219,3 +219,88 @@ def mirror_l_to_r():
     #     mesh.vertices[i].select = True
         #obj.data.vertices[i].co.x = 2.0
     bpy.ops.object.mode_set(mode = 'EDIT') 
+
+
+VARRAY = []
+#選択された頂点をバッファに保持する
+#エディットモードのままだと適用されないことに注意
+def copy_vertex_pos():
+    global VARRAY
+    VARRAY.clear()
+
+    #bpy.ops.object.mode_set(mode = 'OBJECT')
+    obj = bpy.context.active_object
+    mesh = obj.data
+
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+    print('----------------------')
+    for i,v in enumerate(mesh.vertices):
+        print(v.select)
+        if v.select:
+            VARRAY.append(v.co)
+            #VARRAY.append([i,v.co.x,v.co.y,v.co.z])
+            print(v.co)
+
+def paste_vertex_pos():
+    global VARRAY
+
+    obj = bpy.context.active_object
+    mesh = obj.data
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+
+    for v,v1 in zip(mesh.vertices,VARRAY):
+    #for v in VARRAY:
+        v.co = v1
+        # vtx = mesh.vertices[v[0]]
+        # print(vtx)
+        # print(vtx.co)
+
+
+#選択された頂点をバッファに保持する
+#エディットモードのままだと適用されないことに注意
+def copy_bshape_pos():
+    global VARRAY
+    VARRAY.clear()
+
+    obj = bpy.context.active_object
+    mesh = obj.data        
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+
+    spIndex = obj.active_shape_key_index
+    key = bm.verts.layers.shape.keys()[spIndex]
+    val = bm.verts.layers.shape.get(key)
+
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+
+    print('----------------------')
+
+    #選択された頂点インデックスは別に取得
+    for i,v in enumerate(bm.verts):
+        pos = Vector((v[val][0],v[val][1],v[val][2]))
+        VARRAY.append([i,pos])
+        print([i,pos])
+
+
+def paste_bshape_pos():
+    global VARRAY
+
+    obj = bpy.context.active_object
+    mesh = obj.data        
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+
+
+    spIndex = obj.active_shape_key_index
+    key = bm.verts.layers.shape.keys()[spIndex]
+    val = bm.verts.layers.shape.get(key)
+
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+
+
+    for v,v1 in zip(bm.verts,VARRAY):
+        print(v[val],v1[1])
+        v[val] = v1[1]
+    bm.to_mesh(obj.data)
+    mesh.update()
+

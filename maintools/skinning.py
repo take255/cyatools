@@ -293,16 +293,18 @@ def delete_by_word():
     for group in result:
         print(group.name)
         bpy.context.object.vertex_groups.remove(group)
+
+
 def delete_allweights():
     obj=bpy.context.active_object
 
-    boneArray = []
-    for group in obj.vertex_groups:
-        boneArray.append(group.name)
+    # boneArray = []
+    # for group in obj.vertex_groups:
+    #     boneArray.append(group.name)
 
     #頂点の情報
     msh = obj.data
-    vtxCount = str(len(msh.vertices))#頂点数
+    #vtxCount = str(len(msh.vertices))#頂点数
     for v in msh.vertices:
         for vge in v.groups:
             vge.weight = 0
@@ -448,7 +450,7 @@ signL = 'L_'
 signdic = { 'R_':'L_' , 'L_':'R_' , '_l':'_r' , '_r':'_l' , 'Left':'Right' , 'Right':'Left' }
 
 sign_prefix = { 'R_':'L_' , 'L_':'R_' , 'Left':'Right' , 'Right':'Left' }
-sign_suffix = { '_l':'_r' , '_r':'_l'}
+sign_suffix = { '_l':'_r' , '_r':'_l' , '_L':'_R' , '_R':'_L' }
 
 
 def nameFlip_(name):
@@ -722,5 +724,27 @@ def mirror_transfer():
                 vg = obj.vertex_groups[w[0]]
                 vg.add( [i], float(w[1]), 'REPLACE' )
                 
+
+#選択されている頂点のウェイトをすべて削除
+def remove_weight_selectedVTX():
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+
+    obj = bpy.context.active_object
+    # mesh = obj.data        
+
+    # indexarray = [i for i,v in enumerate(mesh.vertices) if v.select ]
+
+
+    # boneArray = []
+    # for group in obj.vertex_groups:
+    #     boneArray.append(group.name)
+
+    #頂点の情報
+    msh = obj.data
+    vtxCount = str(len(msh.vertices))#頂点数
+    for v in msh.vertices:
+        if v.select:
+            for vge in v.groups:
+                vge.weight = 0
 
 

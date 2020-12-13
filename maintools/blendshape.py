@@ -235,7 +235,154 @@ def invert():
             bm.to_mesh(obj.data)
 
 
+VARRAY = []
+VARRAY_DIC = {}
+
+#選択された頂点をバッファに保持する
+#エディットモードのままだと適用されないことに注意
+def copy_pos():
+    global VARRAY
+    VARRAY.clear()
+    
+    
+    global VARRAY_DIC
+    VARRAY_DIC.clear()
+
+    obj = bpy.context.active_object
+    mesh = obj.data        
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+    #選択された頂点インデックスを取得
+    #indexarray = []
+    indexarray = [i for i,v in enumerate(mesh.vertices) if v.select ]
+    # for i,v in enumerate(mesh.vertices):
+    #     if v.select:
+    #         VARRAY.append([v,v.co])
+    #         print(v.co)
+
+    # print(indexarray)
+    # return
+    #ブレンドシェイプ
+    spIndex = obj.active_shape_key_index
+
+    key = bm.verts.layers.shape.keys()[spIndex]
+    val = bm.verts.layers.shape.get(key)
+
+    
+    #選択された頂点インデックスは別に取得
+    for i,v in enumerate(bm.verts):
+        if i in indexarray:
+            
+            pos = Vector((v[val][0],v[val][1],v[val][2]))
+            VARRAY.append([i,pos])
+            VARRAY_DIC[i] = pos
+            #print([i,pos])
+    print(VARRAY_DIC)
 
 
+#シェイプのインデックスが０の時は別処理
+def paste_pos():
+    global VARRAY
+    global VARRAY_DIC
 
+    obj = bpy.context.active_object
+    mesh = obj.data        
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+
+    spIndex = obj.active_shape_key_index
+    key = bm.verts.layers.shape.keys()[spIndex]
+    val = bm.verts.layers.shape.get(key)
+
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+
+    # if spIndex > 0:
+    for i,v in enumerate(bm.verts):
+        if i in VARRAY_DIC:
+            v[val] = VARRAY_DIC[i]
+        #print(v[val],v1[1])
+        #if i == v1[0]:
+        #v[val] = v1[1]
+
+    bm.to_mesh(obj.data)
+    mesh.update()
+
+    # else:
+    #     for i,v in enumerate(mesh.vertices):
+    #         if i in VARRAY_DIC:
+    #             print(VARRAY_DIC[i])
+    #             v.co = VARRAY_DIC[i]
+
+
+VARRAY_DOWNSTREAM = []
+#選択されたブレンドシェイプより下流のブレンドシェイプを保持しておく
+#選択中のは含まないので注意
+#エディットモードのままだと適用されないことに注意
+#配列　[index ,[ [index , Vector ] , [index , Vector ] ] ]
+def keep_downstream():
+    global VARRAY_DOWNSTREAM
+    VARRAY_DOWNSTREAM.clear()
+
+    obj = bpy.context.active_object
+    mesh = obj.data        
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+
+
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+    max = len(bm.verts.layers.shape.keys())
+    spIndex = obj.active_shape_key_index + 1
+
+    #print(spIndex)
+    VARRAY_DOWNSTREAM.append( spIndex  )
+
+    varray_all = []
+    for index in range( spIndex  , max ):
+
+        key = bm.verts.layers.shape.keys()[index]
+        val = bm.verts.layers.shape.get(key)
+
+        varray = []
+
+        for i,v in enumerate(bm.verts):
+            pos = Vector((v[val][0],v[val][1],v[val][2]))
+            varray.append([i,pos])
+            print([i,pos])
+        varray_all.append( varray )
+
+    VARRAY_DOWNSTREAM.append( varray_all )
+
+
+def restore_downstream():
+    global VARRAY_DOWNSTREAM
+
+    obj = bpy.context.active_object
+    mesh = obj.data        
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+
+
+    #spIndex = obj.active_shape_key_index
+    spIndex = VARRAY_DOWNSTREAM[0]
+
+
+    #for i, index in enumerate(range( spIndex + 1 , max )):
+    for i, array in enumerate( VARRAY_DOWNSTREAM[1] ):
+
+        index = spIndex + i 
+        key = bm.verts.layers.shape.keys()[index]
+        val = bm.verts.layers.shape.get(key)
+
+        
+        for v,v1 in zip(bm.verts,array):
+            print(v[val],v1[1])
+            v[val] = v1[1]
+
+
+    bm.to_mesh(obj.data)
+    mesh.update()
 

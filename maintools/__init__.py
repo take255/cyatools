@@ -37,6 +37,7 @@ from . import skinning
 from . import transform
 from . import modeling
 from . import etc
+from . import blendshape
 
 imp.reload(utils)
 imp.reload(modifier)
@@ -50,6 +51,7 @@ imp.reload(skinning)
 imp.reload(transform)
 imp.reload(modeling)
 imp.reload(etc)
+imp.reload(blendshape)
 
 
 #頂点カラーデータ
@@ -171,6 +173,7 @@ class CYATOOLS_PT_toolPanel(utils.panel):
         self.layout.operator("cyatools.curvetools", icon='CURVE_DATA')
         self.layout.operator("cyatools.rename", icon='SYNTAX_OFF')
         self.layout.operator("cyatools.skinningtools", icon='MOD_SKIN')
+        self.layout.operator("cyatools.blendshape_tools", icon='MOD_SKIN')
 
 #---------------------------------------------------------------------------------------
 #Modeling Tools
@@ -220,6 +223,10 @@ class CYATOOLS_MT_modeling_tools(Operator):
         box5.operator( "cyatools.modeling_del_half_x" , icon = 'MOD_TRIANGULATE')
         box5.operator( "cyatools.modeling_select_linked_faces" , icon = 'SNAP_FACE')
         box5.operator( "cyatools.modeling_mirror_l_to_r" , icon = 'MOD_MIRROR')
+        row5 = box5.row() 
+        row5.operator( "cyatools.modeling_copy_vertex_pos" , icon = 'MOD_MIRROR')
+        row5.operator( "cyatools.modeling_paste_vertex_pos" , icon = 'MOD_MIRROR')
+
 
         box5 = col.box()
         box5.label( text = 'material' )
@@ -562,6 +569,7 @@ class CYATOOLS_MT_skinningtools(Operator):
         row.alignment = 'EXPAND'
         row.operator("cyatools.skinning_delete_allweights")
         row.operator("cyatools.skinning_delete_unselectedweights")
+        row.operator("cyatools.skinning_remove_weight_selectedvtx")
 
 
         #row = layout.row(align=False)
@@ -639,6 +647,34 @@ class CYATOOLS_MT_rename(Operator):
         col = box1.column()        
         for s in ('org',):
             col.operator("cyatools.rename_add_defined", text = s).op = s
+
+
+class CYATOOLS_MT_blendshape_tools(Operator):
+    bl_idname = "cyatools.blendshape_tools"
+    bl_label = "blendshape"
+
+    def execute(self, context):
+        return{'FINISHED'}
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        props = bpy.context.scene.cyatools_oa
+        layout=self.layout
+        box = layout.box()
+        box.label( text = 'copy paste' , icon = 'MODIFIER')
+        row5 = box.row() 
+        row5.operator( "cyatools.blendshape_copy_vertex_pos" , icon = 'MOD_MIRROR')
+        row5.operator( "cyatools.blendshape_paste_vertex_pos" , icon = 'MOD_MIRROR')
+
+        box = layout.box()
+        box.label( text = 'restore' , icon = 'MODIFIER')
+        row5 = box.row() 
+        row5.operator( "cyatools.blendshape_keep_pos" , icon = 'MOD_MIRROR')
+        row5.operator( "cyatools.blendshape_restore_pos" , icon = 'MOD_MIRROR')
+
+
 
 #---------------------------------------------------------------------------------------
 #Operator
@@ -1167,7 +1203,6 @@ class CYATOOLS_OT_modeling_select_linked_faces(Operator):
         modeling.select_linked_faces()
         return {'FINISHED'}
 
-
 class CYATOOLS_OT_modeling_pivot_by_facenormal(Operator):
     """Asign the model rotate pivot selected face normal"""
     bl_idname = "cyatools.modeling_pivot_by_facenormal"
@@ -1175,6 +1210,61 @@ class CYATOOLS_OT_modeling_pivot_by_facenormal(Operator):
     def execute(self, context):
         modeling.pivot_by_facenormal()
         return {'FINISHED'}
+
+
+class CYATOOLS_OT_modeling_copy_vertex_pos(Operator):
+    """選択した頂点の位置をコピー"""
+    bl_idname = "cyatools.modeling_copy_vertex_pos"
+    bl_label = "copy vtx"    
+    def execute(self, context):
+        modeling.copy_vertex_pos()
+        return {'FINISHED'}
+
+class CYATOOLS_OT_modeling_paste_vertex_pos(Operator):
+    """選択した頂点の位置をコピー"""
+    bl_idname = "cyatools.modeling_paste_vertex_pos"
+    bl_label = "paste vtx"    
+    def execute(self, context):
+        modeling.paste_vertex_pos()
+        return {'FINISHED'}
+
+
+#---------------------------------------------------------------------------------------
+#ブレンドシェイプ
+#---------------------------------------------------------------------------------------
+class CYATOOLS_OT_blendshape_copy_vertex_pos(Operator):
+    """選択した頂点の位置をコピー"""
+    bl_idname = "cyatools.blendshape_copy_vertex_pos"
+    bl_label = "copy vtx"    
+    def execute(self, context):
+        blendshape.copy_pos()
+        return {'FINISHED'}
+
+class CYATOOLS_OT_blendshape_paste_vertex_pos(Operator):
+    """選択した頂点の位置をコピー"""
+    bl_idname = "cyatools.blendshape_paste_vertex_pos"
+    bl_label = "paste vtx"    
+    def execute(self, context):
+        blendshape.paste_pos()
+        return {'FINISHED'}
+
+
+class CYATOOLS_OT_blendshape_keep_pos(Operator):
+    """選択したブレンドシェイプから下のものを保持する"""
+    bl_idname = "cyatools.blendshape_keep_pos"
+    bl_label = "keep"    
+    def execute(self, context):
+        blendshape.keep_downstream()
+        return {'FINISHED'}
+
+class CYATOOLS_OT_blendshape_restore_pos(Operator):
+    """選択したブレンドシェイプの下のものを復帰する"""
+    bl_idname = "cyatools.blendshape_restore_pos"
+    bl_label = "restore"    
+    def execute(self, context):
+        blendshape.restore_downstream()
+        return {'FINISHED'}
+
 
 #---------------------------------------------------------------------------------------
 #material
@@ -1286,6 +1376,16 @@ class CYATOOLS_OT_skinning_delete_unselectedweights(Operator):
     def execute(self, context):
         skinning.delete_unselectedweights()
         return {'FINISHED'}
+
+class CYATOOLS_OT_skinning_remove_weight_selectedVTX(Operator):
+    """選択されている頂点のウェイト値を０にする"""
+    bl_idname = "cyatools.skinning_remove_weight_selectedvtx"
+    bl_label = "removeSelectedVTX"
+    def execute(self, context):
+        skinning.remove_weight_selectedVTX()
+        return {'FINISHED'}
+
+
 
 class CYATOOLS_OT_skinning_delete_with_word(Operator):
     """指定された文字列が含まれていないバーテックスグループを削除する"""
@@ -1471,6 +1571,7 @@ classes = (
     # UI Panel
     CYATOOLS_PT_toolPanel,
     CYATOOLS_MT_modeling_tools,
+    CYATOOLS_MT_blendshape_tools,
 
     CYATOOLS_MT_modifier_tools,
     CYATOOLS_MT_object_applier,
@@ -1510,6 +1611,8 @@ classes = (
     CYATOOLS_OT_modeling_pivot_by_facenormal,
     CYATOOLS_OT_modeling_select_linked_faces,
     CYATOOLS_OT_modeling_mirror_l_to_r,
+    CYATOOLS_OT_modeling_copy_vertex_pos,
+    CYATOOLS_OT_modeling_paste_vertex_pos,
 
     # instance
     CYATOOLS_OT_instance_select_collection,
@@ -1570,6 +1673,7 @@ classes = (
     CYATOOLS_OT_rename_dropper,
     
 
+
     #スキニング
     CYATOOLS_MT_skinningtools,
     CYATOOLS_OT_skinning_add_influence_bone,
@@ -1581,6 +1685,7 @@ classes = (
     CYATOOLS_OT_skinning_apply_without_armature_modifiers,
     CYATOOLS_OT_skinning_delete_allweights,
     CYATOOLS_OT_skinning_delete_unselectedweights,
+    CYATOOLS_OT_skinning_remove_weight_selectedVTX,
     CYATOOLS_OT_skinning_delete_with_word,
     CYATOOLS_OT_skinning_delete_not_exist_vtxgrp,
     CYATOOLS_OT_skinning_delete_all_vtxgrp,
@@ -1593,8 +1698,14 @@ classes = (
     # CYATOOLS_OT_material_pick_vertex_color,
 
     CYATOOLS_OT_material_reload_texture,
-    CYATOOLS_OT_material_remove_submaterial
+    CYATOOLS_OT_material_remove_submaterial,
 
+
+    #ブレンドシェイプ
+    CYATOOLS_OT_blendshape_copy_vertex_pos,
+    CYATOOLS_OT_blendshape_paste_vertex_pos,
+    CYATOOLS_OT_blendshape_keep_pos,
+    CYATOOLS_OT_blendshape_restore_pos,
 
     #パーティクル
 #    CYATOOLS_OT_particle_effector_collection_assign
