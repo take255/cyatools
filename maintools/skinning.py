@@ -447,7 +447,7 @@ def weights_transfer_v2():
 signR = 'R_'
 signL = 'L_'
 
-signdic = { 'R_':'L_' , 'L_':'R_' , '_l':'_r' , '_r':'_l' , 'Left':'Right' , 'Right':'Left' }
+signdic = { 'R_':'L_' , 'L_':'R_' , '_l':'_r' , '_r':'_l' , 'Left':'Right' , 'Right':'Left' , '_L':'_R' , '_R':'_L' }
 
 sign_prefix = { 'R_':'L_' , 'L_':'R_' , 'Left':'Right' , 'Right':'Left' }
 sign_suffix = { '_l':'_r' , '_r':'_l' , '_L':'_R' , '_R':'_L' }
