@@ -153,6 +153,12 @@ class CYATOOLS_Props_OA(PropertyGroup):
     bind_auto_bool : BoolProperty(name="auto" ,  default = True)
     batch_weight_transfer_string : StringProperty(name = "suffix")
 
+    weightmirror_dir : EnumProperty(items=(
+        ('L>R', 'L>R', ''),
+        ('R>L', 'R>L', '')),
+        default = 'L>R'
+        )
+
     #マテリアル関連
     material_index : IntProperty( name = "number", min=0, max=10, default=1 )
 
@@ -518,9 +524,12 @@ class CYATOOLS_MT_skinningtools(Operator):
         box = col.box()
         box.label(text = 'mirror weight')
         col1 = box.column()
-
         row1 = col1.row()
         row1.operator("cyatools.skinning_weights_mirror",text = 'mirror'  , icon = 'MOD_MIRROR').mode = 'v2'
+
+        row1 = col1.row()
+        row1.prop(props, 'weightmirror_dir' , expand=True)
+
 
         # box = col.box()
         # box.label(text = 'weight')

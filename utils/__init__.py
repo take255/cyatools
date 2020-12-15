@@ -143,6 +143,9 @@ def mode_o():
 def mode_p():
      bpy.ops.object.mode_set(mode = 'POSE')
 
+def mode(mode):
+     bpy.ops.object.mode_set(mode = mode)
+
 
 #---------------------------------------------------------------------------------------
 #カーソル

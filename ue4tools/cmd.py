@@ -26,18 +26,21 @@ def export(mode):
     props = bpy.context.scene.cyaue4tools_props 
     name = ''
 
+    act = utils.getActiveObj()
+    currentMode = utils.current_mode()
+
     if mode == 'anim':
         # fullpath = bpy.data.filepath
         # buf = fullpath.split('\\')
         # name = buf[-1].split('.')[0]
-
+        utils.mode_o()
         utils.deselectAll()
         #コレクション00_Model~に含まれているモデルを対象にする
-        #コレクション名：00_Anim_male01_run01　＞　ファイル名：ani_male01_run01.fbx
+        #コレクション名：00_Anim_male01_run01　＞　ファイル名：an_male01_run01.fbx
         for c in bpy.data.collections:
             #print(c.name,c.name.find('00_Model'))
             if c.name.find('00_Anim_') != -1:
-                name = 'ani_' + c.name.replace('00_Anim_','')
+                name = 'an_' + c.name.replace('00_Anim_','')
                 for ob in bpy.context.scene.objects: 
                     cols = [x.name for x in ob.users_collection]
                     print(ob.name,cols,c in cols)
@@ -47,6 +50,8 @@ def export(mode):
 
                 export_core( mode , name )
 
+        utils.act(act)
+        utils.mode(currentMode)
 
 
     elif mode == 'model':

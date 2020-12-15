@@ -72,6 +72,7 @@ def bind():
             bpy.context.object.data.layers[i] = True
                             
         for ob in obArray:
+            utils.mode_o()
             utils.act(ob)
             bpy.ops.object.mode_set(mode = 'WEIGHT_PAINT')
             bpy.ops.paint.weight_from_bones(type='AUTOMATIC')
@@ -563,9 +564,17 @@ def weights_mirror_v2():
     size = len(mesh.vertices)
     kd = mathutils.kdtree.KDTree(size)
 
-    rside_indices = [i for i,v in enumerate(mesh.vertices) if v.co.x < -0.0001]
+    #rside_indices = [i for i,v in enumerate(mesh.vertices) if v.co.x < -0.0001]
 
-    lside_pos = [[i,(-v.co.x , v.co.y , v.co.z )] for i,v in enumerate(mesh.vertices) if v.co.x < -0.0001]
+    #lside_pos = [[i,(-v.co.x , v.co.y , v.co.z )] for i,v in enumerate(mesh.vertices) if v.co.x < -0.0001]
+
+    props = bpy.context.scene.cyatools_oa
+    print(props.weightmirror_dir)
+    if props.weightmirror_dir == 'L>R':
+        opposit_pos = [[i,(-v.co.x , v.co.y , v.co.z )] for i,v in enumerate(mesh.vertices) if v.co.x < -0.0001]
+    elif props.weightmirror_dir == 'R>L':
+        opposit_pos = [[i,(-v.co.x , v.co.y , v.co.z )] for i,v in enumerate(mesh.vertices) if v.co.x > 0.0001]
+
 
 
     # print('rside>' ,rside_indices)
@@ -584,7 +593,7 @@ def weights_mirror_v2():
     bpy.ops.mesh.select_all(action = 'DESELECT')
     bpy.ops.object.mode_set(mode = 'OBJECT')
 
-    for p in lside_pos:
+    for p in opposit_pos:
         #中心付近の頂点で近接を探索したときに自分自身のインデックスがかえってくる
         #そのまま処理すると、その頂点のウェイトが消失する
         #対策としてそういう場合は処理をスキップしてエラーを防ぐ
