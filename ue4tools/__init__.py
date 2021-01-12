@@ -147,7 +147,7 @@ class CYAUE4TOOLS_OT_export(bpy.types.Operator):
 命名規則
 モデル:00_Model~
 アニメーション:00_Anim~
-00_Model_cha_male01であればcha_male01.fbxというファイルを出力する。
+00_Model_CH_Mmob01であればCH_Mmob01.fbxというファイルを出力する。
 """
 
     bl_idname = "cyaue4tools.export"

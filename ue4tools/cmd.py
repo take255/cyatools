@@ -1,5 +1,6 @@
 import bpy
 import imp
+import re
 
 from .. import utils
 imp.reload(utils)
@@ -30,9 +31,20 @@ def export(mode):
     currentMode = utils.current_mode()
 
     if mode == 'anim':
-        # fullpath = bpy.data.filepath
-        # buf = fullpath.split('\\')
-        # name = buf[-1].split('.')[0]
+        #リンクされたファイル名からキャラ名を抜き出す
+        #アニメションシーンなら　CH_Mmob01.blend , RIG_Mmob01.blend　の２つのファイルを取得できるはず
+        #プレフィックスと.blendを削除したものをキャラ名とする
+        lib = bpy.data.libraries
+        if len(lib) == 0:
+            msg = 'シーンにキャラクターがリンクされていません'
+            bpy.ops.cyatools.messagebox('INVOKE_DEFAULT', message = msg)            
+            return
+        else:
+            buf =  re.split('[_.]',lib[0].name)
+            charname = buf[1]
+
+
+
         utils.mode_o()
         utils.deselectAll()
         #コレクション00_Model~に含まれているモデルを対象にする
@@ -40,7 +52,7 @@ def export(mode):
         for c in bpy.data.collections:
             #print(c.name,c.name.find('00_Model'))
             if c.name.find('00_Anim_') != -1:
-                name = 'an_' + c.name.replace('00_Anim_','')
+                name = 'AN_%s_%s' % (charname , c.name.replace('00_Anim_',''))
                 for ob in bpy.context.scene.objects: 
                     cols = [x.name for x in ob.users_collection]
                     print(ob.name,cols,c in cols)
@@ -134,3 +146,8 @@ def export_core( mode , name ):
 
     #ユニットスケールをもとに戻す
     bpy.context.scene.unit_settings.scale_length = unitscale
+
+
+    msg = '出力完了しました ' + outpath
+    bpy.ops.cyatools.messagebox('INVOKE_DEFAULT', message = msg)            
+
