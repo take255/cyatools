@@ -671,6 +671,8 @@ def rename_add_word( mode ):
 
     if mode == 'suffix':
         word = props.rename_string
+    elif mode == 'prefix':
+        word = props.rename_string
     elif mode == 'suffix_list':
         word = props.suffix
 
@@ -680,7 +682,13 @@ def rename_add_word( mode ):
     for node in itemlist:
         if node.bool_val == True:            
             b = amt.data.edit_bones[node.name]
-            b.name = '%s_%s' % ( b.name , word )
+            
+            if mode == 'suffix' or mode == 'suffix_list':
+                b.name = '%s_%s' % ( b.name , word )
+
+            elif mode == 'prefix':
+                b.name = '%s_%s' % ( word , b.name )
+
             result.append(b.name)
 
     clear()

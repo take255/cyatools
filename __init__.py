@@ -44,7 +44,7 @@ imp.reload(ue4tools)
 bl_info = {
 "name": "cyatools",
 "author": "Takehito Tsuchiya",
-"version": (0, 3.03),
+"version": (0, 3.10),
 "blender": (2, 80, 3),
 "description": "cyatools",
 "category": "Object"}
@@ -67,6 +67,9 @@ class CYATOOLS_MT_addonpreferences(AddonPreferences):
 
 #メッセージダイアログ
 #スペース区切りで改行する
+#使い方
+
+
 class CYATOOLS_MT_messagebox(bpy.types.Operator):
     bl_idname = "cyatools.messagebox"
     bl_label = ""

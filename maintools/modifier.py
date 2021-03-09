@@ -213,7 +213,8 @@ def apply_all(mode):
     for obj in sel:
         utils.activeObj(obj)
         for mod in obj.modifiers:
-            if mode == 0:                    
+            if mode == 0:
+                print(mod.name)
                 bpy.ops.object.modifier_apply( modifier = mod.name )
             elif mode == 1:
                 bpy.ops.object.modifier_remove( modifier = mod.name )

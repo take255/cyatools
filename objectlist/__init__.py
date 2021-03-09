@@ -192,10 +192,12 @@ class CYAOBJECTLIST_MT_rename(Operator):
 
         row1 = box.row()
         row1.operator("cyaobjectlist.rename_add_sequential_number" , icon = 'LINENUMBERS_ON')
+        row1.operator("cyaobjectlist.rename_add_word" , text = 'add prefix').mode = 'prefix'
         row1.operator("cyaobjectlist.rename_add_word" , text = 'add suffix').mode = 'suffix'
 
+        row2 = box.row()
         for mode in ( 'replace' , 'l>r' , 'r>l' , 'del.number'):            
-            row1.operator("cyaobjectlist.rename_replace" , text = mode ).mode = mode
+            row2.operator("cyaobjectlist.rename_replace" , text = mode ).mode = mode
 
 
 

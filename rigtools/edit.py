@@ -182,8 +182,9 @@ def align_position():
 
 #---------------------------------------------------------------------------------------
 #アクティブなボーンに向きをあわせる
+#アクティブなボーンに向きをあわせる ただしロールはそのまま
 #---------------------------------------------------------------------------------------
-def align_direction():
+def align_direction(mode):
     selected = [x.name for x in utils.get_selected_bones() ]
     act_name = utils.get_active_bone().name
     amt=bpy.context.object
@@ -197,6 +198,7 @@ def align_direction():
             tgt = amt.data.edit_bones[bonename]
             head = Vector(tgt.head)
             tgt.matrix = matrix
+            roll = tgt.roll
 
             l = tgt.length
             vec = Vector(act.tail)-Vector(act.head)
@@ -204,7 +206,12 @@ def align_direction():
 
             tgt.head = head
             tgt.tail = Vector(tgt.head) +vec * l
-                
+
+            if mode == 1:
+                tgt.roll = roll
+
+
+
 #---------------------------------------------------------------------------------------
 #アクティブボーン上にそれ以外のボーンを並べる
 #元ボーンのベクトルはheadとtailからもとめられる
@@ -381,6 +388,19 @@ def roll_degree(op):
             bone.roll -= math.pi/2
         if op == '180d':
              bone.roll += math.pi
+
+#平面に投影　単純にtailの値をheadに合わせる
+def projection(op):
+    for bone in bpy.context.selected_bones:
+        head = Vector(bone.head)
+        tail = Vector(bone.tail)
+        if op == 'xy':
+            bone.tail = Vector((tail[0],tail[1],head[2]))
+        if op == 'yz':
+            bone.tail = Vector((head[0],tail[1],tail[2]))
+        if op == 'zx':
+            bone.tail = Vector((tail[0],head[1],tail[2]))
+            
 
 
 def axis_swap(axis):

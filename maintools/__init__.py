@@ -38,6 +38,7 @@ from . import transform
 from . import modeling
 from . import etc
 from . import blendshape
+from . import scenesetup
 
 imp.reload(utils)
 imp.reload(modifier)
@@ -52,6 +53,7 @@ imp.reload(transform)
 imp.reload(modeling)
 imp.reload(etc)
 imp.reload(blendshape)
+imp.reload(scenesetup)
 
 
 #頂点カラーデータ
@@ -166,6 +168,11 @@ class CYATOOLS_Props_OA(PropertyGroup):
     with_bevel : BoolProperty(name="with bevel" ,  default = True)
     curve_liner : BoolProperty(name="liner" ,  default = False)
 
+    #シーンセットアップツール
+    proxy_with_skinbinding : BoolProperty(name="skinbind" ,  default = False)
+    proxy_hide_source : BoolProperty(name="hide" ,  default = True)
+
+
 
 #---------------------------------------------------------------------------------------
 #UI
@@ -180,6 +187,7 @@ class CYATOOLS_PT_toolPanel(utils.panel):
         self.layout.operator("cyatools.rename", icon='SYNTAX_OFF')
         self.layout.operator("cyatools.skinningtools", icon='MOD_SKIN')
         self.layout.operator("cyatools.blendshape_tools", icon='MOD_SKIN')
+        self.layout.operator("cyatools.scenesetuptools", icon='SCENE_DATA')
 
 #---------------------------------------------------------------------------------------
 #Modeling Tools
@@ -684,6 +692,26 @@ class CYATOOLS_MT_blendshape_tools(Operator):
         row5.operator( "cyatools.blendshape_restore_pos" , icon = 'MOD_MIRROR')
 
 
+#---------------------------------------------------------------------------------------
+#シーンセットアップツール
+#---------------------------------------------------------------------------------------
+class CYATOOLS_MT_scenesetuptools(Operator):
+    bl_idname = "cyatools.scenesetuptools"
+    bl_label = "scene setup tools"
+
+    def execute(self, context):
+        return{'FINISHED'}
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width = 400)
+
+    def draw(self, context):
+        props = bpy.context.scene.cyatools_oa
+        layout=self.layout
+        box = layout.box()
+        box.operator( "cyatools.scenesetup_makeproxy" , icon = 'LINKED')
+        box.prop(props, 'proxy_with_skinbinding' , expand=True)
+        box.prop(props, 'proxy_hide_source' , expand=True)
 
 #---------------------------------------------------------------------------------------
 #Operator
@@ -1515,6 +1543,20 @@ class CYATOOLS_OT_rename_dropper(Operator):
 
 
 #---------------------------------------------------------------------------------------
+#Scene Setup Tools
+#---------------------------------------------------------------------------------------
+
+class CYATOOLS_OT_scenesetup_makeproxy(Operator):
+    """入力した文字列の末尾に連番を振るリネーム"""
+    bl_idname = "cyatools.scenesetup_makeproxy"
+    bl_label = "Make Proxy"
+    def execute(self, context):
+        scenesetup.make_proxy()
+        return {'FINISHED'}
+
+
+
+#---------------------------------------------------------------------------------------
 #ここから下のリネームツール、未対応
 #---------------------------------------------------------------------------------------
 class Rename_del_suffix(Operator):
@@ -1585,6 +1627,7 @@ classes = (
     CYATOOLS_MT_modifier_tools,
     CYATOOLS_MT_object_applier,
     CYATOOLS_MT_curvetools,
+    CYATOOLS_MT_scenesetuptools,
     #CYATOOLS_MT_materialtools,
     #CYATOOLS_MT_etc,
     #CYATOOLS_MT_particletools,
@@ -1682,7 +1725,6 @@ classes = (
     CYATOOLS_OT_rename_dropper,
     
 
-
     #スキニング
     CYATOOLS_MT_skinningtools,
     CYATOOLS_OT_skinning_add_influence_bone,
@@ -1715,6 +1757,9 @@ classes = (
     CYATOOLS_OT_blendshape_paste_vertex_pos,
     CYATOOLS_OT_blendshape_keep_pos,
     CYATOOLS_OT_blendshape_restore_pos,
+
+    #シーンセットアップ
+    CYATOOLS_OT_scenesetup_makeproxy
 
     #パーティクル
 #    CYATOOLS_OT_particle_effector_collection_assign

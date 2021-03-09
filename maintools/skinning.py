@@ -22,6 +22,10 @@ def bone_xray(self,context):
 ##スキンバインド
 def bind():
     props = bpy.context.scene.cyatools_oa
+    doSkinBind(props.bind_auto_bool)
+
+def doSkinBind(bind_auto):    
+    #props = bpy.context.scene.cyatools_oa
 
     selected = utils.selected()
 
@@ -63,7 +67,7 @@ def bind():
     #バインドするためレイヤを全表示する必要がある。表示レイヤを取っておき表示してバインドしたあと元の状態に戻す。
 
     utils.mode_o()
-    if props.bind_auto_bool:
+    if bind_auto:
         utils.act(amt)
 
         disp = []

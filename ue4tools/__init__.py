@@ -28,17 +28,7 @@ imp.reload(cmd)
 #Props
 #---------------------------------------------------------------------------------------
 class CYAUE4TOOLS_Props_OA(PropertyGroup):
-    #option
-    # upvector : EnumProperty(items = WORLD , name = 'bone upvector',default = 'Blender' ) 
-    # add_tipbones : BoolProperty(name="add tip bones" ,  default = False)
-
-    #FBX option
-    # scale : FloatProperty(name="scale",min=0.001,default=1.0)
-    # export_option : EnumProperty(items= (('sel', 'sel', '選択されたもの'),('eachsel', 'eachsel', 'Export selection to each file'),('col', 'col', 'colコレクション')))
-    # export_mode : EnumProperty(items= (('def', 'def', 'Default'),('ue', 'ue', 'ForUnrealEngine'),('md', 'md', 'ForMarverousDesigner')))
     filepath : StringProperty(name = "path")
-    # axis_forward : EnumProperty(items = AXIS , name = 'forward',default = '-Y' )
-    # axis_up : EnumProperty(items = AXIS , name = 'up' ,default = 'Z')
 
 
 
@@ -62,7 +52,7 @@ class CYAUE4TOOLS_PT_ui(utils.panel):
         box.prop( bpy.context.scene.unit_settings ,"scale_length")
 
         row = box.row()
-        for val in (0.01,1.0,100.0):
+        for val in (0.01,1.0,10.0,100.0):
             row.operator( 'cyaue4tools.unitscale',text = str(val) ).value = val
         # row.operator( 'cyaue4tools.unitscale',text = "1.0").mode = 1
         # row.operator( 'cyaue4tools.unitscale',text = "100").mode = 2

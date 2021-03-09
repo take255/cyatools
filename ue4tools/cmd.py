@@ -72,7 +72,7 @@ def export(mode):
             print(c.name,c.name.find('00_Model'))
             if c.name.find('00_Model_') != -1:
                 utils.deselectAll()
-                name = c.name.replace('00_Model_','')
+                name = c.name.replace('00_Model_','CH_')
                 for ob in bpy.context.scene.objects: 
                     cols = [x.name for x in ob.users_collection]
                     print(ob.name,cols,c in cols)
@@ -115,7 +115,9 @@ def export_core( mode , name ):
             bake_anim_use_all_bones = True,
             bake_anim_use_nla_strips = False,
             bake_anim_use_all_actions = False,
-            bake_anim_force_startend_keying = True
+            bake_anim_force_startend_keying = True,
+            #bake_anim_step = 0.1
+            bake_anim_simplify_factor = 0.0
             )
 
     if mode == 'model':

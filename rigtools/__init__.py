@@ -413,7 +413,8 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         box1 = row1.box()
         box1.label(text = 'align')
         box1.operator("cyarigtools.edit_align_position")
-        box1.operator("cyarigtools.edit_align_direction")
+        box1.operator("cyarigtools.edit_align_direction",text = "direction").mode = 0
+        box1.operator("cyarigtools.edit_align_direction",text = "dir(keep roll)").mode = 1
         box1.operator("cyarigtools.edit_align_along")
         box1.operator("cyarigtools.edit_align_near_axis")
 
@@ -428,6 +429,15 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         col = box.column()
 
         box1 = col.box()
+
+        #グローバル平面に投影する
+        box1.label(text = 'projection')
+
+        row = box1.row()
+        for x in ( 'xy' , 'yz' , 'zx'):
+            row.operator("cyarigtools.edit_projection" ,text = x ).op = x
+
+
         box1.label(text = 'roll')
 
         row = box1.row()
@@ -504,10 +514,9 @@ class CYARIGTOOLS_PT_rigshape_selector(bpy.types.Operator):
         return context.window_manager.invoke_props_dialog(self)
 
 
-        #col.operator("cyarigtools.arppanel",icon = 'OBJECT_DATA')
 
 #---------------------------------------------------------------------------------------
-#Rigify Toos UI
+#ARP Tools UI
 #---------------------------------------------------------------------------------------
 class CYARIGTOOLS_MT_arptools(bpy.types.Operator):
     """Auto Rig Pro用ツール"""
@@ -525,12 +534,14 @@ class CYARIGTOOLS_MT_arptools(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
 
-        row = layout.row(align=False)
+        col = layout.column(align=False)
+        row = col.row(align=False)
 
         box = row.box()
         box.label(text="Constraint")
         #row = box.row()
         box.operator("cyarigtools.arp_const",text = 'UE4').rig = 'ue4'
+        box.operator("cyarigtools.arp_const",text = 'UE4_EX').rig = 'ue4_ex'
         box.operator("cyarigtools.arp_const",text = 'MIXAMO').rig = 'mixamo'
 
 
@@ -538,6 +549,7 @@ class CYARIGTOOLS_MT_arptools(bpy.types.Operator):
         box.label(text="Adjust ARP")
         #row = box.row()
         box.operator( 'cyarigtools.adjust_arp',text = "UE4").mode = 'ue4'
+        box.operator( 'cyarigtools.adjust_arp',text = "UE4_EX").mode = 'ue4_ex'
         box.operator( 'cyarigtools.adjust_arp',text = "MIXAMO").mode = 'mixamo'
 
         box = row.box()
@@ -545,6 +557,11 @@ class CYARIGTOOLS_MT_arptools(bpy.types.Operator):
         #box.operator("cyarigtools.arp_extracter")
         #box.operator("cyarigtools.arp_connect")
         box.operator("cyarigtools.arp_disable_ikstretch")
+
+        box = col.box()
+        box.label(text = 'proxy')
+        box.operator("cyarigtools.arp_proxy_rig",text = "rig").mode = 'rig'
+        box.operator("cyarigtools.arp_proxy_rig",text = "anim").mode = 'anim'
 
 
 
@@ -789,11 +806,13 @@ class CYARIGTOOLS_OT_edit_align_position(bpy.types.Operator):
         return {'FINISHED'}
 
 class CYARIGTOOLS_OT_edit_align_direction(bpy.types.Operator):
-    """アクティブなジョイントの向きに、それ以外のジョイントの向きを合わせる。"""
+    """アクティブなジョイントの向きに、それ以外のジョイントの向きを合わせる。
+    keep rollはroll値をそのままにする"""
     bl_idname = "cyarigtools.edit_align_direction"
-    bl_label = "direction"
+    bl_label = ""
+    mode : IntProperty()
     def execute(self, context):
-        edit.align_direction()
+        edit.align_direction(self.mode)
         return {'FINISHED'}
 
 class CYARIGTOOLS_OT_edit_align_along(bpy.types.Operator):
@@ -852,6 +871,16 @@ class CYARIGTOOLS_OT_edit_roll_degree(bpy.types.Operator):
     def execute(self, context):
         edit.roll_degree(self.op)
         return {'FINISHED'}
+
+class CYARIGTOOLS_OT_edit_projection(bpy.types.Operator):
+    """ワールドの平面に平行になるようにする"""
+    bl_idname = "cyarigtools.edit_projection"
+    bl_label = ""
+    op : StringProperty()
+    def execute(self, context):
+        edit.projection(self.op)
+        return {'FINISHED'}
+
 
 class CYARIGTOOLS_OT_edit_align_roll_global(bpy.types.Operator):
     """グローバル軸にX,Z軸向きをそろえる"""
@@ -952,7 +981,6 @@ class CYARIGTOOLS_OT_arp_connect(bpy.types.Operator):
         arp.connect()
         return {'FINISHED'}
 
-
 class CYARIGTOOLS_OT_arp_extracter(bpy.types.Operator):
     """キャラのボーンを複製する"""
     bl_idname = "cyarigtools.arp_extracter"
@@ -989,6 +1017,18 @@ class CYARIGTOOLS_OT_arp_disable_ikstretch(bpy.types.Operator):
     def execute(self, context):
         arp.disable_ikstretch()
         return {'FINISHED'}
+
+#Proxy
+class CYARIGTOOLS_OT_arp_proxy_rig(bpy.types.Operator):
+    """リンクしたモデルを選択して実行するとrootとanimmodelがプロキシ化されます"""
+    bl_idname = "cyarigtools.arp_proxy_rig"
+    bl_label = "proxy　rig"
+    mode : StringProperty()
+    def execute(self, context):
+        arp.proxy_rig(self.mode)
+        return {'FINISHED'}
+
+
 
 #---------------------------------------------------------------------------------------
 #Add bone
@@ -1084,6 +1124,7 @@ classes = (
     CYARIGTOOLS_OT_edit_align_at_flontview,
     CYARIGTOOLS_OT_edit_adjust_roll,
     CYARIGTOOLS_OT_edit_roll_degree,
+    CYARIGTOOLS_OT_edit_projection,
     CYARIGTOOLS_OT_edit_align_roll_global,
     CYARIGTOOLS_OT_edit_axis_swap,
     CYARIGTOOLS_OT_locator_add_bone,
@@ -1111,7 +1152,8 @@ classes = (
     CYARIGTOOLS_OT_arp_extracter,
     CYARIGTOOLS_OT_arp_const,
     CYARIGTOOLS_OT_adjust_arp,
-    CYARIGTOOLS_OT_arp_disable_ikstretch
+    CYARIGTOOLS_OT_arp_disable_ikstretch,
+    CYARIGTOOLS_OT_arp_proxy_rig
 )
 
 def register():
