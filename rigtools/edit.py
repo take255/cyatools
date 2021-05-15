@@ -6,6 +6,51 @@ from mathutils import ( Vector , Matrix )
 from . import utils
 imp.reload(utils)
 
+
+#---------------------------------------------------------------------------------------
+#ボーンの初期姿勢のコピー
+#---------------------------------------------------------------------------------------
+
+#コピー先、コピー元のボーンを選択(コピー元をアクティブ)、editモードに入り骨を選択。その後コマンドを実行
+#最新版では複数のアーマチュアでエディットモードにはいれてしまう
+#あらかじめコピー元のボーンを選択しておくのが正しいやり方な気がする
+def copy_from_another():
+    selected = utils.selected()
+
+    for amt in selected:
+        if amt == utils.getActiveObj():
+            source = amt
+        else:
+            target = amt
+    
+    utils.mode_o()
+    utils.act(source)
+    utils.mode_e()
+    selected = utils.get_selected_bones()
+    
+    dataarray = []
+    for b in selected:
+        #bone = amt.data.edit_bones[b.name]
+        matrix = b.matrix
+        dataarray.append( [ b.name , b.matrix ] )
+
+        # head = Vector(bone.head)
+        # vec = Vector(bone.tail) - head
+        # length = vec.length/2
+        # vec.normalize()
+        # bone.tail = length * vec + head
+
+    utils.mode_o()
+    utils.act(target)
+    utils.mode_e()
+
+    for d in dataarray:
+        bone = target.data.edit_bones[d[0]]
+        bone.matrix = d[1]
+
+
+
+
 #---------------------------------------------------------------------------------------
 #長さ調整
 #---------------------------------------------------------------------------------------

@@ -380,6 +380,11 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
 
         #上部左
         col = row.box()
+
+        box = col.box()
+        box.label(text = 'copy')
+        box.operator("cyarigtools.edit_copy_from_another")
+
         box = col.box()
         box.label(text = 'length')
         box.operator("cyarigtools.edit_length_uniform")
@@ -757,11 +762,20 @@ class CYARIGTOOLS_OT_setupik_ue(bpy.types.Operator):
         return {'FINISHED'}
 
 
-
-
 #---------------------------------------------------------------------------------------
 # edit tool
 #---------------------------------------------------------------------------------------
+class CYARIGTOOLS_OT_edit_copy_from_another(bpy.types.Operator):
+    """ボーンの姿勢のコピー
+    コピー先、コピー元のボーンの順に選択(コピー元をアクティブ)
+    """
+    bl_idname = "cyarigtools.edit_copy_from_another"
+    bl_label = "copy from another"
+
+    def execute(self, context):
+        edit.copy_from_another()
+        return {'FINISHED'}
+
 class CYARIGTOOLS_OT_edit_length_uniform(bpy.types.Operator):
     """ボーンの長さをそろえる。\n最後に選択されたボーンに他のを合わせる"""
     bl_idname = "cyarigtools.edit_length_uniform"
@@ -770,7 +784,6 @@ class CYARIGTOOLS_OT_edit_length_uniform(bpy.types.Operator):
     def execute(self, context):
         edit.length_uniform()
         return {'FINISHED'}
-
 
 class CYARIGTOOLS_OT_edit_length_half(bpy.types.Operator):
     """選択されたボーンの長さを半分にする"""
@@ -1110,6 +1123,8 @@ classes = (
     CYARIGTOOLS_OT_setupik_customrig,
 
     #edit
+    CYARIGTOOLS_OT_edit_copy_from_another,
+
     CYARIGTOOLS_OT_edit_length_uniform,
     CYARIGTOOLS_OT_edit_length_half,
     CYARIGTOOLS_OT_edit_genarate_bone_from2,

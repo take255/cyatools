@@ -182,7 +182,42 @@ def pivot_by_facenormal():
     #obj.parent = empty_p    
 
 
+#頂点位置の左から右へのミラーコピー
+#選択した頂点をコピーする
 def mirror_l_to_r():
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+    obj = bpy.context.active_object
+    mesh = obj.data
+
+    size = len(mesh.vertices)
+    kd = kdtree.KDTree(size)
+
+    #rside_indices = [i for i,v in enumerate(mesh.vertices) if v.co.x < 0 and v.select]
+    lside_pos = [[i,(-v.co.x , v.co.y , v.co.z )] for i,v in enumerate(mesh.vertices) if v.co.x < 0  and v.select ]
+
+
+    for i, v in enumerate(mesh.vertices):
+        kd.insert(v.co, i)
+
+    kd.balance()
+
+    bpy.ops.object.mode_set(mode = 'EDIT') 
+    bpy.ops.mesh.select_mode(type="VERT")
+    bpy.ops.mesh.select_all(action = 'DESELECT')
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+
+    for p in lside_pos:
+        co, index, dist = kd.find( p[1] )
+        print("Close to center:",p[0],':', co, index, dist)
+        obj.data.vertices[p[0]].co = (-co.x,co.y,co.z)
+
+
+    bpy.ops.object.mode_set(mode = 'EDIT') 
+
+
+
+
+def mirror_l_to_r_back():
     bpy.ops.object.mode_set(mode = 'OBJECT')
     obj = bpy.context.active_object
     mesh = obj.data

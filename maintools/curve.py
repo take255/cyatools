@@ -22,7 +22,9 @@ def create_liner(dir):
         circleobj.data.resolution_u = 6
 
 
+        curve.data.bevel_mode = 'OBJECT'
         curve.data.bevel_object = circleobj
+
     #curve.data.use_fill_caps = True
         try:
             obj.data.use_uv_as_generated = True    
@@ -57,6 +59,7 @@ def liner_curve(dir):
 
 def assign_bevel_loop( selected , bevelobj):
     for obj in selected:
+        obj.data.bevel_mode = 'OBJECT'
         obj.data.bevel_object = bevelobj
         obj.data.use_fill_caps = True
         try:

@@ -39,6 +39,7 @@ from . import modeling
 from . import etc
 from . import blendshape
 from . import scenesetup
+from . import facemap
 
 imp.reload(utils)
 imp.reload(modifier)
@@ -54,6 +55,7 @@ imp.reload(modeling)
 imp.reload(etc)
 imp.reload(blendshape)
 imp.reload(scenesetup)
+imp.reload(facemap)
 
 
 #頂点カラーデータ
@@ -171,7 +173,10 @@ class CYATOOLS_Props_OA(PropertyGroup):
     #シーンセットアップツール
     proxy_with_skinbinding : BoolProperty(name="skinbind" ,  default = False)
     proxy_hide_source : BoolProperty(name="hide" ,  default = True)
-
+    newcollection_name1 : StringProperty(name = "char name")
+    newcollection_name2 : StringProperty(name = "categoty")
+    newcollection_name3 : StringProperty(name = "parts name")
+ 
 
 
 #---------------------------------------------------------------------------------------
@@ -188,6 +193,7 @@ class CYATOOLS_PT_toolPanel(utils.panel):
         self.layout.operator("cyatools.skinningtools", icon='MOD_SKIN')
         self.layout.operator("cyatools.blendshape_tools", icon='MOD_SKIN')
         self.layout.operator("cyatools.scenesetuptools", icon='SCENE_DATA')
+        self.layout.operator("cyatools.facemaptools", icon='SCENE_DATA')
 
 #---------------------------------------------------------------------------------------
 #Modeling Tools
@@ -708,10 +714,59 @@ class CYATOOLS_MT_scenesetuptools(Operator):
     def draw(self, context):
         props = bpy.context.scene.cyatools_oa
         layout=self.layout
+
         box = layout.box()
         box.operator( "cyatools.scenesetup_makeproxy" , icon = 'LINKED')
         box.prop(props, 'proxy_with_skinbinding' , expand=True)
         box.prop(props, 'proxy_hide_source' , expand=True)
+
+        box = layout.box()
+        box.operator( "cyatools.scenesetup_rename_collection_model" , icon = 'SYNTAX_OFF')
+
+        box = layout.box()
+        box.label( text = 'Create Collection' , icon = 'MODIFIER')
+
+        box.prop(props, 'newcollection_name1' , expand=True)
+        box.prop(props, 'newcollection_name2' , expand=True)
+        box.prop(props, 'newcollection_name3' , expand=True)
+
+        row = box.row()
+        row.operator( "cyatools.scenesetup_create_new_collection" , icon = 'SYNTAX_OFF')
+        row.operator( "cyatools.scenesetup_pick_collection_name" , icon = 'SYNTAX_OFF')
+        row.operator( "cyatools.scenesetup_create_skin_parts" , icon = 'SYNTAX_OFF')
+
+        box = layout.box()
+        box.label( text = 'Save Collection State' , icon = 'MODIFIER')
+        box.operator( "cyatools.scenesetup_save_collection_state" , icon = 'SYNTAX_OFF')
+
+
+        box = layout.box()
+        box.label( text = 'Render State' , icon = 'MODIFIER')
+        box.operator( "cyatools.scenesetup_match_render_to_view" , icon = 'SYNTAX_OFF')
+
+
+
+#---------------------------------------------------------------------------------------
+#フェイスマップツール
+#---------------------------------------------------------------------------------------
+class CYATOOLS_MT_facemaptools(Operator):
+    bl_idname = "cyatools.facemaptools"
+    bl_label = "facemap tools"
+
+    def execute(self, context):
+        return{'FINISHED'}
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width = 400)
+
+    def draw(self, context):
+        props = bpy.context.scene.cyatools_oa
+        layout=self.layout
+
+        box = layout.box()
+        box.operator( "cyatools.facemap_select_backside" , icon = 'LINKED')
+
+
 
 #---------------------------------------------------------------------------------------
 #Operator
@@ -766,8 +821,6 @@ class CYATOOLS_OT_curve_assign_taper(Operator):
         def execute(self, context):
             curve.assign_taper()
             return {'FINISHED'}
-
-
 
 
 class CYATOOLS_OT_curve_create_liner(Operator):
@@ -1547,13 +1600,78 @@ class CYATOOLS_OT_rename_dropper(Operator):
 #---------------------------------------------------------------------------------------
 
 class CYATOOLS_OT_scenesetup_makeproxy(Operator):
-    """入力した文字列の末尾に連番を振るリネーム"""
+    """キャラを自動でプロキシモデルに"""
     bl_idname = "cyatools.scenesetup_makeproxy"
     bl_label = "Make Proxy"
     def execute(self, context):
         scenesetup.make_proxy()
         return {'FINISHED'}
 
+class CYATOOLS_OT_scenesetup_rename_collection_model(Operator):
+    """コレクションに合わせてモデル名をリネームする"""
+    bl_idname = "cyatools.scenesetup_rename_collection_model"
+    bl_label = "Rename To Match Collections"
+    def execute(self, context):
+        scenesetup.rename_collection_model()
+        return {'FINISHED'}
+
+
+class CYATOOLS_OT_scenesetup_create_new_collection(Operator):
+    """新規コレクション追加　自動連番機能つき"""
+    bl_idname = "cyatools.scenesetup_create_new_collection"
+    bl_label = "Create"
+    def execute(self, context):
+        scenesetup.create_new_collection()
+        return {'FINISHED'}
+
+class CYATOOLS_OT_scenesetup_create_skin_parts(Operator):
+    """Skin Partsの基本コレクションの作成"""
+    bl_idname = "cyatools.scenesetup_create_skin_parts"
+    bl_label = "Create"
+    def execute(self, context):
+        scenesetup.create_new_skin_parts()
+        return {'FINISHED'}
+
+
+
+class CYATOOLS_OT_scenesetup_pick_collection_name(Operator):
+    """コレクションの名前をピックする"""
+    bl_idname = "cyatools.scenesetup_pick_collection_name"
+    bl_label = "Pick Collection Name"
+    def execute(self, context):
+        scenesetup.pick_collection_name()
+        return {'FINISHED'}
+
+
+class CYATOOLS_OT_scenesetup_save_collection_state(Operator):
+    """コレクションの表示情報をJsonで保存する"""
+    bl_idname = "cyatools.scenesetup_save_collection_state"
+    bl_label = "Save Collection State"
+    def execute(self, context):
+        scenesetup.save_collection_state()
+        return {'FINISHED'}
+
+
+class CYATOOLS_OT_scenesetup_match_render_to_view(Operator):
+    """レンダリングを表示状態に一致させる"""
+    bl_idname = "cyatools.scenesetup_match_render_to_view"
+    bl_label = "Match render state to view"
+    def execute(self, context):
+        scenesetup.match_render_to_view()
+        return {'FINISHED'}
+
+
+#---------------------------------------------------------------------------------------
+#Facemap Tools
+#---------------------------------------------------------------------------------------
+
+class CYATOOLS_OT_facemap_select_backside(Operator):
+    """Backsideというフェイスマップを選する択"""
+    bl_idname = "cyatools.facemap_select_backside"
+    bl_label = "Select Backface"
+    def execute(self, context):
+        facemap.select_backside()
+        return {'FINISHED'}
 
 
 #---------------------------------------------------------------------------------------
@@ -1628,6 +1746,7 @@ classes = (
     CYATOOLS_MT_object_applier,
     CYATOOLS_MT_curvetools,
     CYATOOLS_MT_scenesetuptools,
+    CYATOOLS_MT_facemaptools,
     #CYATOOLS_MT_materialtools,
     #CYATOOLS_MT_etc,
     #CYATOOLS_MT_particletools,
@@ -1759,10 +1878,16 @@ classes = (
     CYATOOLS_OT_blendshape_restore_pos,
 
     #シーンセットアップ
-    CYATOOLS_OT_scenesetup_makeproxy
+    CYATOOLS_OT_scenesetup_makeproxy,
+    CYATOOLS_OT_scenesetup_rename_collection_model,
+    CYATOOLS_OT_scenesetup_create_new_collection,
+    CYATOOLS_OT_scenesetup_pick_collection_name,
+    CYATOOLS_OT_scenesetup_save_collection_state,
+    CYATOOLS_OT_scenesetup_create_skin_parts,
+    CYATOOLS_OT_scenesetup_match_render_to_view,
 
-    #パーティクル
-#    CYATOOLS_OT_particle_effector_collection_assign
+    #フェースマップツール
+    CYATOOLS_OT_facemap_select_backside,
 
 )
 

@@ -17,6 +17,7 @@ VERTEX_COLOR = {
 'SET05(GREEN)'  :("001200","00370C","005F16","0D7D25","24AC39","7FC269","ACD598","D7EEC9"),
 'SET06(BLUE)'  :("00001D","00004A","000762","0008A9","0022E9","0055EE","7FCEF4","B5EBFB"),
 'SET07(PURPLE)'  :("200020","350045","450062","530053","601986","8944A1","C177C1","FFAAFF"),
+'SET08(Zbias)'  :("ff0000","dd0000","bb0000","990000","770000","550000","330000","110000","000000"),
 
 'METAL'  :("ff0000","00ffff","FFA500","333339","ff9999","99ffe9","ffdb99","e4e54c"),
 'LEATHER':("fff900","0000ff","999933","333399","ffff99","99bcff","062d0c","ffa500"),
@@ -39,7 +40,7 @@ def set_item(self, value):
 
 def change_mattype(self,contex):
     props = bpy.context.scene.cyamaterialtools_oa
-    add(props.material_type)
+    add(props.material_type)n
     #index = props.material_index
 
 def add(mattype):

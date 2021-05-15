@@ -270,8 +270,30 @@ class collection:
                          exist = True
 
                     exist = self.exist_loop(col ,c, exist)
-
           return exist
+
+
+     #ビューレイヤーで表示中のコレクション名を取得
+     #レイヤーの名前と表示状態をリストで返す　
+     #親のコレクションが非表示ならスルー
+     @classmethod
+     def get_visible(self):
+          self.visible = []
+          vlayer = bpy.context.view_layer #カレントビューレイヤー
+          for c in vlayer.layer_collection.children:
+               self.get_visible_loop(c)
+               # if c.hide_viewport:
+               #      self.visible.append( c.name )
+               #      self.get_visible_loop(c)
+
+          return self.visible
+
+     @classmethod
+     def get_visible_loop( self , c ):
+          if not c.hide_viewport:
+               self.visible.append( c.name )
+               for c in c.children:                         
+                    self.get_visible_loop(c)
 
 
 class scene:
