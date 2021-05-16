@@ -40,7 +40,7 @@ def set_item(self, value):
 
 def change_mattype(self,contex):
     props = bpy.context.scene.cyamaterialtools_oa
-    add(props.material_type)n
+    add(props.material_type)
     #index = props.material_index
 
 def add(mattype):
