@@ -41,6 +41,7 @@ imp.reload(arp)
 
 
 AXIS = (('X','X','X'), ('Y','Y','Y'), ('Z','Z','Z'), ('-X','-X','-X'), ('-Y','-Y','-Y'), ('-Z','-Z','-Z'))
+AXIS_PLANE = (('X','X','X'),  ('Z','Z','Z') )
 
 RIGSHAPEPATH = "E:\data\googledrive\lib\model/rig.blend"
 
@@ -129,6 +130,9 @@ class CYARIGTOOLS_Props_OA(PropertyGroup):
 
     axis_forward : EnumProperty(items = AXIS , name = 'forward',default = '-Z' )
     axis_up : EnumProperty(items = AXIS , name = 'up' ,default = 'Y')
+
+
+    axis_plane : EnumProperty(items = AXIS_PLANE , name = 'axis',default = 'X' )
 
 
 
@@ -389,10 +393,12 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         box.label(text = 'length')
         box.operator("cyarigtools.edit_length_uniform")
         box.operator("cyarigtools.edit_length_half")
+        box.operator("cyarigtools.edit_check_ratio")
 
         box = col.box()
         box.label(text = 'modify')
-        box.operator("cyarigtools.edit_genarate_symmetry")
+        box.operator("cyarigtools.edit_genarate_symmetry",text = "symmetry0").mode = 0
+        box.operator("cyarigtools.edit_genarate_symmetry",text = "symmetry1").mode = 1
         box.operator("cyarigtools.edit_connect_chain")
 
 
@@ -428,6 +434,9 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         box1.operator("cyarigtools.edit_align_2axis_plane")
         box1.operator("cyarigtools.edit_align_on_plane")
         box1.operator("cyarigtools.edit_align_at_flontview")
+        box1.prop(props,"axis_plane")
+
+        
 
         box = col1.box()
         box.label(text = 'direction')
@@ -793,6 +802,17 @@ class CYARIGTOOLS_OT_edit_length_half(bpy.types.Operator):
         edit.length_half()
         return {'FINISHED'}
 
+
+class CYARIGTOOLS_OT_edit_check_ratio(bpy.types.Operator):
+    """２つの骨の長さの割合を出す
+    腕のながさの割合は1.08が望ましい"""
+    bl_idname = "cyarigtools.edit_check_ratio"
+    bl_label = "check ratio"
+    def execute(self, context):
+        edit.check_ratio()
+        return {'FINISHED'}
+
+
 class CYARIGTOOLS_OT_edit_genarate_bone_from2(bpy.types.Operator):
     """最初に選択したボーンの根本から、最後に選択したボーンの先端までのボーンを生成する"""
     bl_idname = "cyarigtools.edit_genarate_bone_from2"
@@ -801,13 +821,17 @@ class CYARIGTOOLS_OT_edit_genarate_bone_from2(bpy.types.Operator):
         edit.genarate_bone_from2()
         return {'FINISHED'}
 
+
 #複製ではない
 class CYARIGTOOLS_OT_edit_genarate_symmetry(bpy.types.Operator):
-    """ネーミングルールでミラーリングする。エディットモードでコピー元のボーンを選択して実行する。"""
+    """ネーミングルールでミラーリングする。エディットモードでコピー元のボーンを選択して実行する。
+    mode0: 先頭か最後にLR識別子がある
+    mode1: 中間にLR識別子がある """
     bl_idname = "cyarigtools.edit_genarate_symmetry"
     bl_label = "symmetry"
+    mode : IntProperty()
     def execute(self, context):
-        edit.genarate_symmetry()
+        edit.genarate_symmetry(self.mode)
         return {'FINISHED'}
 
 class CYARIGTOOLS_OT_edit_align_position(bpy.types.Operator):
@@ -1127,6 +1151,8 @@ classes = (
 
     CYARIGTOOLS_OT_edit_length_uniform,
     CYARIGTOOLS_OT_edit_length_half,
+    CYARIGTOOLS_OT_edit_check_ratio,
+
     CYARIGTOOLS_OT_edit_genarate_bone_from2,
     CYARIGTOOLS_OT_edit_genarate_symmetry,
 

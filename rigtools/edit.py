@@ -85,6 +85,15 @@ def length_half():
         bone.tail = length * vec + head
 
 
+#2つの骨を選択して実行。２つの骨の長さの割合を出す
+def check_ratio():
+    amt = bpy.context.object
+    utils.mode_e()
+    bones = utils.get_selected_bones()
+
+    ratio = bones[0].length/bones[1].length
+    print(ratio)
+
 #---------------------------------------------------------------------------------------
 #最初に選択したボーンの根本から、最後に選択したボーンの先端までのボーンを生成する
 #---------------------------------------------------------------------------------------
@@ -109,12 +118,15 @@ def genarate_bone_from2():
 Lsign = ('L_' , '_l' , '.l' ,'_L')
 Rsign = ('R_' , '_r' , '.r' ,'_R')
 
-def genarate_symmetry():
+def genarate_symmetry(mode):
+    if mode == 1:
+        genarate_symmetry2()
+        return
+        
     props = bpy.context.scene.cyarigtools_props
 
     amt = bpy.context.active_object
     
-    oppositeBones = []
     for bone in bpy.context.selected_bones:
         name = bone.name
         head = bone.head
@@ -132,6 +144,42 @@ def genarate_symmetry():
                 newname = R + name[2:] 
             elif name[:2] == R:
                 newname = L + name[2:]
+            else:
+                Exist = False
+        
+            if Exist:
+                newbone = amt.data.edit_bones[newname]
+                newbone.head = (-head[0],head[1], head[2])
+                newbone.tail = (-tail[0],tail[1], tail[2])
+
+                if props.axismethod == 'old':
+                    newbone.roll = -roll + math.pi #反転したあと１８０°回転させる
+
+                elif props.axismethod == 'new':
+                    newbone.roll = -roll
+
+
+#---------------------------------------------------------------------------------------
+#骨のミラーリング。LR識別が中間にある場合にこちらを使用
+#---------------------------------------------------------------------------------------
+Lsign2 = ('_L_' , '_l_')
+Rsign2 =  ('_R_' , '_r_')
+def genarate_symmetry2():
+    props = bpy.context.scene.cyarigtools_props
+
+    amt = bpy.context.active_object
+    
+    for bone in bpy.context.selected_bones:
+        name = bone.name
+        head = bone.head
+        tail = bone.tail
+        roll = bone.roll
+
+        for L ,R in zip( Lsign2 , Rsign2 ):
+            Exist = True
+
+            if name.find(L) != -1:
+                newname = name.replace(L,R)
             else:
                 Exist = False
         
@@ -188,6 +236,30 @@ def AdjustRoll(bone,nor):
         bone.roll = sita*sign
 
     elif props.axismethod == 'new':
+        bone.roll = sita*sign + math.pi/2
+
+
+#平面の法線からボーンのロールを修正する
+#axis_planeプロパティをもとに計算
+def AdjustRoll_axisplane(bone,nor):
+    props = bpy.context.scene.cyarigtools_props
+    mat = bone.matrix
+    
+    z = Vector((mat[0][2],mat[1][2],mat[2][2]))
+    z.normalize()
+
+    #Xvectorを回転の正負判定に使う
+    #Ｘ軸と法線の内積が正なら＋、負ならー
+    x = Vector((mat[0][0],mat[1][0],mat[2][0]))
+    sign= x.dot(nor)/math.fabs(x.dot(nor))
+
+    cos_sita= z.dot(nor)
+    sita = math.acos( cos_sita );
+
+    if props.axis_plane == 'Z':
+        bone.roll = sita*sign
+
+    elif props.axis_plane == 'X':
         bone.roll = sita*sign + math.pi/2
 
 
@@ -328,8 +400,8 @@ def along_2axis_plane():
     #デバッグ用ボーン----- ここまで
 
     #平面の法線からボーンのロールを修正する
-    AdjustRoll(bone1,nor)
-    AdjustRoll(bone2,nor)
+    AdjustRoll_axisplane(bone1,nor)
+    AdjustRoll_axisplane(bone2,nor)
 
 
 
@@ -371,7 +443,7 @@ def align_on_plane():
     #平面の法線からボーンのロールを修正する
     for b in selected:
         bone = amt.data.edit_bones[b]
-        AdjustRoll(bone,nor)
+        AdjustRoll_axisplane(bone,nor)
 
 
 #---------------------------------------------------------------------------------------

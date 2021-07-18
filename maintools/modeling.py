@@ -339,3 +339,11 @@ def paste_bshape_pos():
     bm.to_mesh(obj.data)
     mesh.update()
 
+
+#自動スムーズをONにして角度を１８０度にする
+def normal_180deg():
+    for ob in utils.selected():
+        ob.data.use_auto_smooth = True
+        ob.data.auto_smooth_angle = 180
+    
+

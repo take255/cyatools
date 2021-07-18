@@ -61,7 +61,7 @@ class CYAUE4TOOLS_PT_ui(utils.panel):
         box = col.box()
         box.label(text="Export")
 
-        for mode in ('model','anim'):
+        for mode in ('model','anim','anim_linked','facial'):
             box.operator("cyaue4tools.export" , text = mode ).mode = mode
 
         row = box.row()

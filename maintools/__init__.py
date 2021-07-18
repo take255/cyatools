@@ -163,6 +163,9 @@ class CYATOOLS_Props_OA(PropertyGroup):
         default = 'L>R'
         )
 
+    skin_filepath : StringProperty(name = "path")
+
+
     #マテリアル関連
     material_index : IntProperty( name = "number", min=0, max=10, default=1 )
 
@@ -287,6 +290,12 @@ class CYATOOLS_MT_modeling_tools(Operator):
         box4.prop(props, 'facedot_size' , expand=True)
         box4.prop(props, 'outline_width' , expand=True)
         box4.prop(props, 'origin_size' , expand=True)
+
+        box4 = col.box()
+        box4.label( text = 'normal' )
+        col1 = box4.column()
+        row = col1.row()
+        row.operator( "cyatools.modeling_normal_180deg")
 
 
 class CYATOOLS_MT_modifier_tools(Operator):
@@ -544,6 +553,19 @@ class CYATOOLS_MT_skinningtools(Operator):
         row1 = col1.row()
         row1.prop(props, 'weightmirror_dir' , expand=True)
 
+
+        #CSVを使ったウェイト編集ツール
+        box = layout.box()
+        box.label(text = 'vetex group edit with csv')
+        col1 = box.column()
+        row1 = col1.row()
+        row1.operator("cyatools.skinning_rename_with_csvtable")
+        row1.operator("cyatools.skinning_export_vertexgroup_list")
+        row1.operator("cyatools.skinning_transfer_with_csvtable")
+
+        row2 = col1.row()
+        row2.prop(props,"skin_filepath")
+        row2.operator( 'cyatools.skinning_filebrowse' , icon = 'FILE_FOLDER' ,text = "")
 
         # box = col.box()
         # box.label(text = 'weight')
@@ -1318,6 +1340,14 @@ class CYATOOLS_OT_modeling_paste_vertex_pos(Operator):
         modeling.paste_vertex_pos()
         return {'FINISHED'}
 
+class CYATOOLS_OT_modeling_normal_180deg(Operator):
+    """自動スムーズにして角度を180度に設定"""
+    bl_idname = "cyatools.modeling_normal_180deg"
+    bl_label = "auto smooth 180deg"    
+    def execute(self, context):
+        modeling.normal_180deg()
+        return {'FINISHED'}
+
 
 #---------------------------------------------------------------------------------------
 #ブレンドシェイプ
@@ -1511,6 +1541,54 @@ class CYATOOLS_OT_skinning_delete_all_vtxgrp(Operator):
         skinning.delete_all_vtxgrp()
         return {'FINISHED'}
 
+# class CYATOOLS_OT_skinning_rename_with_csvtable(Operator):
+#     """頂点グループをcsvの変換テーブルを使ってリネーム"""
+#     bl_idname = "cyatools.skinning_rename_with_csvtable"
+#     bl_label = "rename vtx grp"
+#     def execute(self, context):
+#         skinning.rename_with_csvtable()
+#         return {'FINISHED'}
+
+class CYATOOLS_OT_skinning_export_vertexgroup_list(Operator):
+    """頂点グループのリストを出力"""
+    bl_idname = "cyatools.skinning_export_vertexgroup_list"
+    bl_label = "export vertex group"
+    def execute(self, context):
+        skinning.export_vertexgroup_list()
+        return {'FINISHED'}
+
+class CYATOOLS_OT_skinning_transfer_with_csvtable(Operator):
+    """csvの変換テーブルを使ってウェイトを転送"""
+    bl_idname = "cyatools.skinning_transfer_with_csvtable"
+    bl_label = "transfer "
+    def execute(self, context):
+        skinning.transfer_with_csvtable()
+        return {'FINISHED'}
+
+
+#---------------------------------------------------------------------------------------
+#SKin FileBrowser
+#---------------------------------------------------------------------------------------
+class CYATOOLS_MT_skinning_rename_with_csvtable(Operator):
+    bl_idname = "cyatools.skinning_rename_with_csvtable"
+    bl_label = "rename vtx grp"
+
+    filepath : bpy.props.StringProperty(subtype="FILE_PATH")
+    filename : StringProperty()
+    directory : StringProperty(subtype="FILE_PATH")
+
+    def execute(self, context):
+        #print((self.filepath, self.filename, self.directory))
+        # props = bpy.context.scene.cyatools_oa    
+        # props.skin_filepath = self.filepath
+        skinning.rename_with_csvtable(self.filepath)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+
 #---------------------------------------------------------------------------------------
 #Rename
 #---------------------------------------------------------------------------------------
@@ -1668,7 +1746,7 @@ class CYATOOLS_OT_scenesetup_match_render_to_view(Operator):
 class CYATOOLS_OT_facemap_select_backside(Operator):
     """Backsideというフェイスマップを選する択"""
     bl_idname = "cyatools.facemap_select_backside"
-    bl_label = "Select Backface"
+    bl_label = "Select Backside"
     def execute(self, context):
         facemap.select_backside()
         return {'FINISHED'}
@@ -1784,6 +1862,7 @@ classes = (
     CYATOOLS_OT_modeling_mirror_l_to_r,
     CYATOOLS_OT_modeling_copy_vertex_pos,
     CYATOOLS_OT_modeling_paste_vertex_pos,
+    CYATOOLS_OT_modeling_normal_180deg,
 
     # instance
     CYATOOLS_OT_instance_select_collection,
@@ -1861,6 +1940,12 @@ classes = (
     CYATOOLS_OT_skinning_delete_all_vtxgrp,
     #CYATOOLS_OT_skinning_mirror_transfer,
     CYATOOLS_OT_skinning_delete_unselected_vtxgroup,
+
+    #CYATOOLS_OT_skinning_rename_with_csvtable,
+    CYATOOLS_MT_skinning_rename_with_csvtable,
+    CYATOOLS_OT_skinning_export_vertexgroup_list,
+    CYATOOLS_OT_skinning_transfer_with_csvtable,
+    #CYATOOLS_MT_skinning_filebrowse,
 
     #マテリアル
     # CYATOOLS_OT_material_assign_vertex_color,

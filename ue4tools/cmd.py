@@ -36,6 +36,46 @@ def export(mode):
         #アニメションシーンなら　CH_Mmob01.blend , RIG_Mmob01.blend　の２つのファイルを取得できるはず
         #プレフィックスと.blendを削除したものをキャラ名とする
 
+        # lib = bpy.data.libraries
+        # if len(lib) == 0:
+        #     msg = 'シーンにキャラクターがリンクされていません'
+        #     bpy.ops.cyatools.messagebox('INVOKE_DEFAULT', message = msg)            
+        #     return
+        # else:
+        #     buf =  re.split('[_.]', lib[0].name )
+
+        #     charname = ''
+        #     for a in buf[1:-1]:
+        #         charname += '_' + a
+
+            # charname = buf[1]
+
+        utils.mode_o()
+        utils.deselectAll()
+        #コレクション00_Model~に含まれているモデルを対象にする
+        #コレクション名：00_Anim_male01_run01　＞　ファイル名：an_male01_run01.fbx
+        for c in bpy.data.collections:
+            if c.name.find('00_Anim_') != -1:
+                #name = 'AN%s_%s' % (charname , c.name.replace('00_Anim_',''))
+                name = 'AN_%s' % (c.name.replace('00_Anim_',''))
+                for ob in bpy.context.scene.objects: 
+                    cols = [x.name for x in ob.users_collection]
+                    print(ob.name,cols,c in cols)
+                    if c.name in cols: 
+                        utils.select(ob,True)
+                        utils.activeObj(ob)
+
+                export_core( mode , name )
+
+        utils.act(act)
+        utils.mode(currentMode)
+
+
+    elif mode == 'anim_linked':
+        #リンクされたファイル名からキャラ名を抜き出す
+        #アニメションシーンなら　CH_Mmob01.blend , RIG_Mmob01.blend　の２つのファイルを取得できるはず
+        #プレフィックスと.blendを削除したものをキャラ名とする
+
         lib = bpy.data.libraries
         if len(lib) == 0:
             msg = 'シーンにキャラクターがリンクされていません'
@@ -57,6 +97,26 @@ def export(mode):
         for c in bpy.data.collections:
             if c.name.find('00_Anim_') != -1:
                 name = 'AN%s_%s' % (charname , c.name.replace('00_Anim_',''))
+                for ob in bpy.context.scene.objects: 
+                    cols = [x.name for x in ob.users_collection]
+                    print(ob.name,cols,c in cols)
+                    if c.name in cols: 
+                        utils.select(ob,True)
+                        utils.activeObj(ob)
+
+                export_core( mode , name )
+
+        utils.act(act)
+        utils.mode(currentMode)
+
+    elif mode == 'facial':
+        utils.mode_o()
+        utils.deselectAll()
+        #コレクション名：00_Anim_male01_run01　＞　ファイル名：an_male01_run01.fbx
+        for c in bpy.data.collections:
+            if c.name.find('00_Anim_') != -1:
+                #name = 'AN%s_%s' % (charname , c.name.replace('00_Anim_',''))
+                name = 'AN_%s' % (c.name.replace('00_Anim_',''))
                 for ob in bpy.context.scene.objects: 
                     cols = [x.name for x in ob.users_collection]
                     print(ob.name,cols,c in cols)
@@ -159,7 +219,7 @@ def export_core( mode , name ):
             bake_anim_simplify_factor = 0.0
             )
 
-    if mode == 'model':
+    elif mode == 'model':
         scale = 1.0
         axis_forward = '-Z'
         axis_up = 'Y'
@@ -183,6 +243,35 @@ def export_core( mode , name ):
             bake_anim_use_nla_strips = False,
             bake_anim_use_all_actions = False,
             bake_anim_force_startend_keying = True
+            )
+
+
+    elif mode == 'facial':
+            scale = 1.0
+            axis_forward = '-Z'
+            axis_up = 'Y'
+            object_types = {'MESH','ARMATURE'} 
+
+            bpy.ops.export_scene.fbx(
+                filepath=outpath ,
+                use_selection = True ,
+                global_scale = scale ,
+                axis_forward = axis_forward ,
+                axis_up = axis_up,
+                object_types = object_types,
+
+                primary_bone_axis = 'Y',
+                secondary_bone_axis = 'X',
+                add_leaf_bones = False,
+
+                #bake animation
+                bake_anim = True,
+                bake_anim_use_all_bones = False,
+                bake_anim_use_nla_strips = False,
+                bake_anim_use_all_actions = False,
+                bake_anim_force_startend_keying = True,
+                #bake_anim_step = 0.1
+                bake_anim_simplify_factor = 0.0
             )
 
     #ユニットスケールをもとに戻す

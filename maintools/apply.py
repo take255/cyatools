@@ -1,3 +1,4 @@
+#from utils import selected
 import bpy
 import math
 from mathutils import Matrix
@@ -521,10 +522,12 @@ def apply_collection_loop(name ):
 
     bpy.ops.object.join()
 
+    #同名のモデルがあれば、語尾に_oldをつける
     if new_name in [ob.name for ob in bpy.data.objects]:
         ob = bpy.data.objects[new_name]
         utils.scene.move_obj_scene(ob)
-        utils.delete(ob)
+        ob.name = new_name + '_old'
+        #utils.delete(ob)
 
     utils.scene.active(current)
     act = utils.getActiveObj()
@@ -604,6 +607,169 @@ def instance_substantial_loop( col , current , matrix):
 #apply Collection Instance
 #---------------------------------------------------------------------------------------
 def apply_collection_instance():
+
+    global doDelSame
+    global ApplyCollectionMode
+
+    doDelSame = False #同名モデル削除しない
+    keeptransform = keepTransform()
+
+    #強制マージがONならマージ。OFFならメニューの設定に準ずる
+    if ApplyCollectionMode:
+        domerge = True
+    else:
+        domerge = doMerge()
+
+
+    domergebymaterial = doMergeByMaterial()
+    fix_scene = target_scene()
+    #シーンの切り替えがあるため、カレントシーンの設定をここで取得しておく。
+
+    target_col = bpy.data.scenes[fix_scene].collection
+    current = bpy.context.window.scene.name
+
+
+    for ob in utils.selected():
+        Duplicated.clear()
+        utils.act(ob)
+        #act = utils.getActiveObj()
+        act = ob
+
+        #If actname contain '_org' , delete '_org'.
+        actname = act.name
+        
+        if actname.find('_org') != -1:
+            actname = actname.replace('_org','')
+        
+
+        #トランスフォームは一度初期化。マトリックスは最後にかける
+        #コンストレインでミラーしている場合は、姿勢を戻したときにコンストレインが不具合を起こす
+        #コンストレインを切った状態のマトリックスを保持して対処
+
+        matrix = Matrix(act.matrix_world) #複製したものに使うマトリックス
+
+        #コンストレインをすべてオフにする
+        for const in act.constraints:
+            const.mute = True
+
+        bpy.context.view_layer.update()#コンストレイン解除時のマトリックスを強制アップデート
+        matrix_source = Matrix(act.matrix_world) #コピー元のモデルのためのマトリックス
+        
+        act.matrix_world = Matrix()
+
+
+        if act.instance_type != 'COLLECTION':
+            return
+
+
+        #モデルを置くコレクションを指定
+        col = utils.collection.create('98_substantial')
+        # if not ApplyCollectionMode:
+        #     col = utils.collection.create('01_substantial')
+        # else:
+        #     col = utils.collection.root()
+
+
+        #このコレクションがカレントシーンにない場合はエラーになる
+        #コレクションが無い場合はカレントにコピーしてくる
+        if not utils.collection.exist(col):
+            utils.collection.move_col(col)
+        
+        instance_substantial_loop( col , current ,Matrix())
+
+        for dat in Duplicated:
+            utils.scene.move_obj_scene(dat.obj)#オブジェクトが他のシーンある場合はそこに移動する
+            apply_model_modifier(dat)
+            utils.act(dat.obj)
+            if not keeptransform:
+                transform_apply()
+
+
+        #姿勢を元に戻し、コンストレインを復帰させる
+        #元のコンスト状態を保持しておらず、すべてONにする処理をしてるので、問題がおきるかも 
+        act.matrix_world = matrix_source
+        for const in act.constraints:
+            const.mute = False
+
+
+        #コレクションにまとめ,強制マージ
+        # apply_collectionで利用する場合はmoveしない
+        if domerge:
+            # print('dup>>',Duplicated)
+            # for obj in [x.obj for x in Duplicated]:
+            #     print('name>>>',obj.name)
+            #     obj.hide_viewport = False
+
+            utils.multiSelection([x.obj for x in Duplicated])
+            bpy.ops.object.join()
+            transform_apply()
+
+            act = utils.getActiveObj()
+
+            if not ApplyCollectionMode:
+                utils.collection.move_obj( act , target_col )# Here, move to target scene.
+            else:
+                utils.collection.move_obj_to_root(act)
+
+            act.matrix_world =  matrix @ act.matrix_world
+
+            utils.scene.move_obj_scene(act)#In the case not exist obj in current scene, move to fit scene.
+            utils.act(act)
+            transform_apply()#マージされたあとのモデルをアプライ
+            act.name = actname
+
+        #マテリアルでモデルを仕分けする
+        elif domergebymaterial:
+            dic = {}
+            for ob in [x.obj for x in Duplicated]:
+                materials = ob.data.materials
+                print(materials)
+                if len(materials) != 0:
+                    mat = materials[0].name
+                    if mat in dic.keys():
+                        dic[mat].append(ob)
+                    else:
+                        dic[mat] = [ob]
+
+
+            for v in dic.values():
+                utils.deselectAll()
+                utils.multiSelection(v)
+        
+                bpy.ops.object.join()
+                transform_apply()
+                act = utils.getActiveObj()
+
+                if not ApplyCollectionMode:
+                    utils.collection.move_obj( act , target_col )
+
+                act.matrix_world =  matrix @ act.matrix_world
+
+        #マージはしない
+        else:
+            for ob in [x.obj for x in Duplicated]:
+
+                if not ApplyCollectionMode:
+                    utils.collection.move_obj( ob , target_col )
+
+                ob.matrix_world =  matrix @ ob.matrix_world
+
+        utils.sceneActive(current)
+
+
+    if not ApplyCollectionMode:
+        utils.sceneActive(fix_scene)
+
+    doDelSame = True
+    return utils.getActiveObj()
+
+
+
+
+#---------------------------------------------------------------------------------------
+#apply Collection Instance
+#---------------------------------------------------------------------------------------
+def apply_collection_instance_():
 
     global doDelSame
     global ApplyCollectionMode
@@ -755,13 +921,13 @@ def apply_collection_instance():
     doDelSame = True
     return utils.getActiveObj()
 
-
 #---------------------------------------------------------------------------------------
 #トランスフォームをアプライする
 #スケールの正負判定　スケールに一つでも負の値が入っていたら法線をフリップする
 #---------------------------------------------------------------------------------------
 def transform_apply():
     act = utils.getActiveObj()
+    print('actname>>',act.name)
     if len( [ x for x in act.scale if x < 0 ] ) > 0:
         utils.mode_e()
         bpy.ops.mesh.select_all(action='DESELECT')#全選択解除してからの

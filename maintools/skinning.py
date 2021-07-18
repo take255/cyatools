@@ -3,6 +3,7 @@ import imp
 import re
 import math
 import mathutils
+import csv
 
 from . import utils
 imp.reload(utils)
@@ -283,7 +284,7 @@ def delete_notexist_vtxgrp():
     # for group in result:
     #     print(group.name)
     #     bpy.context.object.vertex_groups.remove(group)
-def delete_by_word():
+def delete_with_word():
     props = bpy.context.scene.cyatools_oa
     name = props.vertexgrp_string
 
@@ -386,7 +387,7 @@ def weights_transfer(mode):
             weights_transfer_v2()
 
 
-
+#バインドされていなかったらバインドする
 def weights_transfer_v2():
     bpy.ops.object.mode_set(mode = 'OBJECT')
 
@@ -394,10 +395,26 @@ def weights_transfer_v2():
     mesh = obj_source.data
     size = len(mesh.vertices)
 
+    amt = False
+    #ソースオブジェクトにバインドされている骨を調べる
+    for mod in obj_source.modifiers:
+        if mod.type == 'ARMATURE':
+            amt = mod.object
+
+
+
+    #コピー元にアーマチュアモディファイヤが無ければ実行しない
+    if not amt:
+        return
+
+
     #ボーン名とインデックスの変換テーブル作成
+    #ソースオブジェクトにバインドされている骨の一覧を取得
     bonename2index = {}
+    bonearray = []
     for i,vg in enumerate( obj_source.vertex_groups ):
         bonename2index[vg.name] = i
+        bonearray.append(vg.name)
         
     #コピー元のkdTreeを作成
     kd = mathutils.kdtree.KDTree(size)
@@ -415,8 +432,24 @@ def weights_transfer_v2():
             
 
     for obj in utils.selected():
+
         if obj != obj_source:
             mesh = obj.data
+
+            #自動バインド
+            #アーマチュアモディファイヤがあるかどうか調べる。無ければ追加する。
+            ExistsAmt = False
+            for mod in obj.modifiers:
+                if mod.type == 'ARMATURE':
+                    ExistsAmt = True
+
+            if not ExistsAmt:
+                m = obj.modifiers.new("Armature", type='ARMATURE')
+                m.object = amt
+
+                for b in bonearray:
+                    obj.vertex_groups.new(name = b)
+
 
             #remove all vertex weight.
             #ボーン名からインデックスからインデックスの変換テーブル作成
@@ -529,7 +562,7 @@ def weights_mirror_v1():
         index2name[vg.index]=vg.name
         nameflip[vg.name] = nameFlip(vg.name)
         targets = mesh.vertices.values()
-        #print(targets)
+
     for v in mesh.vertices:
         if(v.co.x>SMALL):
             tgt = getTgt(v,targets , SMALL)
@@ -681,14 +714,8 @@ def weights_mirror_v2_():
 
 # Use this tool when made objects instance.
 def mirror_transfer():
-   #ボーン名
-    bonearray = set()
-
     for obj in utils.selected():
-        # objname = obj.name
         boneArray = []
-        # bonedic = {}
-        #targetarray = []
         targetbone = []
 
         for group in obj.vertex_groups:
@@ -738,19 +765,12 @@ def mirror_transfer():
                 vg.add( [i], float(w[1]), 'REPLACE' )
                 
 
+#---------------------------------------------------------------------------------------
 #選択されている頂点のウェイトをすべて削除
+#---------------------------------------------------------------------------------------
 def remove_weight_selectedVTX():
     bpy.ops.object.mode_set(mode = 'OBJECT')
-
     obj = bpy.context.active_object
-    # mesh = obj.data        
-
-    # indexarray = [i for i,v in enumerate(mesh.vertices) if v.select ]
-
-
-    # boneArray = []
-    # for group in obj.vertex_groups:
-    #     boneArray.append(group.name)
 
     #頂点の情報
     msh = obj.data
@@ -761,3 +781,91 @@ def remove_weight_selectedVTX():
                 vge.weight = 0
 
 
+#---------------------------------------------------------------------------------------
+#CSV変換テーブルを使って頂点グループをリネーム
+#---------------------------------------------------------------------------------------
+def rename_with_csvtable(path):
+    # props = bpy.context.scene.cyatools_oa
+    # path = props.skin_filepath
+
+    #辞書として読み込む
+    dic = {}
+    #with open('E:/data/OneDrive/projects/_model/Others/Gmod/mametya/table/exchange01.csv') as f:
+    with open( path ) as f:
+        reader = csv.reader(f)
+        for row in reader:
+            dic[row[0]] = row[1]
+            print(row)
+
+    obj = bpy.context.object
+
+    #辞書に含まれていたらリネームする
+    for group in obj.vertex_groups:
+        if group.name in dic:
+            group.name = dic[group.name]
+
+
+#---------------------------------------------------------------------------------------
+#頂点グループのリストを出力
+#---------------------------------------------------------------------------------------
+def export_vertexgroup_list():
+    obj = bpy.context.object
+    result = []
+    for group in obj.vertex_groups:
+        result.append([group.name,])
+        print(group.name)
+
+
+    print(result)
+    with open('e:/tmp/vertexgroup.csv', 'w' , newline = "") as f:
+        writer = csv.writer(f)
+        writer.writerows(result)
+
+
+#---------------------------------------------------------------------------------------
+#csvファイルを元にウェイトを転送する
+#---------------------------------------------------------------------------------------
+def transfer_with_csvtable():
+
+    dic = {}
+    with open('E:/data/OneDrive/projects/_model/Others/Gmod/mametya/table/transfer01.csv') as f:
+        reader = csv.reader(f)
+        for row in reader:
+            dic[row[0]] = row[1]
+
+    for obj in utils.selected():
+        boneArray = []
+        for group in obj.vertex_groups:
+            boneArray.append(group.name)
+
+        size = len(boneArray)
+        #頂点の情報
+        msh = obj.data
+        vtxCount = str(len(msh.vertices))#頂点数
+
+        for i,v in enumerate(msh.vertices):
+            #いったんweightarrayに頂点の全部のウェイトを格納
+            weightarray = [0.0 ]*len(boneArray)
+            for vge in v.groups:
+                weightarray[vge.group] = vge.weight
+
+                #転送元のウェイトをクリア
+                if boneArray[vge.group] in dic:
+                    vge.weight = 0
+
+
+            #転送元のウェイト値を転送先のウェイトに足す            
+            for bone in boneArray:
+                if bone in dic:
+                    idx0 = boneArray.index(bone)
+                    idx1 = boneArray.index(dic[bone])
+                    
+                    weightarray[idx1] += weightarray[idx0]
+                    weightarray[idx0] = 0.0
+
+            new_weights = [[i,x] for i,x in enumerate(weightarray) if x > 0.0001]
+
+            #ウェイト値が０ではないものを抜き出し、ウェイトを追加する
+            for w in new_weights:
+                vg = obj.vertex_groups[w[0]]
+                vg.add( [i], w[1], 'REPLACE' )
