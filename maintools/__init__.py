@@ -297,6 +297,12 @@ class CYATOOLS_MT_modeling_tools(Operator):
         row = col1.row()
         row.operator( "cyatools.modeling_normal_180deg")
 
+        box4 = col.box()
+        box4.label( text = 'animation' )
+        col1 = box4.column()
+        row = col1.row()
+        row.operator( "cyatools.modeling_copy_action")
+
 
 class CYATOOLS_MT_modifier_tools(Operator):
     bl_idname = "cyatools.modifier_tools"
@@ -1349,6 +1355,18 @@ class CYATOOLS_OT_modeling_normal_180deg(Operator):
         return {'FINISHED'}
 
 
+#アニメーション
+
+class CYATOOLS_OT_modeling_copy_action(Operator):
+    """シェイプキーの編集アクションをコピーする
+    複数選択して、アクティブなものを他のものにコピー"""
+    bl_idname = "cyatools.modeling_copy_action"
+    bl_label = "copy shepe key action"    
+    def execute(self, context):
+        modeling.copy_action()
+        return {'FINISHED'}
+
+
 #---------------------------------------------------------------------------------------
 #ブレンドシェイプ
 #---------------------------------------------------------------------------------------
@@ -1863,6 +1881,7 @@ classes = (
     CYATOOLS_OT_modeling_copy_vertex_pos,
     CYATOOLS_OT_modeling_paste_vertex_pos,
     CYATOOLS_OT_modeling_normal_180deg,
+    CYATOOLS_OT_modeling_copy_action,
 
     # instance
     CYATOOLS_OT_instance_select_collection,

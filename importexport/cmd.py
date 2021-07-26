@@ -819,8 +819,13 @@ def export_format(mode):
 def export_cmd(outpath , mode):
     props = bpy.context.scene.cyaimportexport_props 
 
-    forward = props.axis_forward
-    up = props.axis_up
+    #現在のフレームを変更
+    bpy.context.scene.frame_set( props.export_frame )
+
+    #ユニットスケールの一時的変更
+    if props.temp_unitscale_enable:
+        current_unitscale = bpy.context.scene.unit_settings.scale_length
+        bpy.context.scene.unit_settings.scale_length = props.temp_unitscale
 
     if props.export_mode == 'def':
         print(outpath)
@@ -872,3 +877,7 @@ def export_cmd(outpath , mode):
         elif mode == 'obj':
             bpy.ops.export_scene.obj(filepath=outpath ,global_scale = props.scale , use_selection = True)
         
+
+    #ユニットスケールをもとに戻す
+    if props.temp_unitscale_enable:
+        bpy.context.scene.unit_settings.scale_length = current_unitscale

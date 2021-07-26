@@ -44,7 +44,7 @@ imp.reload(ue4tools)
 bl_info = {
 "name": "cyatools",
 "author": "Takehito Tsuchiya",
-"version": (0, 3.15),
+"version": (0, 3.16),
 "blender": (2, 90, 1),
 "description": "cyatools",
 "category": "Object"}

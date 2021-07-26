@@ -347,3 +347,20 @@ def normal_180deg():
         ob.data.auto_smooth_angle = 180
     
 
+#---------------------------------------------------------------------------------------
+#アニメーション
+#---------------------------------------------------------------------------------------
+
+#シェイプキーのアニメーションコピペ
+#シェイプキーがなければエラーになる
+def copy_action():
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+
+    obj_source = bpy.context.active_object
+    action = obj_source.data.shape_keys.animation_data.action.name
+
+
+    for ob in utils.selected():
+        ob.data.shape_keys.animation_data.action = bpy.data.actions[action]
+
+

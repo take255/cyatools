@@ -11,6 +11,7 @@ from bpy.types import(
 
 from bpy.props import(
     FloatProperty,
+    IntProperty,
     PointerProperty,
     StringProperty,
     EnumProperty,
@@ -66,6 +67,9 @@ class CYAIMPORTEXPORT_Props_OA(PropertyGroup):
     axis_forward : EnumProperty(items = AXIS , name = 'forward',default = '-Y' )
     axis_up : EnumProperty(items = AXIS , name = 'up' ,default = 'Z')
 
+    temp_unitscale_enable : BoolProperty(name="enable" ,  default = False)
+    temp_unitscale : FloatProperty(name="unit scale",min=0.001,default=1.0)
+    export_frame : IntProperty(name="frame" , default= 0 )
 
 
 #---------------------------------------------------------------------------------------
@@ -130,6 +134,18 @@ class CYAIMPORTEXPORT_PT_ui(utils.panel):
         row = box.row()
         row.prop(props,"fbx_path")
         row.operator( 'cyaimportexport.filebrowse' , icon = 'FILE_FOLDER' ,text = "")
+
+
+        box = col.box()
+        box.label(text="Temporary Unit Scale")
+        row = box.row()
+        row.prop(props, 'temp_unitscale_enable')
+        row.prop(props, 'temp_unitscale', icon='BLENDER')
+
+        box = col.box()
+        box.label(text="Export Frame Number")
+        row = box.row()
+        row.prop(props, 'export_frame')
 
 
         col.prop(props, 'scale', icon='BLENDER', toggle=True)
