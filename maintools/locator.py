@@ -741,6 +741,29 @@ def snap_bone_at_obj():
     bone.head = loc
 
 
+#---------------------------------------------------------------------------------------
+#ロケータを配置して分離したいフェースを選択　実行するとフェースが複製されロケータの位置が原点になって配置される
+#---------------------------------------------------------------------------------------
+def separate_face():
+    objects = set([ob.name for ob in utils.selected()])
+    bpy.ops.mesh.duplicate_move()
+    bpy.ops.mesh.separate(type='SELECTED')
+
+    utils.mode_o()
+
+    dupulicated = []
+    for ob in utils.selected():
+        if ob.name not in objects:
+            dupulicated.append(ob)
+            print(ob.name)
+
+    bpy.ops.object.select_all(action='DESELECT')
+
+    utils.act(dupulicated[0])
+    for ob in dupulicated:
+        utils.select(ob,True)
+
+    bpy.ops.object.join()
 
         
 

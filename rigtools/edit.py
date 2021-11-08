@@ -2,6 +2,7 @@ import bpy
 import imp
 import math
 from mathutils import ( Vector , Matrix )
+import csv
 
 from . import utils
 imp.reload(utils)
@@ -22,12 +23,12 @@ def copy_from_another():
             source = amt
         else:
             target = amt
-    
+
     utils.mode_o()
     utils.act(source)
     utils.mode_e()
     selected = utils.get_selected_bones()
-    
+
     dataarray = []
     for b in selected:
         #bone = amt.data.edit_bones[b.name]
@@ -75,7 +76,7 @@ def length_half():
     amt = bpy.context.object
     utils.mode_e()
     selected = utils.get_selected_bones()
-    
+
     for b in selected:
         bone = amt.data.edit_bones[b.name]
         head = Vector(bone.head)
@@ -109,7 +110,7 @@ def genarate_bone_from2():
     target.head = bone1.head
     target.tail = bone2.tail
     target.roll = bone1.roll
-    
+
 
 #---------------------------------------------------------------------------------------
 #選択したボーンの名前を取得、LR入れ替えた骨を探し　LRの候補を数種類使えるように改良
@@ -122,11 +123,11 @@ def genarate_symmetry(mode):
     if mode == 1:
         genarate_symmetry2()
         return
-        
+
     props = bpy.context.scene.cyarigtools_props
 
     amt = bpy.context.active_object
-    
+
     for bone in bpy.context.selected_bones:
         name = bone.name
         head = bone.head
@@ -141,12 +142,12 @@ def genarate_symmetry(mode):
             elif name[-2:] == R:
                 newname = name[:-2] + L
             elif name[:2] == L:
-                newname = R + name[2:] 
+                newname = R + name[2:]
             elif name[:2] == R:
                 newname = L + name[2:]
             else:
                 Exist = False
-        
+
             if Exist:
                 newbone = amt.data.edit_bones[newname]
                 newbone.head = (-head[0],head[1], head[2])
@@ -168,7 +169,7 @@ def genarate_symmetry2():
     props = bpy.context.scene.cyarigtools_props
 
     amt = bpy.context.active_object
-    
+
     for bone in bpy.context.selected_bones:
         name = bone.name
         head = bone.head
@@ -182,7 +183,7 @@ def genarate_symmetry2():
                 newname = name.replace(L,R)
             else:
                 Exist = False
-        
+
             if Exist:
                 newbone = amt.data.edit_bones[newname]
                 newbone.head = (-head[0],head[1], head[2])
@@ -220,7 +221,7 @@ def Normal2bone(bone1,bone2):
 def AdjustRoll(bone,nor):
     props = bpy.context.scene.cyarigtools_props
     mat = bone.matrix
-    
+
     z = Vector((mat[0][2],mat[1][2],mat[2][2]))
     z.normalize()
 
@@ -244,7 +245,7 @@ def AdjustRoll(bone,nor):
 def AdjustRoll_axisplane(bone,nor):
     props = bpy.context.scene.cyarigtools_props
     mat = bone.matrix
-    
+
     z = Vector((mat[0][2],mat[1][2],mat[2][2]))
     z.normalize()
 
@@ -290,7 +291,7 @@ def align_position():
     act = utils.get_active_bone().name
     amt=bpy.context.object
     utils.mode_e()
-    
+
     if len(selected ) > 0 :
 
         for b in selected:
@@ -306,12 +307,12 @@ def align_direction(mode):
     act_name = utils.get_active_bone().name
     amt=bpy.context.object
     utils.mode_e()
-    
+
     act = amt.data.edit_bones[act_name]
     matrix = Matrix(act.matrix)
 
     if len(selected ) > 0 :
-        for bonename in selected:                
+        for bonename in selected:
             tgt = amt.data.edit_bones[bonename]
             head = Vector(tgt.head)
             tgt.matrix = matrix
@@ -428,7 +429,7 @@ def align_on_plane():
 
     # 平面上の最近点 = A - N * ( PA ・ N )
     # A 先端位置
-    # N 面法線 
+    # N 面法線
     # P 平面上の点
     # PA・N　内積
 
@@ -462,7 +463,7 @@ def align_at_flontview():
 
     #法線を割り出す　normal.y = 0
     #vecのｘ、ｚを入れ替えればよい(どちらかにー符号をつける)
-    vec0 = Vector(bone1.head) - Vector(bone2.tail) 
+    vec0 = Vector(bone1.head) - Vector(bone2.tail)
     nor = Vector((vec0.z ,0 ,-vec0.x) )
     nor.normalize()
 
@@ -517,7 +518,7 @@ def projection(op):
             bone.tail = Vector((head[0],tail[1],tail[2]))
         if op == 'zx':
             bone.tail = Vector((tail[0],head[1],tail[2]))
-            
+
 
 
 def axis_swap(axis):
@@ -564,7 +565,7 @@ def axis_swap(axis):
 #---------------------------------------------------------------------------------------
 #ロールをグローバル平面上にそろえる
 # ラジオボタンで選択
-# ボーン軸(X,Z)　グローバル軸　(x,y,z,x,y,z) 
+# ボーン軸(X,Z)　グローバル軸　(x,y,z,x,y,z)
 #y軸とグローバル軸の外積から直行するベクトルをだし、そのベクトルとY軸との外積でグローバル軸に沿ったベクトルを割り出す
 #---------------------------------------------------------------------------------------
 def align_roll_global():
@@ -587,17 +588,17 @@ def align_roll_global():
 #---------------------------------------------------------------------------------------
 #コンストレイン
 #---------------------------------------------------------------------------------------
-def constraint_cleanup():        
+def constraint_cleanup():
     for bone in bpy.context.selected_pose_bones:
         for const in bone.constraints:
             bone.constraints.remove( const )
 
 def constraint_cleanup_empty():
     for bone in bpy.context.selected_pose_bones:
-        
+
         for const in bone.constraints:
             isempty = False
-            
+
             if hasattr(const, 'target'):
                 if const.target is None:
                     isempty = True
@@ -619,10 +620,10 @@ def constraint_change_influence(self,context):
     bpy.ops.object.mode_set(mode = 'POSE')
     for bone in bpy.context.selected_pose_bones:
         for const in bone.constraints:
-            const.influence = self.const_influence                    
+            const.influence = self.const_influence
 
 #---------------------------------------------------------------------------------------
-#connect chain 
+#connect chain
 #---------------------------------------------------------------------------------------
 def connect_chain():
     utils.mode_e()
@@ -642,8 +643,8 @@ def delete_rig_loop(bone,root):
 
     else:
         return delete_rig_loop(p,root)
-    
-    
+
+
 
 def delete_rig():
     utils.mode_p()
@@ -673,7 +674,7 @@ def delete_rig():
 
     for b in result:
         b.select = True
-    
+
     bpy.ops.armature.delete()
 
 
@@ -711,8 +712,8 @@ def add_bone():
     m_array = []
     for ob in utils.selected():
         if ob != amt:
-            m_array.append( AddBoneObj(ob) )  
-    
+            m_array.append( AddBoneObj(ob) )
+
     utils.act(amt)
     utils.mode_e()
 
@@ -722,7 +723,7 @@ def add_bone():
         b.tail = m.head + m.axis_forward[ af ]
         print(m.axis_forward[ af ])
         bpy.ops.armature.select_all(action='DESELECT')
-        
+
 
 # First, select object next select armature. Enter edit mode and select bone to align.
 def snap_bone_at_obj():
@@ -732,5 +733,153 @@ def snap_bone_at_obj():
     for ob in utils.selected():
         if ob != amt:
             loc = ob.location
-    
+
     bone.head = loc
+
+#---------------------------------------------------------------------------------------
+#Faceitから骨を移行する
+#  キャラボーン　faceit の順で２つ選択 (faceitをアクティブに)
+# csvに従って骨生成
+# 骨名、ルート用位置骨、head or tail、テール用位置骨、root or tail、親骨
+#eye_l , master_eye.L , head , master_eye.L , tail , head
+#E:/data/dcctools/blender/2.91/scripts/addons/cyatools/data/faceit2ingame.csv
+#---------------------------------------------------------------------------------------
+class BoneData:
+    name = ""
+    headbone = ""
+    head_pos = ""
+    tailbone = ""
+    tail_pos = ""
+    parent = ""
+
+    def __init__(self,row):
+        print(row)
+        self.name = row[0]
+        self.headbone = row[1]
+        self.head_pos = row[2]
+        self.tailbone = row[3]
+        self.tail_pos = row[4]
+        self.parent = row[5]
+
+    def get_coord(self,amt):
+
+        utils.mode_o()
+        loc = amt.location
+
+        utils.mode_e()
+        headbone = amt.data.edit_bones[self.headbone]
+
+
+        if self.head_pos == "head":
+            self.head = headbone.head + loc
+
+        elif self.head_pos == "tail":
+            self.head = headbone.tail+ loc
+
+        tailbone = amt.data.edit_bones[self.tailbone]
+
+        if self.tail_pos == "head":
+            self.tail =  tailbone.head+ loc
+
+        elif self.tail_pos == "tail":
+            self.tail =  tailbone.tail+ loc
+
+
+        print(self.head)
+        print(self.tail)
+        utils.mode_o()
+
+    #存在している骨はnewしない
+    def generate(self,amt):
+        utils.mode_e()
+
+        if self.name in amt.data.edit_bones:
+            b = amt.data.edit_bones[self.name]
+        else:
+            b = amt.data.edit_bones.new( self.name )
+
+        b.parent = amt.data.edit_bones[self.parent]
+        b.head = self.head
+        b.tail = self.tail
+
+
+#---------------------------------------------------------------------------------------
+#骨をコピーして別の骨に複製する
+#---------------------------------------------------------------------------------------
+def bone_copy_with_csv(path):
+
+    #path = "E:/data/dcctools/blender/2.91/scripts/addons/cyatools/data/faceit2ingame.csv"
+
+    bdataarray = []
+    with open( path ) as f:
+        reader = csv.reader(f)
+        for row in reader:
+            bdata = BoneData(row)
+
+            bdataarray.append(bdata)
+            #dic[row[0]] = row[1]
+
+
+    selected = utils.selected()
+
+    for amt in selected:
+        if amt == utils.getActiveObj():
+            faceit = amt
+        else:
+            target = amt
+
+
+
+    utils.act(faceit)
+
+    for bdata in bdataarray:
+        bdata.get_coord(faceit)
+
+
+    utils.act(target)
+
+    for bdata in bdataarray:
+        bdata.generate(target)
+
+            #headbone = ob.data.edit_bones[bdata.headbone]
+
+            # if bdata.head_pos == "head":
+            #      print(headbone.head)
+            # elif bdata.head_pos == "tail":
+            #     print(headbone.tail)
+
+            # tailbone = ob.data.edit_bones[bdata.tailbone]
+            # if bdata.tail_pos == "head":
+            #      print(tailbone.head)
+            # elif bdata.tail_pos == "tail":
+            #     print(tailbone.tail)
+
+
+#---------------------------------------------------------------------------------------
+#CSV変換テーブルを使って頂点グループをリネーム
+#---------------------------------------------------------------------------------------
+def bone_rename_with_csv(path):
+
+    amt = bpy.context.object
+
+    utils.mode_p()
+    for b in amt.pose.bones:
+        print(b.name)
+
+    return
+    #辞書として読み込む
+    dic = {}
+    with open( path ) as f:
+        reader = csv.reader(f)
+        for row in reader:
+            dic[row[0]] = row[1]
+            print(row)
+
+    obj = bpy.context.object
+
+    #辞書に含まれていたらリネームする
+    for group in obj.vertex_groups:
+        if group.name in dic:
+            group.name = dic[group.name]
+
+

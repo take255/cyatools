@@ -54,8 +54,6 @@ class CYAUE4TOOLS_PT_ui(utils.panel):
         row = box.row()
         for val in (0.01,1.0,10.0,100.0):
             row.operator( 'cyaue4tools.unitscale',text = str(val) ).value = val
-        # row.operator( 'cyaue4tools.unitscale',text = "1.0").mode = 1
-        # row.operator( 'cyaue4tools.unitscale',text = "100").mode = 2
 
 
         box = col.box()

@@ -1,4 +1,5 @@
 import bpy
+import bmesh
 import imp
 import re
 import math
@@ -25,7 +26,7 @@ def bind():
     props = bpy.context.scene.cyatools_oa
     doSkinBind(props.bind_auto_bool)
 
-def doSkinBind(bind_auto):    
+def doSkinBind(bind_auto):
     #props = bpy.context.scene.cyatools_oa
 
     selected = utils.selected()
@@ -57,7 +58,7 @@ def doSkinBind(bind_auto):
 
         for b in amt.data.edit_bones:
             if not b.name in vtxgrp:
-                
+
                 if b.use_deform == True:
                     b.select = True
                 #if Isrigbone(b):
@@ -75,7 +76,7 @@ def doSkinBind(bind_auto):
         for i in range(32):
             disp.append(bpy.context.object.data.layers[i])
             bpy.context.object.data.layers[i] = True
-                            
+
         for ob in obArray:
             utils.mode_o()
             utils.act(ob)
@@ -88,7 +89,7 @@ def doSkinBind(bind_auto):
             bpy.context.object.data.layers[i] = disp[i]
 
 
-    
+
 
 #Deformボーンを除外
 def Isrigbone(bone):
@@ -102,7 +103,7 @@ def Isrigbone(bone):
 
     elif parent == None:
         result = True
-        
+
     elif parent.name == root:
         result = False
 
@@ -124,7 +125,7 @@ def Isrigbone_(bone):
 
     elif parent == None:
         result = True
-        
+
     elif parent.name == root:
         result = False
 
@@ -144,10 +145,10 @@ def asssign_maxweight():
         result.append(bone.name)
 
 
-    bpy.ops.object.mode_set(mode = 'OBJECT')        
+    bpy.ops.object.mode_set(mode = 'OBJECT')
     objects = bpy.context.scene.objects
 
-    #アーマチュアをエディットモードのままにしておくと選択がおかしくなるのでいったん全選択解除       
+    #アーマチュアをエディットモードのままにしておくと選択がおかしくなるのでいったん全選択解除
     bpy.ops.object.select_all(action='DESELECT')
 
     for obj in selected:
@@ -167,7 +168,9 @@ def asssign_maxweight():
                         group.add( [i], 1.0, 'REPLACE' )
 
 
-
+#---------------------------------------------------------------------------------------
+#選択骨をインフルエンス追加
+#---------------------------------------------------------------------------------------
 def add_influence_bone():
     selected = utils.selected()
     obj = selected[1]
@@ -183,7 +186,7 @@ def add_influence_bone():
     for obj in selected:
         if obj.type != 'ARMATURE':
 
-            utils.activeObj(obj)    
+            utils.activeObj(obj)
             msh = obj.data
 
             #頂点グループを追加
@@ -191,6 +194,46 @@ def add_influence_bone():
                 bpy.context.object.vertex_groups.new(name = group)
 
 
+#---------------------------------------------------------------------------------------
+#自動でインフルエンス追加
+#---------------------------------------------------------------------------------------
+def add_influence_bone_auto():
+    selected = utils.selected()
+
+
+
+    for ob in selected:
+
+        boneset =[]
+        current_grp = []
+
+
+        for group in ob.vertex_groups:
+            current_grp.append(group.name)
+
+
+        for mod in ob.modifiers:
+            if mod.type == 'ARMATURE':
+                amt = mod.object
+                print( amt.name )
+
+        #アーマチュア内の骨をリストアップしてセットに格納
+        utils.act(amt)
+        utils.mode_e()
+        for b in amt.data.edit_bones:
+            boneset.append(b.name)
+
+        utils.mode_o()
+        utils.activeObj(ob)
+
+        for b in boneset:
+            if b not in current_grp:
+                bpy.context.object.vertex_groups.new(name = b)
+                print(b)
+
+#---------------------------------------------------------------------------------------
+#他のモデルからインフルエンスコピー
+#---------------------------------------------------------------------------------------
 def copy_influence_bone():
     selected = utils.selected()
     act = utils.getActiveObj()
@@ -209,29 +252,11 @@ def copy_influence_bone():
                 bpy.context.object.vertex_groups.new(name = b )
                 print( vg.name )
 
-    return 
 
 
-    result =[]
-    for bone in utils.get_selected_bones():
-        print( bone.name )
-        result.append( bone.name )
-
-    utils.mode_o()
-    utils.deselectAll()
-
-    for obj in selected:
-        if obj.type != 'ARMATURE':
-
-            utils.activeObj(obj)    
-            msh = obj.data
-
-            #頂点グループを追加
-            for group in result:
-                bpy.context.object.vertex_groups.new(name = group)
-
-
+#---------------------------------------------------------------------------------------
 #アーマチュア以外のモディファイヤをapply
+#---------------------------------------------------------------------------------------
 def apply_without_armature_modifiers():
     sel = bpy.context.selected_objects
     scene_obj = bpy.context.scene.objects
@@ -245,11 +270,10 @@ def apply_without_armature_modifiers():
 
 
 def delete_all_vtxgrp():
-    obj = bpy.context.object
-    me = obj.data
-    result = []
-    for group in obj.vertex_groups:
-        bpy.context.object.vertex_groups.remove(group)
+    for obj in utils.selected():
+        utils.act(obj)
+        for group in obj.vertex_groups:
+            bpy.context.object.vertex_groups.remove(group)
 
 
 
@@ -326,7 +350,7 @@ def delete_unselectedweights():
     for bone in bpy.context.selected_bones:
         print( bone.name)
         result.add(bone.name)
-    
+
     bpy.ops.object.mode_set(mode = 'OBJECT')
 
     objects = bpy.context.scene.objects
@@ -341,7 +365,7 @@ def delete_unselectedweights():
             #選択モデルをアクティブに
             #objects.active =obj
             utils.act(obj)
-    
+
             msh = obj.data
             vtxCount = len(msh.vertices)#頂点数
 
@@ -358,6 +382,7 @@ def delete_unselectedweights():
 
 #---------------------------------------------------------------------------------------
 #ウェイトの転送
+#選択頂点のウェイト転送は、転送先の頂点をあらかじめ選択しておく仕様
 #---------------------------------------------------------------------------------------
 def weights_transfer(mode):
     props = bpy.context.scene.cyatools_oa
@@ -389,6 +414,7 @@ def weights_transfer(mode):
 
 #バインドされていなかったらバインドする
 def weights_transfer_v2():
+    props = bpy.context.scene.cyatools_oa
     bpy.ops.object.mode_set(mode = 'OBJECT')
 
     obj_source = bpy.context.active_object
@@ -415,7 +441,7 @@ def weights_transfer_v2():
     for i,vg in enumerate( obj_source.vertex_groups ):
         bonename2index[vg.name] = i
         bonearray.append(vg.name)
-        
+
     #コピー元のkdTreeを作成
     kd = mathutils.kdtree.KDTree(size)
     for i, v in enumerate(mesh.vertices):
@@ -429,7 +455,7 @@ def weights_transfer_v2():
         for vge in v.groups:
             grp.append([vge.group, vge.weight])
         weight_array.append(grp)
-            
+
 
     for obj in utils.selected():
 
@@ -454,25 +480,61 @@ def weights_transfer_v2():
             #remove all vertex weight.
             #ボーン名からインデックスからインデックスの変換テーブル作成
             index2index = {}
+
+
+            #選択頂点のインデックスを事前に取得
+            indexarray = []
+
+            if props.weight_transfer_selected_vtx:
+                for v in mesh.vertices:
+                    if v.select:
+                        indexarray.append(v.index)
+
+
+
             for i,vg in enumerate(obj.vertex_groups):
                 if vg.name in bonename2index:
                     index2index[ bonename2index[vg.name] ] = i
-                vg.remove( range( len(mesh.vertices) ) )
-                #print(bonename2index[vg.name],i)
 
-            bpy.ops.object.mode_set(mode = 'EDIT') 
-            bpy.ops.mesh.select_mode(type="VERT")
-            bpy.ops.mesh.select_all(action = 'DESELECT')
+                if not props.weight_transfer_keep_original:#元のウェイトを削除しないでコピー実行
+
+                    if not props.weight_transfer_selected_vtx:
+                        vg.remove( range( len(mesh.vertices) ) )
+
+                    else:#選択頂点だけコピーの場合は選択されている頂点のウェイトだけ削除
+                        vg.remove( indexarray )
+                        # for i,v in enumerate(mesh.vertices):
+                        #     if v.select:
+                        #         vg.remove( [i] )
+
+
+            #bpy.ops.object.mode_set(mode = 'EDIT')
+            #bpy.ops.mesh.select_mode(type="VERT")
+            #bpy.ops.mesh.select_all(action = 'DESELECT')
             bpy.ops.object.mode_set(mode = 'OBJECT')
 
-            for i,v in enumerate(mesh.vertices):
-                co, index, dist = kd.find( v.co )
+            if not props.weight_transfer_selected_vtx:
 
-                for w in weight_array[index]:
-                    if w[0] in index2index:
-                        vg = obj.vertex_groups[ index2index[w[0]] ]
-                        #頂点インデックス、ウェイト値
-                        vg.add( [i], w[1] , 'REPLACE' )
+                for i,v in enumerate(mesh.vertices):
+                    co, index, dist = kd.find( v.co )
+
+                    for w in weight_array[index]:
+                        if w[0] in index2index:
+                            vg = obj.vertex_groups[ index2index[w[0]] ]
+                            #頂点インデックス、ウェイト値
+                            vg.add( [i], w[1] , 'REPLACE' )
+
+            else:
+
+                for i,v in enumerate(mesh.vertices):
+                    if v.select:
+                        co, index, dist = kd.find( v.co )
+
+                        for w in weight_array[index]:
+                            if w[0] in index2index:
+                                vg = obj.vertex_groups[ index2index[w[0]] ]
+                                #頂点インデックス、ウェイト値
+                                vg.add( [i], w[1] , 'REPLACE' )
 
 
 
@@ -510,7 +572,7 @@ def nameFlip(name):
     #prefixを調べる
     for sign in sign_prefix:
         if name[ : len(sign) ] == sign:
-            new = sign_prefix[sign] + name[ len(sign): ] 
+            new = sign_prefix[sign] + name[ len(sign): ]
             return new
 
     #suffixを調べる
@@ -594,8 +656,8 @@ def weights_mirror_v2():
         index2name[vg.index]=vg.name
         nameflip[vg.index] = nameFlip(vg.name)
         namedic[vg.name] = vg.index
-    
-    for i in range(bonesize):    
+
+    for i in range(bonesize):
         index_inv[i] = namedic[ nameflip[i] ]
 
     size = len(mesh.vertices)
@@ -625,7 +687,7 @@ def weights_mirror_v2():
 
     kd.balance()
 
-    bpy.ops.object.mode_set(mode = 'EDIT') 
+    bpy.ops.object.mode_set(mode = 'EDIT')
     bpy.ops.mesh.select_mode(type="VERT")
     bpy.ops.mesh.select_all(action = 'DESELECT')
     bpy.ops.object.mode_set(mode = 'OBJECT')
@@ -669,7 +731,7 @@ def weights_mirror_v2_():
 
     print(lside_pos)
 
-    bpy.ops.object.mode_set(mode = 'EDIT') 
+    bpy.ops.object.mode_set(mode = 'EDIT')
     bpy.ops.mesh.select_mode(type="VERT")
     bpy.ops.mesh.select_all(action = 'DESELECT')
     bpy.ops.object.mode_set(mode = 'OBJECT')
@@ -683,7 +745,7 @@ def weights_mirror_v2_():
         mesh.vertices[i].co.x = mesh.vertices[i].co.x + 1
 
 
-    bpy.ops.object.mode_set(mode = 'EDIT') 
+    bpy.ops.object.mode_set(mode = 'EDIT')
 
     return
     for i, v in enumerate(mesh.vertices):
@@ -720,8 +782,8 @@ def mirror_transfer():
 
         for group in obj.vertex_groups:
             boneArray.append(group.name)
-            
-        for i,bone in enumerate( boneArray ): 
+
+        for i,bone in enumerate( boneArray ):
             exist = False
             for sign in signdic:
                 if(bone.find( sign ) != -1):
@@ -754,16 +816,16 @@ def mirror_transfer():
             for vge in v.groups:
                 if vge.weight > 0.00001:#ウェイト値０は除外
                     index = vge.group
-                    grparray.append([ targetbone[index] , vge.weight ] ) 
-                    vge.weight = 0.0            
+                    grparray.append([ targetbone[index] , vge.weight ] )
+                    vge.weight = 0.0
             vtxarray.append(grparray)
-            
+
 
         for i,point in enumerate( vtxarray ):
             for w in point:
                 vg = obj.vertex_groups[w[0]]
                 vg.add( [i], float(w[1]), 'REPLACE' )
-                
+
 
 #---------------------------------------------------------------------------------------
 #選択されている頂点のウェイトをすべて削除
@@ -825,13 +887,16 @@ def export_vertexgroup_list():
 #---------------------------------------------------------------------------------------
 #csvファイルを元にウェイトを転送する
 #---------------------------------------------------------------------------------------
-def transfer_with_csvtable():
+def transfer_with_csvtable(path):
 
+    #'E:/data/OneDrive/projects/_model/Others/Gmod/mametya/table/transfer01.csv'
     dic = {}
-    with open('E:/data/OneDrive/projects/_model/Others/Gmod/mametya/table/transfer01.csv') as f:
+    with open( path ) as f:
         reader = csv.reader(f)
         for row in reader:
-            dic[row[0]] = row[1]
+
+            if row[0] != row[1]:#転送元と先が一緒だったら無視する
+                dic[row[0]] = row[1]
 
     for obj in utils.selected():
         boneArray = []
@@ -854,12 +919,12 @@ def transfer_with_csvtable():
                     vge.weight = 0
 
 
-            #転送元のウェイト値を転送先のウェイトに足す            
+            #転送元のウェイト値を転送先のウェイトに足す
             for bone in boneArray:
                 if bone in dic:
                     idx0 = boneArray.index(bone)
                     idx1 = boneArray.index(dic[bone])
-                    
+
                     weightarray[idx1] += weightarray[idx0]
                     weightarray[idx0] = 0.0
 
@@ -869,3 +934,62 @@ def transfer_with_csvtable():
             for w in new_weights:
                 vg = obj.vertex_groups[w[0]]
                 vg.add( [i], w[1], 'REPLACE' )
+
+
+#---------------------------------------------------------------------------------------
+#頂点グループリストで選択したもので、閾値以上のウェイトが振られている頂点を選択
+#複数選択したオブジェクトに対応
+#---------------------------------------------------------------------------------------
+def selectgrp():
+    props = bpy.context.scene.cyatools_oa
+    threshold = props.threshold_selectweight
+
+    #選択されている頂点グループの名前を調べる
+    act  = utils.getActiveObj()
+    index = act.vertex_groups.active_index
+    bone = act.vertex_groups[index]
+    bname = bone.name
+
+
+    selected = utils.selected()
+
+    for obj in selected:
+        bones = [b.name for b in obj.vertex_groups]
+        if bname in bones:
+            utils.mode_o()
+            utils.act(obj)
+            index = bones.index(bname)
+            print(index)
+
+            msh = obj.data
+
+            indexarray = set()
+            for v in msh.vertices:
+                for vge in v.groups:
+                    if vge.group == index :
+                        if vge.weight > threshold:
+                            indexarray.add(v.index)
+
+            utils.mode_e()
+
+            bm = bmesh.from_edit_mesh(msh)
+            for v in bm.verts:
+                v.select = False
+
+
+            for v in bm.verts:
+                if v.index in indexarray:
+                    v.select = True
+
+
+            bm.select_mode |= {'VERT'}
+            bm.select_flush_mode()
+
+            bmesh.update_edit_mesh(msh)
+
+
+    utils.mode_o()
+    for obj in selected:
+        utils.select(obj,True)
+    utils.mode_e()
+

@@ -161,7 +161,7 @@ def invert():
 
 
         BoneArray[bone.name].parent_number = len(bone.parent_recursive)
-        
+
 
 
         if bone.parent != None:
@@ -182,7 +182,7 @@ def invert():
 
     for obj in bpy.context.selected_objects:
         if obj.type != 'ARMATURE':
-            mesh = obj.data        
+            mesh = obj.data
             bm = bmesh.new()
             bm.from_mesh(mesh)
 
@@ -243,13 +243,12 @@ VARRAY_DIC = {}
 def copy_pos():
     global VARRAY
     VARRAY.clear()
-    
-    
+
     global VARRAY_DIC
     VARRAY_DIC.clear()
 
     obj = bpy.context.active_object
-    mesh = obj.data        
+    mesh = obj.data
     bm = bmesh.new()
     bm.from_mesh(mesh)
 
@@ -270,16 +269,16 @@ def copy_pos():
     key = bm.verts.layers.shape.keys()[spIndex]
     val = bm.verts.layers.shape.get(key)
 
-    
+
     #選択された頂点インデックスは別に取得
     for i,v in enumerate(bm.verts):
         if i in indexarray:
-            
+
             pos = Vector((v[val][0],v[val][1],v[val][2]))
             VARRAY.append([i,pos])
             VARRAY_DIC[i] = pos
             #print([i,pos])
-    print(VARRAY_DIC)
+    #print(VARRAY_DIC)
 
 
 #シェイプのインデックスが０の時は別処理
@@ -299,9 +298,11 @@ def paste_pos():
     bpy.ops.object.mode_set(mode = 'OBJECT')
 
     # if spIndex > 0:
+    print(len(bm.verts))
     for i,v in enumerate(bm.verts):
         if i in VARRAY_DIC:
             v[val] = VARRAY_DIC[i]
+            print(val,i)
         #print(v[val],v1[1])
         #if i == v1[0]:
         #v[val] = v1[1]
@@ -326,7 +327,7 @@ def keep_downstream():
     VARRAY_DOWNSTREAM.clear()
 
     obj = bpy.context.active_object
-    mesh = obj.data        
+    mesh = obj.data
     bm = bmesh.new()
     bm.from_mesh(mesh)
 
@@ -359,7 +360,7 @@ def restore_downstream():
     global VARRAY_DOWNSTREAM
 
     obj = bpy.context.active_object
-    mesh = obj.data        
+    mesh = obj.data
     bm = bmesh.new()
     bm.from_mesh(mesh)
 
@@ -377,7 +378,6 @@ def restore_downstream():
         key = bm.verts.layers.shape.keys()[index]
         val = bm.verts.layers.shape.get(key)
 
-        
         for v,v1 in zip(bm.verts,array):
             print(v[val],v1[1])
             v[val] = v1[1]
@@ -385,4 +385,108 @@ def restore_downstream():
 
     bm.to_mesh(obj.data)
     mesh.update()
+
+
+#ブレンドシェイプのキーを全削除
+def remove_all_keys():
+    for ob in utils.selected():
+        utils.act(ob)
+        bpy.ops.object.shape_key_remove(all=True)
+
+
+#シェイプキークリア
+def shape_key_clear():
+    for ob in utils.selected():
+        utils.act(ob)
+        bpy.ops.object.shape_key_clear()
+
+
+#---------------------------------------------------------------------------------------
+#シェイプキーのアニメーションコピペ
+#シェイプキーがなければエラーになる
+#---------------------------------------------------------------------------------------
+def copy_action():
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+
+    obj_source = bpy.context.active_object
+    action = obj_source.data.shape_keys.animation_data.action.name
+
+
+    for ob in utils.selected():
+        ob.data.shape_keys.animation_data.action = bpy.data.actions[action]
+
+
+#---------------------------------------------------------------------------------------
+#NLAエディタでアニメーションをプッシュダウンする
+#---------------------------------------------------------------------------------------
+def push_down():
+    for obj in utils.selected():
+        if obj.data.shape_keys.animation_data is not None:
+            action = obj.data.shape_keys.animation_data.action
+            if action is not None:
+                track = obj.data.shape_keys.animation_data.nla_tracks.new()
+                track.strips.new(action.name, action.frame_range[0], action)
+                obj.data.shape_keys.animation_data.action = None
+
+
+#---------------------------------------------------------------------------------------
+#シェイプキーのNLAのミュート、アンミュート
+#---------------------------------------------------------------------------------------
+def shepekey_mute(mute):
+    for obj in utils.selected():
+        for j in obj.data.shape_keys.animation_data.nla_tracks:
+            j.mute = mute   
+
+#---------------------------------------------------------------------------------------
+#シェイプキーを挿入
+#---------------------------------------------------------------------------------------
+def insert_all_keys():
+    frame = bpy.context.scene.frame_current
+
+    for ob in utils.selected():
+        for kb in ob.data.shape_keys.key_blocks:
+            print(kb)
+            kb.keyframe_insert(data_path='value', frame= frame )
+
+
+#---------------------------------------------------------------------------------------
+#ミュートされていないシェイプキーを削除する
+#---------------------------------------------------------------------------------------
+def remove_shapekey_unmuted():
+
+    for ob in utils.selected():
+        utils.act(ob)
+        # シェイプキーのリストを取得する
+        shape_keys = ob.data.shape_keys.key_blocks
+
+        # シェイプキーのリストを逆順に舐める
+        # （先頭から消すとインデックスがずれるので後ろから消す）
+        for i, shape_key in reversed(list(enumerate(shape_keys))):
+            # 消したくないシェイプキーは除外する
+            #if shape_key.name != "Basis" or shape_key.mute == False:
+            print(shape_key.mute)
+            if shape_key.mute == False:
+                # シェイプキーを選択して、削除
+                bpy.context.active_object.active_shape_key_index = i
+                bpy.ops.object.shape_key_remove()
+
+
+    # for sk in bpy.data.shape_keys:
+    #     sk.value = 0
+    #     sk.keyframe_insert(data_path='value', frame= 1 )
+
+    # for ob in utils.selected():
+    #     for shapekey in ob.data.shape_keys:
+    #         # rename / translate shape key names by changing shapekey.name
+    #         for keyblock in shapekey.key_blocks:
+    #                 print(keyblock.value)
+            
+    #         return
+        # rename / translate block key names by changing keyblock.name
+
+#    for obj in utils.selected():
+#         if obj.data.shape_keys is not None:
+#             print(obj.data.shape_keys )
+    # bpy.context.object.data.shape_keys.key_blocks ["Key 1"]
+    # keyframe_insert（data_path = 'value'、frame = 1）
 

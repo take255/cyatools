@@ -147,3 +147,57 @@ def paste_matrix():
 
     # for b in BONE_MATRIX_DIC:
     #     print(b)
+
+
+#---------------------------------------------------------------------------------------
+#matrix copy pose
+#ルート階層から順に適用していく必要がある
+#階層でソートするには
+#---------------------------------------------------------------------------------------
+
+def pose_copy_pasete(mode):
+
+    amt = bpy.context.object
+    global BONE_MATRIX_DIC
+
+    utils.mode_p()
+
+    if mode == "copy":
+        BONE_MATRIX_DIC.clear()
+
+        for bone in utils.get_selected_bones():        
+            BONE_MATRIX_DIC[bone.name] = Matrix(bone.matrix)
+            #m = Matrix(bone.matrix)
+            #pos =(m[0][3] , m[1][3] , m[2][3]  )
+            #bonematrixarray[bone.name] = [Matrix(bone.matrix) , pos]
+
+
+
+    else:
+        array = []
+        for bone in bpy.context.selected_pose_bones:
+    
+            num = get_parent_loop( bone , 0 )
+            print(bone.name,num)
+
+            array.append([num,bone.name])
+            #bone.matrix = BONE_MATRIX_DIC[bone.name]
+
+        array.sort()
+
+        for a in array:
+            bone = amt.pose.bones[a[1]]
+            print(bone.name, a , bone.name in BONE_MATRIX_DIC)
+
+            if bone.name in BONE_MATRIX_DIC:
+                bone.matrix = BONE_MATRIX_DIC[bone.name]
+    # for b in BONE_MATRIX_DIC:
+    #     print(b)
+
+def get_parent_loop(bone,num):
+    p = bone.parent
+    num += 1
+    if p != None:
+        num = get_parent_loop( p , num )
+
+    return num

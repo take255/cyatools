@@ -12,7 +12,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 import bpy
-from bpy.types import( 
+from bpy.types import(
     AddonPreferences
     #PropertyGroup , Panel , Operator ,UIList
     )
@@ -44,26 +44,42 @@ imp.reload(ue4tools)
 bl_info = {
 "name": "cyatools",
 "author": "Takehito Tsuchiya",
-"version": (0, 3.16),
+"version": (0, 3.19),
 "blender": (2, 90, 1),
 "description": "cyatools",
 "category": "Object"}
 
 RIGSHAPEPATH = "E:\data\googledrive\lib\model/rig.blend"
+ADDONPATH ="E:/tmp/cyatools.ZIP"
 
 #---------------------------------------------------------------------------------------
 #UI Preference
 #---------------------------------------------------------------------------------------
 class CYATOOLS_MT_addonpreferences(AddonPreferences):
     bl_idname = __name__
- 
+
     shape_path : StringProperty(default = RIGSHAPEPATH )
+    addon_path : StringProperty(default = ADDONPATH )
 
     def draw(self, context):
         layout = self.layout
         layout.label(text='Rig Shape Path')
         col = layout.column()
         col.prop(self, 'shape_path',text = 'shape_path', expand=True)
+        col.prop(self, 'addon_path',text = 'addon_path', expand=True)
+        col.operator( "cyatools.preferences_install_addon", icon = 'TEXTURE')
+
+
+
+#reload texture
+class CYATOOLS_OT_preferences_install_addon(bpy.types.Operator):
+    """update"""
+    bl_idname = "cyatools.preferences_install_addon"
+    bl_label = "update"
+    def execute(self, context):
+        bpy.ops.preferences.addon_install(filepath = ADDONPATH, overwrite = True)
+        return {'FINISHED'}
+
 
 #メッセージダイアログ
 #スペース区切りで改行する
@@ -73,21 +89,21 @@ class CYATOOLS_MT_addonpreferences(AddonPreferences):
 class CYATOOLS_MT_messagebox(bpy.types.Operator):
     bl_idname = "cyatools.messagebox"
     bl_label = ""
- 
+
     message : bpy.props.StringProperty(
         name = "message",
         description = "message",
         default = ''
     )
- 
+
     def execute(self, context):
         self.report({'INFO'}, self.message)
         print(self.message)
         return {'FINISHED'}
- 
+
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self, width = 400)
- 
+
     def draw(self, context):
         buf = self.message.split(' ')
         for s in buf:
@@ -97,7 +113,8 @@ class CYATOOLS_MT_messagebox(bpy.types.Operator):
 
 classes = (
     CYATOOLS_MT_addonpreferences,
-    CYATOOLS_MT_messagebox
+    CYATOOLS_MT_messagebox,
+    CYATOOLS_OT_preferences_install_addon
 )
 
 
@@ -116,7 +133,7 @@ def register():
 def unregister():
     for cls in classes:
         bpy.utils.unregister_class(cls)
-    
+
     maintools.unregister()
     modifierlist.unregister()
     rigtools.unregister()

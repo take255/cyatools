@@ -3,7 +3,7 @@ import imp
 from bpy.app.handlers import persistent
 
 
-from bpy.types import( 
+from bpy.types import(
     PropertyGroup,
     Panel,
     Operator,
@@ -29,6 +29,7 @@ from . import renamer
 from . import duplicator
 from . import constraint
 from . import arp
+from . import proportion
 
 imp.reload(utils)
 imp.reload(cmd)
@@ -38,6 +39,7 @@ imp.reload(renamer)
 imp.reload(duplicator)
 imp.reload(constraint)
 imp.reload(arp)
+imp.reload(proportion)
 
 
 AXIS = (('X','X','X'), ('Y','Y','Y'), ('Z','Z','Z'), ('-X','-X','-X'), ('-Y','-Y','-Y'), ('-Z','-Z','-Z'))
@@ -79,17 +81,17 @@ def cyarigtools_handler(scene):
             act_bone = bpy.context.active_pose_bone.name
         elif utils.current_mode() == 'EDIT':
             act_bone = bpy.context.active_bone.name
-            
+
 
         index_notExists = []
         #すでに選択されているものをアクティブにした場合、リストにあるものを削除して最後に追加する
         for i , bone in enumerate(props.allbones):
             if act_bone == bone.name:
                 index_notExists.append(i)
-            
+
         props.allbones.add().name = act_bone
 
-        #選択されていなければリストから外す removeはインデックスで指定        
+        #選択されていなければリストから外す removeはインデックスで指定
         for i , bone in enumerate(props.allbones):
             if not bone.name in [x.name for x in selected]:
                 index_notExists.append(i)
@@ -100,7 +102,7 @@ def cyarigtools_handler(scene):
 
 #---------------------------------------------------------------------------------------
 #Props
-#---------------------------------------------------------------------------------------        
+#---------------------------------------------------------------------------------------
 class CYARIGTOOLS_Props_OA(PropertyGroup):
     handler_through : BoolProperty(default = False)
 
@@ -131,8 +133,13 @@ class CYARIGTOOLS_Props_OA(PropertyGroup):
     axis_forward : EnumProperty(items = AXIS , name = 'forward',default = '-Z' )
     axis_up : EnumProperty(items = AXIS , name = 'up' ,default = 'Y')
 
-
     axis_plane : EnumProperty(items = AXIS_PLANE , name = 'axis',default = 'X' )
+
+    #キャラプロポーション用
+    root_scale : FloatProperty(name="root",min=0.001,default=1.0)
+    spine_scale : FloatProperty(name="spine",min=0.001,default=1.0)
+    clavicle_scale : FloatProperty(name="clavicle",min=0.001,default=1.0)
+    hand_scale : FloatProperty(name="hand",min=0.001,default=1.0)
 
 
 
@@ -146,8 +153,6 @@ class CYARIGTOOLS_PT_ui(utils.panel):
         return context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
-        props = bpy.context.scene.cyarigtools_props        
-
         col = self.layout.column(align=False)
         col.operator("cyarigtools.rigsetuptools",icon = 'OBJECT_DATA')
         col.operator("cyarigtools.edittools",icon = 'OBJECT_DATA')
@@ -156,6 +161,7 @@ class CYARIGTOOLS_PT_ui(utils.panel):
         col.operator("cyarigtools.constrainttools",icon = 'OBJECT_DATA')
         col.operator("cyarigtools.rigcontrolpanel",icon = 'OBJECT_DATA')
         col.operator("cyarigtools.arptools",icon = 'OBJECT_DATA')
+        col.operator("cyarigtools.proportionpanel",icon = 'OBJECT_DATA')
 
 
 #---------------------------------------------------------------------------------------
@@ -194,7 +200,7 @@ class CYARIGTOOLS_MT_rigcontrolpanel(bpy.types.Operator):
         return context.window_manager.invoke_props_dialog(self , width=400)
 
     def draw(self, context):
-        props = bpy.context.scene.cyarigtools_props        
+        props = bpy.context.scene.cyarigtools_props
 
         col = self.layout.column(align=False)
 
@@ -291,7 +297,7 @@ class CYARIGTOOLS_MT_rigsetuptools(bpy.types.Operator):
         return context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
-        props = bpy.context.scene.cyarigtools_props        
+        props = bpy.context.scene.cyarigtools_props
 
         col_root = self.layout.column(align=False)
         box = col_root.box()
@@ -306,7 +312,7 @@ class CYARIGTOOLS_MT_rigsetuptools(bpy.types.Operator):
         box.prop(props, "rigshape_scale", icon='BLENDER', toggle=True)
         box.operator("cyarigtools.rigshape_append")
         box.operator("cyarigtools.make_the_same_size")
-    
+
 
         col = row.column()
 
@@ -369,12 +375,12 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        props = bpy.context.scene.cyarigtools_props        
+        props = bpy.context.scene.cyarigtools_props
         props.handler_through = False
         return context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
-        props = bpy.context.scene.cyarigtools_props        
+        props = bpy.context.scene.cyarigtools_props
 
         col_root = self.layout.column(align=False)
         box = col_root.box()
@@ -436,7 +442,7 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         box1.operator("cyarigtools.edit_align_at_flontview")
         box1.prop(props,"axis_plane")
 
-        
+
 
         box = col1.box()
         box.label(text = 'direction')
@@ -482,12 +488,11 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         row1.prop(props, 'axis_forward',text = 'fwd')
         row1.prop(props, 'axis_up')
 
-        # box = col_root.box()
-        # box.label(text = 'other commands')
-        # row = box.row()
-        # row.operator("cyarigtools.edit_connect_chain")
-        # row.operator("cyarigtools.edit_delete_rig")
 
+        box3 = col1.box()
+        box3.label( text = 'bone copy csv' )
+        row = box3.row()
+        row.operator( "cyarigtools.edit_bone_copy_with_csv")
 
 
 
@@ -578,6 +583,47 @@ class CYARIGTOOLS_MT_arptools(bpy.types.Operator):
         box.operator("cyarigtools.arp_proxy_rig",text = "anim").mode = 'anim'
 
 
+#---------------------------------------------------------------------------------------
+#Proportion Panel キャラ骨のプロポーション設定ツール
+#---------------------------------------------------------------------------------------
+class CYARIGTOOLS_MT_proportionpanel(bpy.types.Operator):
+    """キャラ骨のプロポーション設定ツール"""
+    bl_idname = "cyarigtools.proportionpanel"
+    bl_label = "Proportion Panel"
+    bl_options = {'REGISTER', 'UNDO'}
+
+
+    def execute(self, context):
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        props = bpy.context.scene.cyarigtools_props
+        layout = self.layout
+
+        col = layout.column(align=False)
+        row = col.row(align=False)
+
+        box = row.box()
+        box.label(text="Proportion Scale")
+
+
+        box.prop(props, "root_scale")
+        box.prop(props, "spine_scale")
+        box.prop(props, "clavicle_scale")
+        box.prop(props, "hand_scale")
+        box.operator("cyarigtools.proportion_assign")
+        box.operator("cyarigtools.proportion_apply")
+        box.operator("cyarigtools.proportion_get")
+
+        box = row.box()
+        box.label(text = 'pose')
+        box.operator("cyarigtools.cmd_pose_copy_pasete",text = "copy").mode = 'copy'
+        box.operator("cyarigtools.cmd_pose_copy_pasete",text = "paste").mode = 'paste'
+
+
 
 #---------------------------------------------------------------------------------------
 # Operator
@@ -623,7 +669,7 @@ class CYARIGTOOLS_OT_setupik_customrig(bpy.types.Operator):
     ik:
     Add ik controller and pole vector.
     First ,select 2 joint bones, and execute this command.
-    
+
     knee:
     Add knee bone and constraint knee to leg bone.
     First ,select 2 joint bones, and execute this command.
@@ -667,7 +713,7 @@ class CYARIGTOOLS_OT_setupik_polevector(bpy.types.Operator):
 class CYARIGTOOLS_OT_setupik_spline_ik(bpy.types.Operator):
     """リストに根本から先端までのボーンを入力する。\nコントローラは自動で生成される。\n先頭のボーンを選択しておくこと。\nベジェカーブが生成されるのでそれでコントロールする。"""
     bl_idname = "cyarigtools.setupik_spline_ik"
-    bl_label = "spline ik"  
+    bl_label = "spline ik"
     def execute(self, context):
         setup_ik.spline_ik()
         return {'FINISHED'}
@@ -721,7 +767,7 @@ class CYARIGTOOLS_OT_setupik_rig_spine_v3(bpy.types.Operator):
         return {'FINISHED'}
 
 class CYARIGTOOLS_OT_setupik_rig_neck(bpy.types.Operator):
-    """首骨のリグの自動設定\n胸の骨、首、頭までの骨を順番にリストに登録して実行"""    
+    """首骨のリグの自動設定\n胸の骨、首、頭までの骨を順番にリストに登録して実行"""
     bl_idname = "cyarigtools.setupik_rig_neck"
     bl_label = "neck"
     def execute(self, context):
@@ -730,7 +776,7 @@ class CYARIGTOOLS_OT_setupik_rig_neck(bpy.types.Operator):
 
 class CYARIGTOOLS_OT_setupik_rig_neck_v2(bpy.types.Operator):
     """首骨のリグの自動設定:
-        胸の骨、首、頭までの骨を順番にリストに登録して実行"""    
+        胸の骨、首、頭までの骨を順番にリストに登録して実行"""
 
     bl_idname = "cyarigtools.setupik_rig_neck_v2"
     bl_label = "neck v2"
@@ -743,7 +789,7 @@ class CYARIGTOOLS_OT_setupik_rig_finger(bpy.types.Operator):
     指のルートボーンを選択して実行する。
     ボーンのフォーマットはindex_01_lで最初と最後の要素を使う。
     できあがるコントローラ名は ctr.index.lとなる。
-    tweakノードはctr.tweak.index_01.lとなる。"""    
+    tweakノードはctr.tweak.index_01.lとなる。"""
 
     bl_idname = "cyarigtools.setupik_rig_finger"
     bl_label = "finger"
@@ -753,7 +799,7 @@ class CYARIGTOOLS_OT_setupik_rig_finger(bpy.types.Operator):
 
 
 class CYARIGTOOLS_OT_setupik_setup_rig_chain(bpy.types.Operator):
-    """setup Unreal Engine Rig"""    
+    """setup Unreal Engine Rig"""
     bl_idname = "cyarigtools.setupik_setup_rig_chain"
     bl_label = "assign chain rig"
     def execute(self, context):
@@ -763,7 +809,7 @@ class CYARIGTOOLS_OT_setupik_setup_rig_chain(bpy.types.Operator):
 
 #setup Unreal Engine Rig
 class CYARIGTOOLS_OT_setupik_ue(bpy.types.Operator):
-    """setup Unreal Engine Rig"""    
+    """setup Unreal Engine Rig"""
     bl_idname = "cyarigtools.setupik_ue"
     bl_label = "create ue rig"
     def execute(self, context):
@@ -936,6 +982,44 @@ class CYARIGTOOLS_OT_edit_axis_swap(bpy.types.Operator):
         edit.axis_swap(self.op)
         return {'FINISHED'}
 
+
+class CYARIGTOOLS_OT_edit_bone_copy_with_csv(bpy.types.Operator):
+    """CSVの情報から骨をコピーする"""
+    bl_idname = "cyarigtools.edit_bone_copy_with_csv"
+    bl_label = "bone copy with csv"
+
+    filepath : bpy.props.StringProperty(subtype="FILE_PATH")
+    filename : StringProperty()
+    directory : StringProperty(subtype="FILE_PATH")
+
+    def execute(self, context):
+        edit.bone_copy_with_csv( self.filepath )
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+
+
+class CYARIGTOOLS_OT_edit_bone_copy_with_csv(bpy.types.Operator):
+    """CSVの情報から骨をコピーする"""
+    bl_idname = "cyarigtools.edit_bone_copy_with_csv"
+    bl_label = "bone copy with csv"
+
+    filepath : bpy.props.StringProperty(subtype="FILE_PATH")
+    filename : StringProperty()
+    directory : StringProperty(subtype="FILE_PATH")
+
+    def execute(self, context):
+        edit.bone_copy_with_csv( self.filepath )
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+
 #---------------------------------------------------------------------------------------
 # rig control panel
 #---------------------------------------------------------------------------------------
@@ -1091,6 +1175,44 @@ class CYARIGTOOLS_OT_locator_snap_bone_at_obj(Operator):
         edit.snap_bone_at_obj()
         return {'FINISHED'}
 
+#---------------------------------------------------------------------------------------
+# Proportion Panel
+#---------------------------------------------------------------------------------------
+class CYARIGTOOLS_OT_proportion_assign(bpy.types.Operator):
+    """選択した骨とメッシュをスケール値に合わせる"""
+    bl_idname = "cyarigtools.proportion_assign"
+    bl_label = "assign"
+    def execute(self, context):
+        proportion.assign()
+        return {'FINISHED'}
+
+
+class CYARIGTOOLS_OT_proportion_apply(bpy.types.Operator):
+    """現在のプロポーションで確定する"""
+    bl_idname = "cyarigtools.proportion_apply"
+    bl_label = "apply"
+    def execute(self, context):
+        proportion.apply()
+        return {'FINISHED'}
+
+class CYARIGTOOLS_OT_proportion_get(bpy.types.Operator):
+    """選択された骨のプロポーション値を取得"""
+    bl_idname = "cyarigtools.proportion_get"
+    bl_label = "get"
+    def execute(self, context):
+        proportion.get()
+        return {'FINISHED'}
+
+class CYARIGTOOLS_OT_cmd_pose_copy_pasete(bpy.types.Operator):
+    """選択された骨のプロポーション値を取得"""
+    bl_idname = "cyarigtools.cmd_pose_copy_pasete"
+    bl_label = ""
+    mode : StringProperty()
+    def execute(self, context):
+        cmd.pose_copy_pasete(self.mode)
+        return {'FINISHED'}
+
+
 
 #---------------------------------------------------------------------------------------
 # other tools
@@ -1120,13 +1242,14 @@ classes = (
     CYARIGTOOLS_MT_rigsetuptools,
     CYARIGTOOLS_MT_edittools,
     CYARIGTOOLS_MT_rigcontrolpanel,
+    CYARIGTOOLS_MT_proportionpanel,
 
     #RigShape-Related
     CYARIGTOOLS_PT_rigshape_selector,
     CYARIGTOOLS_OT_rigshape_revert,
     CYARIGTOOLS_OT_rigshape_append,
     CYARIGTOOLS_OT_make_the_same_size,
-    
+
     #setup ik rig
     CYARIGTOOLS_OT_setupik_ik,
     CYARIGTOOLS_OT_setupik_polevector,
@@ -1170,6 +1293,7 @@ classes = (
     CYARIGTOOLS_OT_edit_axis_swap,
     CYARIGTOOLS_OT_locator_add_bone,
     CYARIGTOOLS_OT_locator_snap_bone_at_obj,
+    CYARIGTOOLS_OT_edit_bone_copy_with_csv,
 
 
     #other tools
@@ -1194,7 +1318,14 @@ classes = (
     CYARIGTOOLS_OT_arp_const,
     CYARIGTOOLS_OT_adjust_arp,
     CYARIGTOOLS_OT_arp_disable_ikstretch,
-    CYARIGTOOLS_OT_arp_proxy_rig
+    CYARIGTOOLS_OT_arp_proxy_rig,
+
+    #propotion
+    CYARIGTOOLS_OT_proportion_assign,
+    CYARIGTOOLS_OT_proportion_apply,
+    CYARIGTOOLS_OT_proportion_get,
+    CYARIGTOOLS_OT_cmd_pose_copy_pasete,
+
 )
 
 def register():
@@ -1210,7 +1341,7 @@ def register():
 
 
 def unregister():
-    
+
     for cls in classes:
         bpy.utils.unregister_class(cls)
 

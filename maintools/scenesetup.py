@@ -8,6 +8,7 @@ from . import skinning
 
 
 imp.reload(utils)
+MOB_TYPE_DATA = {}
 
 #プロキシ関連ツール
 def make_proxy():
@@ -176,9 +177,10 @@ def pick_collection_name():
     props.newcollection_name3 = buf[4][:-2]
 
 
-
+#---------------------------------------------------------------------------------------
 #ビューレイヤーのステートをjsonで保存する
 #全コレクションと親の保存　再構築できるようにする
+#---------------------------------------------------------------------------------------
 def save_collection_state():
     data = dict()
 
@@ -203,10 +205,10 @@ def save_collection_state():
         json.dump(data, file, ensure_ascii=False, indent=2)    
 
 
-
+#---------------------------------------------------------------------------------------
 #ビューレイヤーの表示状態をレンダリング状態にマッチさせる
+#---------------------------------------------------------------------------------------
 def match_render_to_view():
-
 
     vlayer = bpy.context.view_layer #カレントビューレイヤー
 
@@ -226,3 +228,26 @@ def match_render_to_view():
 
     for v in visible:
         print(v)
+
+def mob_offset():
+    props = bpy.context.scene.cyatools_oa
+    mob_offset = props.mob_offset
+
+    val = MOB_TYPE_DATA[mob_offset]
+    print(val)
+
+    for ob in utils.selected():
+        ob.location.y = float(val)
+
+
+#---------------------------------------------------------------------------------------
+#モブの頂点グループゲーム用に修正
+#ファイルパスは決めうちで
+#---------------------------------------------------------------------------------------
+def mob_modify_vtxgrp():
+    path = "D:/Prj/B01/Assets/Characters/Common/Data/"
+    file1 = 'mob_vtxgrp_transfer.csv'
+    file2 = 'mob_bonename_exchange.csv'
+
+    skinning.transfer_with_csvtable( path + file1 )
+    skinning.rename_with_csvtable( path + file2 )

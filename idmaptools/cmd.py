@@ -100,10 +100,7 @@ def assign_vertex_color(mode):
     props = bpy.context.scene.cyamaterialtools_oa
 
     ui_list = bpy.context.window_manager.cyamaterialtools_list
-    itemlist = ui_list.itemlist    
     index = ui_list.active_index
-
-    mat_type = props.material_type
 
     a = VERTEX_COLOR[ props.material_type ][ index ]
     color = [conv(a[:2]) , conv(a[2:4]) , conv(a[4:]) , 1.0]

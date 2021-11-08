@@ -14,6 +14,7 @@
 import bpy
 from bpy.types import ( PropertyGroup , Panel , Operator ,UIList)
 import imp
+import csv
 
 from bpy.props import(
     PointerProperty,
@@ -61,6 +62,23 @@ imp.reload(facemap)
 #頂点カラーデータ
 #MATERIAL_TYPE = ( ('METAL','METAL','') , ('LEATHER','LEATHER','') , ('CLOTH','CLOTH','') , ('OTHERS','OTHERS','') , ('BUFFER','BUFFER','') )
 #AXIS = (('X','X','X'), ('Y','Y','Y'), ('Z','Z','Z'), ('-X','-X','-X'), ('-Y','-Y','-Y'), ('-Z','-Z','-Z'))
+
+
+MOB_OFFSET_PATH = 'D:/Prj/B01/Assets/Characters/Common/Data/Mob_Offset.csv'
+
+MOB_TYPE = []
+MOB_TYPE_DATA = []
+with open(MOB_OFFSET_PATH, encoding='utf8', newline='') as f:
+    csvreader = csv.reader(f)
+    for row in csvreader:
+
+        item = [row[0],row[0],""]
+        MOB_TYPE.append([row[0],row[0],""])
+        MOB_TYPE_DATA.append([row[0],row[1]])
+
+
+print(MOB_TYPE)
+
 
 
 #シーンを追加したとき、それぞれのシーンにあるシーンリストを更新してあげる必要がある
@@ -154,8 +172,11 @@ class CYATOOLS_Props_OA(PropertyGroup):
     vertexgrp_string : StringProperty(name = "word")
     weight_margin : FloatProperty(name = "margin", default=0.01 )
     batch_weight_transfer_bool : BoolProperty(name="batch" ,  default = False)
+    weight_transfer_keep_original : BoolProperty(name="keep original" ,  default = False)
+    weight_transfer_selected_vtx : BoolProperty(name="selected vtx" ,  default = False)
     bind_auto_bool : BoolProperty(name="auto" ,  default = True)
     batch_weight_transfer_string : StringProperty(name = "suffix")
+    threshold_selectweight : FloatProperty(name = "threshold", default=0.9 )
 
     weightmirror_dir : EnumProperty(items=(
         ('L>R', 'L>R', ''),
@@ -181,6 +202,10 @@ class CYATOOLS_Props_OA(PropertyGroup):
     newcollection_name3 : StringProperty(name = "parts name")
  
 
+    mob_offset : StringProperty(name="mob_offset", maxlen=63 )
+    mob_offset_all : CollectionProperty(type=PropertyGroup)
+
+    #mob_offset : EnumProperty(items = MOB_TYPE , name = '' )
 
 #---------------------------------------------------------------------------------------
 #UI
@@ -218,12 +243,12 @@ class CYATOOLS_MT_modeling_tools(Operator):
         props.outline_width = view3d.outline_width
         props.origin_size = view3d.object_origin_size
 
-        return context.window_manager.invoke_props_dialog(self ,width = 300)
+        return context.window_manager.invoke_props_dialog(self ,width = 400)
 
     def draw(self, context):
         props = bpy.context.scene.cyatools_oa
         layout=self.layout
-        row = layout.split(factor = 0.6, align = False)
+        row = layout.split(factor = 0.5, align = False)
 
         col = row.column()
         box2 = col.box()
@@ -233,6 +258,7 @@ class CYATOOLS_MT_modeling_tools(Operator):
         box2.operator( "cyatools.group" , icon = 'GROUP')
         box2.operator( "cyatools.locator_tobone" , icon = 'CONSTRAINT_BONE')
         box2.operator( "cyatools.locator_tobone_keep" , icon = 'CONSTRAINT_BONE')
+        #box2.operator( "cyatools.modeling_separate_face" , icon = 'CONSTRAINT_BONE')
 
         #トランスフォーム
         box3 = col.box()
@@ -240,12 +266,15 @@ class CYATOOLS_MT_modeling_tools(Operator):
         box3.operator( "cyatools.trasnform_apply_x" , icon = 'AXIS_SIDE')
         box3.operator( "cyatools.trasnform_reset_cursor_rot" , icon = 'CON_ROTLIKE')
         box3.operator( "cyatools.modeling_pivot_by_facenormal" , icon = 'NORMALS_FACE')
+        box3.operator( "cyatools.trasnform_invert_bonetransform" , icon = 'NORMALS_FACE')
 
         box5 = col.box()
         box5.label( text = 'modeling' )
         box5.operator( "cyatools.modeling_del_half_x" , icon = 'MOD_TRIANGULATE')
         box5.operator( "cyatools.modeling_select_linked_faces" , icon = 'SNAP_FACE')
         box5.operator( "cyatools.modeling_mirror_l_to_r" , icon = 'MOD_MIRROR')
+        box5.operator( "cyatools.modeling_separate_face" , icon = 'CONSTRAINT_BONE')
+
         row5 = box5.row() 
         row5.operator( "cyatools.modeling_copy_vertex_pos" , icon = 'MOD_MIRROR')
         row5.operator( "cyatools.modeling_paste_vertex_pos" , icon = 'MOD_MIRROR')
@@ -264,6 +293,13 @@ class CYATOOLS_MT_modeling_tools(Operator):
         box3.operator( "cyatools.instance_instancer" , icon = 'DUPLICATE')
         box3.operator( "cyatools.instance_substantial" , icon = 'MOD_SUBSURF')
         box3.operator( "cyatools.instance_replace" , icon = 'LIBRARY_DATA_OVERRIDE')
+
+        box4 = col.box()
+        box4.label( text = 'rot90deg' )
+        row = box4.row()
+        row.operator( "cyatools.transform_rot90deg" , text = 'x').axis = 'x'
+        row.operator( "cyatools.transform_rot90deg" , text = 'y').axis = 'y'
+        row.operator( "cyatools.transform_rot90deg" , text = 'z').axis = 'z'
 
         box4 = col.box()
         box4.label( text = 'swap axis' )
@@ -298,10 +334,11 @@ class CYATOOLS_MT_modeling_tools(Operator):
         row.operator( "cyatools.modeling_normal_180deg")
 
         box4 = col.box()
-        box4.label( text = 'animation' )
-        col1 = box4.column()
-        row = col1.row()
-        row.operator( "cyatools.modeling_copy_action")
+        box4.label( text = 'special' )
+        #col1 = box4.column()
+        #row = col1.row()
+        box4.operator( "cyatools.modeling_extract_missingparts")
+        box4.operator( "cyatools.modeling_extract_missingparts2")
 
 
 class CYATOOLS_MT_modifier_tools(Operator):
@@ -537,6 +574,9 @@ class CYATOOLS_MT_skinningtools(Operator):
         row1.operator("cyatools.skinning_add_influence_bone"  , icon = 'BONE_DATA')
         row1.operator("cyatools.skinning_copy_influence_bone" , icon = 'COMMUNITY')
 
+        row1 = box.row()
+        row1.operator("cyatools.skinning_add_influence_bone_auto" , icon = 'COMMUNITY')
+
 
         box = col.box()
         box.label(text = 'copy weight')
@@ -546,8 +586,10 @@ class CYATOOLS_MT_skinningtools(Operator):
         row1.operator("cyatools.skinning_weights_transfer" , icon = 'COMMUNITY').mode = 'v2'
         row1.prop(props, "batch_weight_transfer_bool")
 
-        row1 = col1.row()
-        row1.prop(props,'batch_weight_transfer_string')
+        
+        col1.prop(props,'batch_weight_transfer_string')
+        col1.prop(props, "weight_transfer_selected_vtx")
+        col1.prop(props, "weight_transfer_keep_original")
         
         
         box = col.box()
@@ -558,6 +600,12 @@ class CYATOOLS_MT_skinningtools(Operator):
 
         row1 = col1.row()
         row1.prop(props, 'weightmirror_dir' , expand=True)
+
+        box = col.box()
+        box.label(text = 'select')
+        box.operator("cyatools.skinning_selectgrp"  , icon = 'MOD_MIRROR')
+        box.prop(props, 'threshold_selectweight' , expand=True)
+        
 
 
         #CSVを使ったウェイト編集ツール
@@ -571,7 +619,7 @@ class CYATOOLS_MT_skinningtools(Operator):
 
         row2 = col1.row()
         row2.prop(props,"skin_filepath")
-        row2.operator( 'cyatools.skinning_filebrowse' , icon = 'FILE_FOLDER' ,text = "")
+        #row2.operator( 'cyatools.skinning_filebrowse' , icon = 'FILE_FOLDER' ,text = "")
 
         # box = col.box()
         # box.label(text = 'weight')
@@ -699,10 +747,12 @@ class CYATOOLS_MT_rename(Operator):
         for s in ('org',):
             col.operator("cyatools.rename_add_defined", text = s).op = s
 
-
+#---------------------------------------------------------------------------------------
+#アニメーションツール
+#---------------------------------------------------------------------------------------
 class CYATOOLS_MT_blendshape_tools(Operator):
     bl_idname = "cyatools.blendshape_tools"
-    bl_label = "blendshape"
+    bl_label = "animation"
 
     def execute(self, context):
         return{'FINISHED'}
@@ -713,17 +763,41 @@ class CYATOOLS_MT_blendshape_tools(Operator):
     def draw(self, context):
         props = bpy.context.scene.cyatools_oa
         layout=self.layout
-        box = layout.box()
-        box.label( text = 'copy paste' , icon = 'MODIFIER')
-        row5 = box.row() 
-        row5.operator( "cyatools.blendshape_copy_vertex_pos" , icon = 'MOD_MIRROR')
-        row5.operator( "cyatools.blendshape_paste_vertex_pos" , icon = 'MOD_MIRROR')
+
 
         box = layout.box()
+        box.label( text = 'blendshape key edit' , icon = 'MODIFIER')
+
+        row = box.row() 
+        row.operator( "cyatools.blendshape_insert_all_keys" , icon = 'MOD_MIRROR')
+        row.operator( "cyatools.blendshape_remove_shapekey_unmuted" , icon = 'MOD_MIRROR')
+
+
+        row = box.row() 
+        row.operator( "cyatools.blendshape_remove_all_keys" , icon = 'MOD_MIRROR')
+        row.operator( "cyatools.blendshape_shape_key_clear" , icon = 'MOD_MIRROR')
+        row = box.row() 
+        row.operator( "cyatools.blendshape_copy_action")
+        row.operator( "cyatools.blendshape_push_down")
+
+        row = box.row() 
+        row.operator( "cyatools.blendshape_shepekey_mute" ,text = 'Mute').mode = True
+        row.operator( "cyatools.blendshape_shepekey_mute" ,text = 'Unute').mode = False
+
+        
+
+
+
+        box = layout.box()
+        box.label( text = 'blendshape vtx copy paste' , icon = 'MODIFIER')
+        row = box.row() 
+        row.operator( "cyatools.blendshape_copy_vertex_pos" , icon = 'MOD_MIRROR')
+        row.operator( "cyatools.blendshape_paste_vertex_pos" , icon = 'MOD_MIRROR')
+
         box.label( text = 'restore' , icon = 'MODIFIER')
-        row5 = box.row() 
-        row5.operator( "cyatools.blendshape_keep_pos" , icon = 'MOD_MIRROR')
-        row5.operator( "cyatools.blendshape_restore_pos" , icon = 'MOD_MIRROR')
+        row = box.row() 
+        row.operator( "cyatools.blendshape_keep_pos" , icon = 'MOD_MIRROR')
+        row.operator( "cyatools.blendshape_restore_pos" , icon = 'MOD_MIRROR')
 
 
 #---------------------------------------------------------------------------------------
@@ -732,11 +806,33 @@ class CYATOOLS_MT_blendshape_tools(Operator):
 class CYATOOLS_MT_scenesetuptools(Operator):
     bl_idname = "cyatools.scenesetuptools"
     bl_label = "scene setup tools"
+    #mob_type = []
 
     def execute(self, context):
         return{'FINISHED'}
 
     def invoke(self, context, event):
+        #ウインドウを開くタイミングでモブデータを読み込む
+        #self.mob_type.clear()
+        scenesetup.MOB_TYPE_DATA.clear()
+        props = bpy.context.scene.cyatools_oa
+        #props.mob_offset.clear() 
+        props.mob_offset_all.clear()       
+
+        with open(MOB_OFFSET_PATH, encoding='utf8', newline='') as f:
+            csvreader = csv.reader(f)
+            for row in csvreader:
+                #item = [row[1].row[0],row[1]]
+                #self.mob_type.append([row[1].row[0],row[1]])
+                #props.mob_offset.add().name =item 
+                #print(row[0])
+                #item = [row[1],row[0],row[1]]
+                props.mob_offset_all.add().name = row[0]
+                scenesetup.MOB_TYPE_DATA[row[0]] = row[1]
+                #self.mob_type.append(item)
+
+        #props.mob_offset.items = self.mob_type
+
         return context.window_manager.invoke_props_dialog(self, width = 400)
 
     def draw(self, context):
@@ -772,6 +868,13 @@ class CYATOOLS_MT_scenesetuptools(Operator):
         box.label( text = 'Render State' , icon = 'MODIFIER')
         box.operator( "cyatools.scenesetup_match_render_to_view" , icon = 'SYNTAX_OFF')
 
+
+        box = layout.box()
+        box.label( text = 'MobSetup' , icon = 'MODIFIER')
+        row = box.row()
+        row.prop_search(props, "mob_offset", props, "mob_offset_all", icon='SCENE_DATA')
+        row.operator("cyatools.scenesetup_mob_offset" , icon = 'DUPLICATE')
+        row.operator("cyatools.scenesetup_mob_modify_vtxgrp" , icon = 'DUPLICATE')
 
 
 #---------------------------------------------------------------------------------------
@@ -920,6 +1023,15 @@ class CYATOOLS_OT_locator_tobone_keep(Operator):
 
     def execute(self, context):
         locator.tobone_keep()
+        return {'FINISHED'}
+
+class CYATOOLS_OT_modeling_separate_face(Operator):
+    """選択されたフェースが複製され１メッシュになる"""
+    bl_idname = "cyatools.modeling_separate_face"
+    bl_label = "separate face"
+
+    def execute(self, context):
+        locator.separate_face()
         return {'FINISHED'}
 
 
@@ -1249,6 +1361,16 @@ class CYATOOLS_OT_swap_axis(Operator):
         return {'FINISHED'}
 
 
+class CYATOOLS_OT_transform_rot90deg(Operator):
+    """90度モデルを回転させる"""
+    bl_idname = "cyatools.transform_rot90deg"
+    bl_label = ""
+    axis : StringProperty()
+    def execute(self, context):
+        transform.rot90deg(self.axis)
+        return {'FINISHED'}
+
+
 #オブジェクトをX軸ミラーコンストレインする
 class CYATOOLS_OT_instance_mirror(Operator):
     """インスタンスをミラーする
@@ -1292,6 +1414,16 @@ class CYATOOLS_OT_trasnform_reset_cursor_rot(Operator):
     def execute(self, context):
         transform.reset_cursor_rot()
         return {'FINISHED'}
+
+#選択した骨でモデルを逆変換
+class CYATOOLS_OT_trasnform_invert_bonetransform(Operator):
+    """モデルとアーマチュアの骨を選択して、骨の逆変換をかける"""
+    bl_idname = "cyatools.trasnform_invert_bonetransform"
+    bl_label = "invert bone transform"    
+    def execute(self, context):
+        transform.invert_bonetransform()
+        return {'FINISHED'}
+
 
 #---------------------------------------------------------------------------------------
 #modering
@@ -1354,17 +1486,34 @@ class CYATOOLS_OT_modeling_normal_180deg(Operator):
         modeling.normal_180deg()
         return {'FINISHED'}
 
-
-#アニメーション
-
-class CYATOOLS_OT_modeling_copy_action(Operator):
-    """シェイプキーの編集アクションをコピーする
-    複数選択して、アクティブなものを他のものにコピー"""
-    bl_idname = "cyatools.modeling_copy_action"
-    bl_label = "copy shepe key action"    
+class CYATOOLS_OT_modeling_extract_missingparts(Operator):
+    """欠損を生成する 頂点グループに名前をつけて自動でカット
+    . で区切る
+    先頭 MISSINGPARTS
+    基準にする骨名
+    出力するメッシュ名
+    例：MISSINGPARTS.lowerarm_l.model_leftarm    
+    """
+    bl_idname = "cyatools.modeling_extract_missingparts"
+    bl_label = "extract missingparts"    
     def execute(self, context):
-        modeling.copy_action()
+        modeling.extract_missingparts()
         return {'FINISHED'}
+
+#ボックスを使ったモデルのカット
+class CYATOOLS_OT_modeling_extract_missingparts2(Operator):
+    """欠損を生成する 01_MISSING_PARTS_CUTTER　というコレクションにカッターモデルを入れて実行
+    カッターモデル名に情報を入れる　. で区切る
+    CUTTER.基準にする骨名.出力するメッシュ名
+    例：CUTTER.lowerarm_l.model_leftarm    
+    """
+    bl_idname = "cyatools.modeling_extract_missingparts2"
+    bl_label = "extract missingparts2"    
+    def execute(self, context):
+        modeling.extract_missingparts2()
+        return {'FINISHED'}
+
+
 
 
 #---------------------------------------------------------------------------------------
@@ -1403,6 +1552,64 @@ class CYATOOLS_OT_blendshape_restore_pos(Operator):
         blendshape.restore_downstream()
         return {'FINISHED'}
 
+class CYATOOLS_OT_blendshape_remove_all_keys(Operator):
+    """選択したモデルのブレンドシェイプキーを全削除"""
+    bl_idname = "cyatools.blendshape_remove_all_keys"
+    bl_label = "delete all keys"    
+    def execute(self, context):
+        blendshape.remove_all_keys()
+        return {'FINISHED'}
+
+class CYATOOLS_OT_blendshape_insert_all_keys(Operator):
+    """現在のフレームにキーを挿入"""
+    bl_idname = "cyatools.blendshape_insert_all_keys"
+    bl_label = "insert all keys"    
+    def execute(self, context):
+        blendshape.insert_all_keys()
+        return {'FINISHED'}
+
+class CYATOOLS_OT_blendshape_remove_shapekey_unmuted(Operator):
+    """現在のフレームにキーを挿入"""
+    bl_idname = "cyatools.blendshape_remove_shapekey_unmuted"
+    bl_label = "remove unmuted"    
+    def execute(self, context):
+        blendshape.remove_shapekey_unmuted()
+        return {'FINISHED'}
+
+class CYATOOLS_OT_blendshape_shape_key_clear(Operator):
+    """シェイプキーをクリアする(削除はしない)"""
+    bl_idname = "cyatools.blendshape_shape_key_clear"
+    bl_label = "shape key clear"    
+    def execute(self, context):
+        blendshape.shape_key_clear()
+        return {'FINISHED'}
+
+
+class CYATOOLS_OT_blendshape_copy_action(Operator):
+    """シェイプキーの編集アクションをコピーする
+    複数選択して、アクティブなものを他のものにコピー"""
+    bl_idname = "cyatools.blendshape_copy_action"
+    bl_label = "copy shepe key action"    
+    def execute(self, context):
+        blendshape.copy_action()
+        return {'FINISHED'}
+
+class CYATOOLS_OT_blendshape_push_down(Operator):
+    """フェイシャル"アニメーションをプッシュダウンする"""
+    bl_idname = "cyatools.blendshape_push_down"
+    bl_label = "push down"    
+    def execute(self, context):
+        blendshape.push_down()
+        return {'FINISHED'}
+
+class CYATOOLS_OT_blendshape_shepekey_mute(Operator):
+    """シェイプキーのミュート、アンミュート"""
+    bl_idname = "cyatools.blendshape_shepekey_mute"
+    bl_label = ""
+    mode : BoolProperty()
+    def execute(self, context):
+        blendshape.shepekey_mute(self.mode)
+        return {'FINISHED'}
 
 #---------------------------------------------------------------------------------------
 #material
@@ -1435,6 +1642,16 @@ class CYATOOLS_OT_skinning_add_influence_bone(Operator):
     def execute(self, context):
         skinning.add_influence_bone()
         return {'FINISHED'}
+
+
+class CYATOOLS_OT_skinning_add_influence_bone_auto(Operator):
+    """アーマチュアモディファイヤにアサインされている骨を自動で頂点グループに加える"""
+    bl_idname = "cyatools.skinning_add_influence_bone_auto"
+    bl_label = "add inf auto"
+    def execute(self, context):
+        skinning.add_influence_bone_auto()
+        return {'FINISHED'}
+
 
 class CYATOOLS_OT_skinning_copy_influence_bone(Operator):
     """まず、コピー先のモデル最後にコピー元のモデルを選択して実行する"""
@@ -1575,12 +1792,15 @@ class CYATOOLS_OT_skinning_export_vertexgroup_list(Operator):
         skinning.export_vertexgroup_list()
         return {'FINISHED'}
 
-class CYATOOLS_OT_skinning_transfer_with_csvtable(Operator):
-    """csvの変換テーブルを使ってウェイトを転送"""
-    bl_idname = "cyatools.skinning_transfer_with_csvtable"
-    bl_label = "transfer "
+
+
+class CYATOOLS_OT_skinning_selectgrp(Operator):
+    """選択した頂点グループを閾値以上のウェイトの頂点を選択
+    複数のメッシュが選択されているときは、頂点グループ名を元に複数選択する"""
+    bl_idname = "cyatools.skinning_selectgrp"
+    bl_label = "select "
     def execute(self, context):
-        skinning.transfer_with_csvtable()
+        skinning.selectgrp()
         return {'FINISHED'}
 
 
@@ -1596,9 +1816,6 @@ class CYATOOLS_MT_skinning_rename_with_csvtable(Operator):
     directory : StringProperty(subtype="FILE_PATH")
 
     def execute(self, context):
-        #print((self.filepath, self.filename, self.directory))
-        # props = bpy.context.scene.cyatools_oa    
-        # props.skin_filepath = self.filepath
         skinning.rename_with_csvtable(self.filepath)
         return {'FINISHED'}
 
@@ -1607,6 +1824,23 @@ class CYATOOLS_MT_skinning_rename_with_csvtable(Operator):
         return {'RUNNING_MODAL'}
 
 
+class CYATOOLS_MT_skinning_transfer_with_csvtable(Operator):
+    """csvの変換テーブルを使ってウェイトを転送"""
+    bl_idname = "cyatools.skinning_transfer_with_csvtable"
+    bl_label = "transfer "
+
+    filepath : bpy.props.StringProperty(subtype="FILE_PATH")
+    filename : StringProperty()
+    directory : StringProperty(subtype="FILE_PATH")
+
+
+    def execute(self, context):
+        skinning.transfer_with_csvtable(self.filepath)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 #---------------------------------------------------------------------------------------
 #Rename
 #---------------------------------------------------------------------------------------
@@ -1757,6 +1991,23 @@ class CYATOOLS_OT_scenesetup_match_render_to_view(Operator):
         return {'FINISHED'}
 
 
+class CYATOOLS_OT_scenesetup_mob_offset(Operator):
+    """モブの位置オフセットの設定"""
+    bl_idname = "cyatools.scenesetup_mob_offset"
+    bl_label = "mob_offset"
+    def execute(self, context):
+        scenesetup.mob_offset()
+        return {'FINISHED'}
+
+
+class CYATOOLS_OT_scenesetup_mob_modify_vtxgrp(Operator):
+    """モブの頂点グループをゲーム用に修正"""
+    bl_idname = "cyatools.scenesetup_mob_modify_vtxgrp"
+    bl_label = "mob modify vtxgrp"
+    def execute(self, context):
+        scenesetup.mob_modify_vtxgrp()
+        return {'FINISHED'}
+
 #---------------------------------------------------------------------------------------
 #Facemap Tools
 #---------------------------------------------------------------------------------------
@@ -1869,6 +2120,7 @@ classes = (
     CYATOOLS_OT_collection_sort,
     CYATOOLS_OT_locator_tobone,
     CYATOOLS_OT_locator_tobone_keep,
+    CYATOOLS_OT_modeling_separate_face,
     # CYATOOLS_OT_locator_add_bone,
     # CYATOOLS_OT_locator_snap_bone_at_obj,
 
@@ -1881,7 +2133,17 @@ classes = (
     CYATOOLS_OT_modeling_copy_vertex_pos,
     CYATOOLS_OT_modeling_paste_vertex_pos,
     CYATOOLS_OT_modeling_normal_180deg,
-    CYATOOLS_OT_modeling_copy_action,
+    #CYATOOLS_OT_modeling_copy_action,
+    CYATOOLS_OT_modeling_extract_missingparts,
+    CYATOOLS_OT_modeling_extract_missingparts2,
+    
+    # transform
+    CYATOOLS_OT_swap_axis,
+    CYATOOLS_OT_trasnform_apply_x,
+    CYATOOLS_OT_trasnform_reset_cursor_rot,
+    CYATOOLS_OT_trasnform_invert_bonetransform,
+    CYATOOLS_OT_transform_rot90deg,
+
 
     # instance
     CYATOOLS_OT_instance_select_collection,
@@ -1916,10 +2178,6 @@ classes = (
     CYATOOLS_OT_apply_model,
     CYATOOLS_OT_move_collection,
 
-    # transform
-    CYATOOLS_OT_swap_axis,
-    CYATOOLS_OT_trasnform_apply_x,
-    CYATOOLS_OT_trasnform_reset_cursor_rot,
 
     # etc
     # CYATOOLS_OT_transform_rotate_axis,
@@ -1945,6 +2203,7 @@ classes = (
     #スキニング
     CYATOOLS_MT_skinningtools,
     CYATOOLS_OT_skinning_add_influence_bone,
+    CYATOOLS_OT_skinning_add_influence_bone_auto,
     CYATOOLS_OT_skinning_copy_influence_bone,
     CYATOOLS_OT_skinning_bind,
     CYATOOLS_OT_skinning_weights_mirror,
@@ -1963,7 +2222,8 @@ classes = (
     #CYATOOLS_OT_skinning_rename_with_csvtable,
     CYATOOLS_MT_skinning_rename_with_csvtable,
     CYATOOLS_OT_skinning_export_vertexgroup_list,
-    CYATOOLS_OT_skinning_transfer_with_csvtable,
+    CYATOOLS_MT_skinning_transfer_with_csvtable,
+    CYATOOLS_OT_skinning_selectgrp,
     #CYATOOLS_MT_skinning_filebrowse,
 
     #マテリアル
@@ -1980,6 +2240,13 @@ classes = (
     CYATOOLS_OT_blendshape_paste_vertex_pos,
     CYATOOLS_OT_blendshape_keep_pos,
     CYATOOLS_OT_blendshape_restore_pos,
+    CYATOOLS_OT_blendshape_remove_all_keys,
+    CYATOOLS_OT_blendshape_insert_all_keys,
+    CYATOOLS_OT_blendshape_shape_key_clear,
+    CYATOOLS_OT_blendshape_copy_action,
+    CYATOOLS_OT_blendshape_push_down,
+    CYATOOLS_OT_blendshape_shepekey_mute,
+    CYATOOLS_OT_blendshape_remove_shapekey_unmuted,
 
     #シーンセットアップ
     CYATOOLS_OT_scenesetup_makeproxy,
@@ -1989,6 +2256,8 @@ classes = (
     CYATOOLS_OT_scenesetup_save_collection_state,
     CYATOOLS_OT_scenesetup_create_skin_parts,
     CYATOOLS_OT_scenesetup_match_render_to_view,
+    CYATOOLS_OT_scenesetup_mob_offset,
+    CYATOOLS_OT_scenesetup_mob_modify_vtxgrp,
 
     #フェースマップツール
     CYATOOLS_OT_facemap_select_backside,
