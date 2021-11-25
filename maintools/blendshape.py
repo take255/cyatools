@@ -19,13 +19,13 @@ def quat_weight(q , weight):
 
 
 class Bone:
-    quatanion = Quaternion()    
+    quatanion = Quaternion()
     parent_number = 0
 
     initmatrix = Matrix()
     matrix = Matrix()
     location = Vector()
-    
+
     parent = ''
 
     def __init__(self , name):
@@ -89,7 +89,7 @@ class Vtx:
 
             q0 = quat_weight( BoneArray[ w.name ].quatanion , w.value ) #ボーンの逆クオータニオン
             q1 = quat_weight( BoneArray[ parent ].quatanion , w.value ) #親の逆クオータニオン
-            
+
             #クオータニオンに戻し頂点座標にかける。位置をもとに戻す。最後に親の逆クオータニオンをかける。
             val =  q1 @ ( ( q0 @ v + BoneArray[w.name].location ) - BoneArray[parent].location ) + BoneArray[parent].location
         return  val
@@ -102,9 +102,9 @@ class Vtx:
             if w.name == 'Bone.001':
                 #vec +=   BoneArray[BoneArray[w.name].parent].matrix @ ( BoneArray[w.name].matrix @ ( val - BoneArray[w.name].location ) * w.value  + BoneArray[w.name].location * w.value )
                 vec +=   ( BoneArray[w.name].matrix @ ( val - BoneArray[w.name].location ) * w.value  + BoneArray[w.name].location * w.value )
-            
+
             else:
-                vec +=     ( val - BoneArray[w.name].location ) * w.value  + BoneArray[w.name].location * w.value 
+                vec +=     ( val - BoneArray[w.name].location ) * w.value  + BoneArray[w.name].location * w.value
 
         print(vec)
         return vec
@@ -119,7 +119,7 @@ class Vtx:
         return vec
 
 
-    
+
 
 
 #---------------------------------------------------------------------------------------
@@ -287,7 +287,7 @@ def paste_pos():
     global VARRAY_DIC
 
     obj = bpy.context.active_object
-    mesh = obj.data        
+    mesh = obj.data
     bm = bmesh.new()
     bm.from_mesh(mesh)
 
@@ -374,7 +374,7 @@ def restore_downstream():
     #for i, index in enumerate(range( spIndex + 1 , max )):
     for i, array in enumerate( VARRAY_DOWNSTREAM[1] ):
 
-        index = spIndex + i 
+        index = spIndex + i
         key = bm.verts.layers.shape.keys()[index]
         val = bm.verts.layers.shape.get(key)
 
@@ -435,7 +435,7 @@ def push_down():
 def shepekey_mute(mute):
     for obj in utils.selected():
         for j in obj.data.shape_keys.animation_data.nla_tracks:
-            j.mute = mute   
+            j.mute = mute
 
 #---------------------------------------------------------------------------------------
 #シェイプキーを挿入
@@ -480,7 +480,7 @@ def remove_shapekey_unmuted():
     #         # rename / translate shape key names by changing shapekey.name
     #         for keyblock in shapekey.key_blocks:
     #                 print(keyblock.value)
-            
+
     #         return
         # rename / translate block key names by changing keyblock.name
 
@@ -489,4 +489,38 @@ def remove_shapekey_unmuted():
 #             print(obj.data.shape_keys )
     # bpy.context.object.data.shape_keys.key_blocks ["Key 1"]
     # keyframe_insert（data_path = 'value'、frame = 1）
+
+
+#---------------------------------------------------------------------------------------
+#モブのフェイシャルターゲットのクリンナップ
+#シェイプキーは先頭の４つ残しで削除
+#---------------------------------------------------------------------------------------
+def mob_facial_cleanup():
+
+    namearray = (
+    'Basis',
+    'CloseEyes',
+    'Damage',
+    'Fear',
+    'Anger',
+    )
+
+    for ob in utils.selected():
+        utils.act(ob)
+        # シェイプキーのリストを取得する
+        shape_keys = ob.data.shape_keys.key_blocks
+
+        # シェイプキーのリストを逆順に舐める
+        # （先頭から消すとインデックスがずれるので後ろから消す）
+        for i, shape_key in reversed(list(enumerate(shape_keys))):
+
+            bpy.context.active_object.active_shape_key_index = i
+            bpy.ops.object.shape_key_remove()
+
+            if i == 5:
+                break
+
+        #ブレンドシェイプのリネーム
+        for shape_key , name in zip(shape_keys,namearray):
+            shape_key.name = name
 

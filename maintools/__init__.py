@@ -95,14 +95,14 @@ def go_scene(self,context):
 
     #シーンを追加した場合、シーンのコレクションプロパティとの差が生じてしまっているので修正
     if len(props.allscene) != count:
-        props.allscene.clear()        
+        props.allscene.clear()
         for scn in bpy.data.scenes:
-            props.allscene.add().name = scn.name       
+            props.allscene.add().name = scn.name
 
     if len(props.target_allscene) != count:
-        props.target_allscene.clear()        
+        props.target_allscene.clear()
         for scn in bpy.data.scenes:
-            props.target_allscene.add().name = scn.name       
+            props.target_allscene.add().name = scn.name
 
 
 
@@ -116,7 +116,7 @@ class CYATOOLS_Props_OA(PropertyGroup):
     create_collection : BoolProperty(name="create collection" ,  default = False)
     add_suffix : BoolProperty(name="add suffix" ,  default = True)
     only_directly_below : BoolProperty(name="only directly below" ,  default = False)
-    keep_transform : BoolProperty(name="keep transform" ,  default = False)    
+    keep_transform : BoolProperty(name="keep transform" ,  default = False)
 
     #シーン名
     scene_name : StringProperty(name="Scene", maxlen=63 ,update = go_scene)
@@ -128,10 +128,10 @@ class CYATOOLS_Props_OA(PropertyGroup):
     new_scene_name : StringProperty(name="new scene", maxlen=63)
 
 
-    displayed_obj : StringProperty(name="Target", maxlen=63)    
+    displayed_obj : StringProperty(name="Target", maxlen=63)
     displayed_allobjs : CollectionProperty(type=PropertyGroup)
 
-    displayed_collection : StringProperty(name="Coll", maxlen=63)    
+    displayed_collection : StringProperty(name="Coll", maxlen=63)
     displayed_allcollections : CollectionProperty(type=PropertyGroup)
 
     #モデリングツール
@@ -144,6 +144,7 @@ class CYATOOLS_Props_OA(PropertyGroup):
     facedot_size : IntProperty(name="facedot size" ,update = modeling.facedot_size,min=1,max = 10)
     outline_width : IntProperty(name="outline width" ,update = modeling.outline_width,min=1,max = 5)
     origin_size : IntProperty(name="origin size" ,update = modeling.origin_size,min=4,max = 10)
+    uv_index : IntProperty(name="mapindex" ,update = etc.change_uv_index,min=0,max = 10)
 
     #モディファイヤ関連
     mod_init : BoolProperty(default = True)
@@ -200,7 +201,7 @@ class CYATOOLS_Props_OA(PropertyGroup):
     newcollection_name1 : StringProperty(name = "char name")
     newcollection_name2 : StringProperty(name = "categoty")
     newcollection_name3 : StringProperty(name = "parts name")
- 
+
 
     mob_offset : StringProperty(name="mob_offset", maxlen=63 )
     mob_offset_all : CollectionProperty(type=PropertyGroup)
@@ -210,7 +211,7 @@ class CYATOOLS_Props_OA(PropertyGroup):
 #---------------------------------------------------------------------------------------
 #UI
 #---------------------------------------------------------------------------------------
-class CYATOOLS_PT_toolPanel(utils.panel):   
+class CYATOOLS_PT_toolPanel(utils.panel):
     bl_label ='Main Tools'
     def draw(self, context):
         self.layout.operator("cyatools.apply", icon='EVENT_A')
@@ -275,16 +276,22 @@ class CYATOOLS_MT_modeling_tools(Operator):
         box5.operator( "cyatools.modeling_mirror_l_to_r" , icon = 'MOD_MIRROR')
         box5.operator( "cyatools.modeling_separate_face" , icon = 'CONSTRAINT_BONE')
 
-        row5 = box5.row() 
+        row5 = box5.row()
         row5.operator( "cyatools.modeling_copy_vertex_pos" , icon = 'MOD_MIRROR')
         row5.operator( "cyatools.modeling_paste_vertex_pos" , icon = 'MOD_MIRROR')
 
-
+        #material UV
         box5 = col.box()
-        box5.label( text = 'material' )
+        box5.label( text = 'material UV' )
         box5.operator( "cyatools.material_reload_texture", icon = 'TEXTURE')
         box5.operator( "cyatools.material_remove_submaterial", icon = 'NODE_MATERIAL')
-        
+
+        row5 = box5.row()
+        row5.operator( "cyatools.material_add_uv")
+        row5.prop(props, 'uv_index' , expand=True)
+        row5.operator('cyatools.remove_uv_index' , icon = 'TRASH')
+
+
         #instacne
         col = row.column()
         box3 = col.box()
@@ -311,7 +318,6 @@ class CYATOOLS_MT_modeling_tools(Operator):
 
         box4 = col.box()
         box4.label( text = ' mirror instance' )
-        # box4.label( text = ' transform' )
         col1 = box4.column()
         row = col1.row()
         row.operator( "cyatools.instance_mirror" , text = 'x' ).op = 'x'
@@ -319,7 +325,7 @@ class CYATOOLS_MT_modeling_tools(Operator):
         row.operator( "cyatools.instance_mirror" , text = 'z' ).op = 'z'
         row = col1.row()
         row.prop(props, 'mirror_mode' , expand=True)
-        
+
         box4 = col.box()
         box4.label( text = 'component size' )
         box4.prop(props, 'vertex_size' , expand=True)
@@ -402,7 +408,7 @@ class CYATOOLS_MT_modifier_tools(Operator):
         row1 = col.row()
         row1.operator( "cyatools.modifier_apply_all" ,text = 'apply all', icon = 'PROP_ON').mode = 0
         row1.operator( "cyatools.modifier_apply_all" ,text = 'delete all', icon = 'CANCEL').mode = 1
-        
+
         box = row.box()
         box.label( text = 'constraint (assign)' )
         box.prop(props, "const_type" , icon='RESTRICT_VIEW_OFF')
@@ -477,7 +483,7 @@ class CYATOOLS_MT_object_applier(Operator):
     bl_label = "Object Applier"
 
     def invoke(self, context, event):
-        scene.set_current()        
+        scene.set_current()
         return context.window_manager.invoke_props_dialog(self)
 
     def execute(self, context):
@@ -506,7 +512,7 @@ class CYATOOLS_MT_object_applier(Operator):
         row.label( text = 'move' )
         row.operator("cyatools.move_model" , icon = 'OBJECT_DATAMODE').mode = True
         row.operator("cyatools.move_collection" , icon = 'GROUP').mode = True
-        
+
         row = box.row()
         row.label( text = 'copy' )
         row.operator("cyatools.move_model" , icon = 'OBJECT_DATAMODE').mode = False
@@ -529,7 +535,7 @@ class CYATOOLS_MT_object_applier(Operator):
         row.prop(props, "merge_apply")
         row.prop(props, "merge_by_material")
         row = col.row()
-        row.prop(props, "only_directly_below")        
+        row.prop(props, "only_directly_below")
 
         row = box.row()
         row.prop(props, "keeparmature_apply")
@@ -542,7 +548,7 @@ class CYATOOLS_MT_object_applier(Operator):
         row = box.row()
         row.prop(props, "add_suffix")
         row.prop(props, "keep_transform")
-        
+
 
 #---------------------------------------------------------------------------------------
 #スキン関連ツール
@@ -586,12 +592,12 @@ class CYATOOLS_MT_skinningtools(Operator):
         row1.operator("cyatools.skinning_weights_transfer" , icon = 'COMMUNITY').mode = 'v2'
         row1.prop(props, "batch_weight_transfer_bool")
 
-        
+
         col1.prop(props,'batch_weight_transfer_string')
         col1.prop(props, "weight_transfer_selected_vtx")
         col1.prop(props, "weight_transfer_keep_original")
-        
-        
+
+
         box = col.box()
         box.label(text = 'mirror weight')
         col1 = box.column()
@@ -605,7 +611,7 @@ class CYATOOLS_MT_skinningtools(Operator):
         box.label(text = 'select')
         box.operator("cyatools.skinning_selectgrp"  , icon = 'MOD_MIRROR')
         box.prop(props, 'threshold_selectweight' , expand=True)
-        
+
 
 
         #CSVを使ったウェイト編集ツール
@@ -628,14 +634,14 @@ class CYATOOLS_MT_skinningtools(Operator):
         # row1 = col1.row()
         # row1.operator("cyatools.skinning_assign_maxweights")
         # row1.operator("cyatools.skinning_weights_transfer").mode = 'v1'
-        
+
         # row1 = col1.split(factor = 0.4, align = False)
         # row1.operator("cyatools.skinning_weights_mirror",text = 'mirror_v1' ).mode = 'v1'
         # row1.prop(props,'weight_margin')
 
         # row1 = col1.row()
         # row1.operator("cyatools.skinning_mirror_transfer")#!!!
-  
+
 
         #row = layout.row(align=False)
         col = row.column()
@@ -705,7 +711,7 @@ class CYATOOLS_MT_rename(Operator):
 
         col = box.column()
         col.prop(props, "rename_string")
-                
+
         row1 = col.row()
         row1.alignment = 'LEFT'
         row1.operator("cyatools.rename_select" , icon = 'VIEW_PAN')
@@ -719,31 +725,31 @@ class CYATOOLS_MT_rename(Operator):
         row2 =split1.row()
         row2.operator("cyatools.rename_add" , text = 'Prefix').op = 'PREFIX'
         row2.operator("cyatools.rename_add", text = 'Suffix').op = 'SUFFIX'
-        
+
         box = split.box()
         col = box.column()
         col.operator("cyatools.rename_replace")
         col.prop(props, "from_string")
         col.prop(props, "to_string")
-        
+
         box = col_root.box()
         row = box.row()
 
         box1 = row.box()
         box1.label(text="replace")
-        col = box1.column()        
+        col = box1.column()
         for s in ('high>low' , 'low>high' , '.>_' , 'delete_number'):
             col.operator("cyatools.rename_replace_defined", text = s).op = s
 
         box1 = row.box()
         box1.label(text="shape name")
-        col = box1.column()        
+        col = box1.column()
         for s in ('object','maya'):
             col.operator("cyatools.rename_mesh", text = s).op = s
 
         box1 = row.box()
         box1.label(text="add")
-        col = box1.column()        
+        col = box1.column()
         for s in ('org',):
             col.operator("cyatools.rename_add_defined", text = s).op = s
 
@@ -768,36 +774,40 @@ class CYATOOLS_MT_blendshape_tools(Operator):
         box = layout.box()
         box.label( text = 'blendshape key edit' , icon = 'MODIFIER')
 
-        row = box.row() 
+        row = box.row()
         row.operator( "cyatools.blendshape_insert_all_keys" , icon = 'MOD_MIRROR')
         row.operator( "cyatools.blendshape_remove_shapekey_unmuted" , icon = 'MOD_MIRROR')
 
 
-        row = box.row() 
+        row = box.row()
         row.operator( "cyatools.blendshape_remove_all_keys" , icon = 'MOD_MIRROR')
         row.operator( "cyatools.blendshape_shape_key_clear" , icon = 'MOD_MIRROR')
-        row = box.row() 
+        row = box.row()
         row.operator( "cyatools.blendshape_copy_action")
         row.operator( "cyatools.blendshape_push_down")
 
-        row = box.row() 
+        row = box.row()
         row.operator( "cyatools.blendshape_shepekey_mute" ,text = 'Mute').mode = True
         row.operator( "cyatools.blendshape_shepekey_mute" ,text = 'Unute').mode = False
-
-        
-
 
 
         box = layout.box()
         box.label( text = 'blendshape vtx copy paste' , icon = 'MODIFIER')
-        row = box.row() 
+        row = box.row()
         row.operator( "cyatools.blendshape_copy_vertex_pos" , icon = 'MOD_MIRROR')
         row.operator( "cyatools.blendshape_paste_vertex_pos" , icon = 'MOD_MIRROR')
 
         box.label( text = 'restore' , icon = 'MODIFIER')
-        row = box.row() 
+        row = box.row()
         row.operator( "cyatools.blendshape_keep_pos" , icon = 'MOD_MIRROR')
         row.operator( "cyatools.blendshape_restore_pos" , icon = 'MOD_MIRROR')
+
+
+        box = layout.box()
+        box.label( text = 'Mob facial' , icon = 'MODIFIER')
+        row = box.row()
+        row.operator( "cyatools.blendshape_mob_facial_cleanup" , icon = 'MOD_MIRROR')
+
 
 
 #---------------------------------------------------------------------------------------
@@ -816,15 +826,15 @@ class CYATOOLS_MT_scenesetuptools(Operator):
         #self.mob_type.clear()
         scenesetup.MOB_TYPE_DATA.clear()
         props = bpy.context.scene.cyatools_oa
-        #props.mob_offset.clear() 
-        props.mob_offset_all.clear()       
+        #props.mob_offset.clear()
+        props.mob_offset_all.clear()
 
         with open(MOB_OFFSET_PATH, encoding='utf8', newline='') as f:
             csvreader = csv.reader(f)
             for row in csvreader:
                 #item = [row[1].row[0],row[1]]
                 #self.mob_type.append([row[1].row[0],row[1]])
-                #props.mob_offset.add().name =item 
+                #props.mob_offset.add().name =item
                 #print(row[0])
                 #item = [row[1],row[0],row[1]]
                 props.mob_offset_all.add().name = row[0]
@@ -910,7 +920,7 @@ class CYATOOLS_OT_curve_assign_bevel(Operator):
         """カーブにベベルをアサイン\nカーブ、ベベルカーブの順に選択して実行"""
         bl_idname = "cyatools.curve_assign_bevel"
         bl_label = "select"
-        
+
         def execute(self, context):
             curve.assign_bevel()
             return {'FINISHED'}
@@ -919,7 +929,7 @@ class CYATOOLS_OT_curve_assign_circle_bevel(Operator):
         """カーブに円のベベルをアサイン"""
         bl_idname = "cyatools.curve_assign_circle_bevel"
         bl_label = "circle"
-        
+
         def execute(self, context):
             curve.assign_circle_bevel()
             return {'FINISHED'}
@@ -928,7 +938,7 @@ class CYATOOLS_OT_curve_assign_liner_bevel(Operator):
         """カーブに直線のベベルをアサイン"""
         bl_idname = "cyatools.curve_assign_liner_bevel"
         bl_label = "liner"
-        
+
         def execute(self, context):
             curve.assign_liner_bevel()
             return {'FINISHED'}
@@ -938,7 +948,7 @@ class CYATOOLS_OT_curve_assign_taper_selected(Operator):
 カーブ、テーパーカーブの順に選択して実行"""
         bl_idname = "cyatools.curve_assign_taper_selected"
         bl_label = "select"
-        
+
         def execute(self, context):
             curve.assign_taper_selected()
             return {'FINISHED'}
@@ -948,7 +958,7 @@ class CYATOOLS_OT_curve_assign_taper(Operator):
 カーブ、テーパーカーブの順に選択して実行"""
         bl_idname = "cyatools.curve_assign_taper"
         bl_label = "curve"
-        
+
         def execute(self, context):
             curve.assign_taper()
             return {'FINISHED'}
@@ -969,7 +979,7 @@ class CYATOOLS_OT_curve_select_bevel(Operator):
         """選択カーブのベベルを選択"""
         bl_idname = "cyatools.curve_select_bevel"
         bl_label = "bevel"
-        
+
         def execute(self, context):
             curve.select_bevel()
             return {'FINISHED'}
@@ -1120,7 +1130,7 @@ class CYATOOLS_OT_move_collection(Operator):
         else:
             self.report({'ERROR'}, APPLY_TARGET_ERROR)
         return {'FINISHED'}
-        
+
 #空のコレクションを削除
 class CYATOOLS_OT_remove_empty_collection(Operator):
     """空のコレクションを削除"""
@@ -1173,11 +1183,11 @@ class CYATOOLS_MT_new_scene(Operator):
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
-   
+
     def draw(self, context):
         props = bpy.context.scene.cyatools_oa
         row = self.layout.row(align=False)
-        row.prop(props, "new_scene_name", icon='BLENDER', toggle=True)    
+        row.prop(props, "new_scene_name", icon='BLENDER', toggle=True)
 
     def execute(self, context):
         props = bpy.context.scene.cyatools_oa
@@ -1186,7 +1196,7 @@ class CYATOOLS_MT_new_scene(Operator):
         if bpy.data.scenes.get(scene_name) is not None:
             return {'FINISHED'}
 
-        bpy.ops.scene.new(type='EMPTY')     
+        bpy.ops.scene.new(type='EMPTY')
         bpy.context.scene.name = scene_name
         scene.set_current()
 
@@ -1229,7 +1239,7 @@ class CYATOOLS_OT_modifier_asign(Operator):
         modifier.assign()
         return {'FINISHED'}
 
-class CYATOOLS_OT_modifier_show(Operator):    
+class CYATOOLS_OT_modifier_show(Operator):
     """モディファイヤを表示する"""
     bl_idname = "cyatools.modifier_show"
     bl_label = ""
@@ -1238,7 +1248,7 @@ class CYATOOLS_OT_modifier_show(Operator):
         modifier.show(True)
         return {'FINISHED'}
 
-class CYATOOLS_OT_modifier_hide(Operator):    
+class CYATOOLS_OT_modifier_hide(Operator):
     """モディファイヤを表示する"""
     bl_idname = "cyatools.modifier_hide"
     bl_label = ""
@@ -1247,7 +1257,7 @@ class CYATOOLS_OT_modifier_hide(Operator):
         modifier.show(False)
         return {'FINISHED'}
 
-class CYATOOLS_OT_modifier_apply(Operator):    
+class CYATOOLS_OT_modifier_apply(Operator):
     """モディファイヤを適用する"""
     bl_idname = "cyatools.modifier_apply"
     bl_label = ""
@@ -1256,7 +1266,7 @@ class CYATOOLS_OT_modifier_apply(Operator):
         modifier.apply_mod()
         return {'FINISHED'}
 
-class CYATOOLS_OT_modifier_remove(Operator):    
+class CYATOOLS_OT_modifier_remove(Operator):
     """delete the modifier of selected type"""
     bl_idname = "cyatools.modifier_remove"
     bl_label = ""
@@ -1307,7 +1317,7 @@ class CYATOOLS_OT_modifier_apply_all(Operator):
 class CYATOOLS_OT_constraint_asign(Operator):
     """メニューで選択したタイプのみ適用する
 1:複数選択し、アクティブなもので他のものをコンストレインする
-2: 適用　3:表示　4:非表示　5:削除    
+2: 適用　3:表示　4:非表示　5:削除
 """
     bl_idname = "cyatools.constraint_asign"
     bl_label = ""
@@ -1410,7 +1420,7 @@ class CYATOOLS_OT_trasnform_apply_x(Operator):
 class CYATOOLS_OT_trasnform_reset_cursor_rot(Operator):
     """Reset cursor rotation"""
     bl_idname = "cyatools.trasnform_reset_cursor_rot"
-    bl_label = "reset cursor rot"    
+    bl_label = "reset cursor rot"
     def execute(self, context):
         transform.reset_cursor_rot()
         return {'FINISHED'}
@@ -1419,7 +1429,7 @@ class CYATOOLS_OT_trasnform_reset_cursor_rot(Operator):
 class CYATOOLS_OT_trasnform_invert_bonetransform(Operator):
     """モデルとアーマチュアの骨を選択して、骨の逆変換をかける"""
     bl_idname = "cyatools.trasnform_invert_bonetransform"
-    bl_label = "invert bone transform"    
+    bl_label = "invert bone transform"
     def execute(self, context):
         transform.invert_bonetransform()
         return {'FINISHED'}
@@ -1432,7 +1442,7 @@ class CYATOOLS_OT_trasnform_invert_bonetransform(Operator):
 class CYATOOLS_OT_modeling_del_half_x(Operator):
     """モデルの-X側を削除"""
     bl_idname = "cyatools.modeling_del_half_x"
-    bl_label = "del half x"    
+    bl_label = "del half x"
     def execute(self, context):
         modeling.del_half_x()
         return {'FINISHED'}
@@ -1440,7 +1450,7 @@ class CYATOOLS_OT_modeling_del_half_x(Operator):
 class CYATOOLS_OT_modeling_mirror_l_to_r(Operator):
     """mirror geometry from left side to right side. """
     bl_idname = "cyatools.modeling_mirror_l_to_r"
-    bl_label = "mirror"    
+    bl_label = "mirror"
     def execute(self, context):
         modeling.mirror_l_to_r()
         return {'FINISHED'}
@@ -1448,7 +1458,7 @@ class CYATOOLS_OT_modeling_mirror_l_to_r(Operator):
 class CYATOOLS_OT_modeling_select_linked_faces(Operator):
     """モデルの-X側を削除"""
     bl_idname = "cyatools.modeling_select_linked_faces"
-    bl_label = "select linked faces"    
+    bl_label = "select linked faces"
     def execute(self, context):
         modeling.select_linked_faces()
         return {'FINISHED'}
@@ -1456,7 +1466,7 @@ class CYATOOLS_OT_modeling_select_linked_faces(Operator):
 class CYATOOLS_OT_modeling_pivot_by_facenormal(Operator):
     """Asign the model rotate pivot selected face normal"""
     bl_idname = "cyatools.modeling_pivot_by_facenormal"
-    bl_label = "pivot_by_facenormal"    
+    bl_label = "pivot_by_facenormal"
     def execute(self, context):
         modeling.pivot_by_facenormal()
         return {'FINISHED'}
@@ -1465,7 +1475,7 @@ class CYATOOLS_OT_modeling_pivot_by_facenormal(Operator):
 class CYATOOLS_OT_modeling_copy_vertex_pos(Operator):
     """選択した頂点の位置をコピー"""
     bl_idname = "cyatools.modeling_copy_vertex_pos"
-    bl_label = "copy vtx"    
+    bl_label = "copy vtx"
     def execute(self, context):
         modeling.copy_vertex_pos()
         return {'FINISHED'}
@@ -1473,7 +1483,7 @@ class CYATOOLS_OT_modeling_copy_vertex_pos(Operator):
 class CYATOOLS_OT_modeling_paste_vertex_pos(Operator):
     """選択した頂点の位置をコピー"""
     bl_idname = "cyatools.modeling_paste_vertex_pos"
-    bl_label = "paste vtx"    
+    bl_label = "paste vtx"
     def execute(self, context):
         modeling.paste_vertex_pos()
         return {'FINISHED'}
@@ -1481,7 +1491,7 @@ class CYATOOLS_OT_modeling_paste_vertex_pos(Operator):
 class CYATOOLS_OT_modeling_normal_180deg(Operator):
     """自動スムーズにして角度を180度に設定"""
     bl_idname = "cyatools.modeling_normal_180deg"
-    bl_label = "auto smooth 180deg"    
+    bl_label = "auto smooth 180deg"
     def execute(self, context):
         modeling.normal_180deg()
         return {'FINISHED'}
@@ -1492,10 +1502,10 @@ class CYATOOLS_OT_modeling_extract_missingparts(Operator):
     先頭 MISSINGPARTS
     基準にする骨名
     出力するメッシュ名
-    例：MISSINGPARTS.lowerarm_l.model_leftarm    
+    例：MISSINGPARTS.lowerarm_l.model_leftarm
     """
     bl_idname = "cyatools.modeling_extract_missingparts"
-    bl_label = "extract missingparts"    
+    bl_label = "extract missingparts"
     def execute(self, context):
         modeling.extract_missingparts()
         return {'FINISHED'}
@@ -1505,10 +1515,10 @@ class CYATOOLS_OT_modeling_extract_missingparts2(Operator):
     """欠損を生成する 01_MISSING_PARTS_CUTTER　というコレクションにカッターモデルを入れて実行
     カッターモデル名に情報を入れる　. で区切る
     CUTTER.基準にする骨名.出力するメッシュ名
-    例：CUTTER.lowerarm_l.model_leftarm    
+    例：CUTTER.lowerarm_l.model_leftarm
     """
     bl_idname = "cyatools.modeling_extract_missingparts2"
-    bl_label = "extract missingparts2"    
+    bl_label = "extract missingparts2"
     def execute(self, context):
         modeling.extract_missingparts2()
         return {'FINISHED'}
@@ -1522,7 +1532,7 @@ class CYATOOLS_OT_modeling_extract_missingparts2(Operator):
 class CYATOOLS_OT_blendshape_copy_vertex_pos(Operator):
     """選択した頂点の位置をコピー"""
     bl_idname = "cyatools.blendshape_copy_vertex_pos"
-    bl_label = "copy vtx"    
+    bl_label = "copy vtx"
     def execute(self, context):
         blendshape.copy_pos()
         return {'FINISHED'}
@@ -1530,7 +1540,7 @@ class CYATOOLS_OT_blendshape_copy_vertex_pos(Operator):
 class CYATOOLS_OT_blendshape_paste_vertex_pos(Operator):
     """選択した頂点の位置をコピー"""
     bl_idname = "cyatools.blendshape_paste_vertex_pos"
-    bl_label = "paste vtx"    
+    bl_label = "paste vtx"
     def execute(self, context):
         blendshape.paste_pos()
         return {'FINISHED'}
@@ -1539,7 +1549,7 @@ class CYATOOLS_OT_blendshape_paste_vertex_pos(Operator):
 class CYATOOLS_OT_blendshape_keep_pos(Operator):
     """選択したブレンドシェイプから下のものを保持する"""
     bl_idname = "cyatools.blendshape_keep_pos"
-    bl_label = "keep"    
+    bl_label = "keep"
     def execute(self, context):
         blendshape.keep_downstream()
         return {'FINISHED'}
@@ -1547,7 +1557,7 @@ class CYATOOLS_OT_blendshape_keep_pos(Operator):
 class CYATOOLS_OT_blendshape_restore_pos(Operator):
     """選択したブレンドシェイプの下のものを復帰する"""
     bl_idname = "cyatools.blendshape_restore_pos"
-    bl_label = "restore"    
+    bl_label = "restore"
     def execute(self, context):
         blendshape.restore_downstream()
         return {'FINISHED'}
@@ -1555,7 +1565,7 @@ class CYATOOLS_OT_blendshape_restore_pos(Operator):
 class CYATOOLS_OT_blendshape_remove_all_keys(Operator):
     """選択したモデルのブレンドシェイプキーを全削除"""
     bl_idname = "cyatools.blendshape_remove_all_keys"
-    bl_label = "delete all keys"    
+    bl_label = "delete all keys"
     def execute(self, context):
         blendshape.remove_all_keys()
         return {'FINISHED'}
@@ -1563,7 +1573,7 @@ class CYATOOLS_OT_blendshape_remove_all_keys(Operator):
 class CYATOOLS_OT_blendshape_insert_all_keys(Operator):
     """現在のフレームにキーを挿入"""
     bl_idname = "cyatools.blendshape_insert_all_keys"
-    bl_label = "insert all keys"    
+    bl_label = "insert all keys"
     def execute(self, context):
         blendshape.insert_all_keys()
         return {'FINISHED'}
@@ -1571,7 +1581,7 @@ class CYATOOLS_OT_blendshape_insert_all_keys(Operator):
 class CYATOOLS_OT_blendshape_remove_shapekey_unmuted(Operator):
     """現在のフレームにキーを挿入"""
     bl_idname = "cyatools.blendshape_remove_shapekey_unmuted"
-    bl_label = "remove unmuted"    
+    bl_label = "remove unmuted"
     def execute(self, context):
         blendshape.remove_shapekey_unmuted()
         return {'FINISHED'}
@@ -1579,7 +1589,7 @@ class CYATOOLS_OT_blendshape_remove_shapekey_unmuted(Operator):
 class CYATOOLS_OT_blendshape_shape_key_clear(Operator):
     """シェイプキーをクリアする(削除はしない)"""
     bl_idname = "cyatools.blendshape_shape_key_clear"
-    bl_label = "shape key clear"    
+    bl_label = "shape key clear"
     def execute(self, context):
         blendshape.shape_key_clear()
         return {'FINISHED'}
@@ -1589,7 +1599,7 @@ class CYATOOLS_OT_blendshape_copy_action(Operator):
     """シェイプキーの編集アクションをコピーする
     複数選択して、アクティブなものを他のものにコピー"""
     bl_idname = "cyatools.blendshape_copy_action"
-    bl_label = "copy shepe key action"    
+    bl_label = "copy shepe key action"
     def execute(self, context):
         blendshape.copy_action()
         return {'FINISHED'}
@@ -1597,7 +1607,7 @@ class CYATOOLS_OT_blendshape_copy_action(Operator):
 class CYATOOLS_OT_blendshape_push_down(Operator):
     """フェイシャル"アニメーションをプッシュダウンする"""
     bl_idname = "cyatools.blendshape_push_down"
-    bl_label = "push down"    
+    bl_label = "push down"
     def execute(self, context):
         blendshape.push_down()
         return {'FINISHED'}
@@ -1611,6 +1621,18 @@ class CYATOOLS_OT_blendshape_shepekey_mute(Operator):
         blendshape.shepekey_mute(self.mode)
         return {'FINISHED'}
 
+#モブのブレンドシェイプのクリンナップ
+class CYATOOLS_OT_blendshape_mob_facial_cleanup(Operator):
+    """モブのブレンドシェイプのクリンナップ
+    Faceitで作成して４つのモブ用フェイシャルターゲットを作成したら実行する
+    余分なターゲットを削除して、ターゲット名を修正する
+    """
+    bl_idname = "cyatools.blendshape_mob_facial_cleanup"
+    bl_label = "mob facial cleanup"
+    def execute(self, context):
+        blendshape.mob_facial_cleanup()
+        return {'FINISHED'}
+
 #---------------------------------------------------------------------------------------
 #material
 #---------------------------------------------------------------------------------------
@@ -1618,7 +1640,7 @@ class CYATOOLS_OT_blendshape_shepekey_mute(Operator):
 class CYATOOLS_OT_material_reload_texture(Operator):
     """reload all textures"""
     bl_idname = "cyatools.material_reload_texture"
-    bl_label = "reload texture"    
+    bl_label = "reload texture"
     def execute(self, context):
         etc.material_reload_texture()
         return {'FINISHED'}
@@ -1627,10 +1649,29 @@ class CYATOOLS_OT_material_reload_texture(Operator):
 class CYATOOLS_OT_material_remove_submaterial(Operator):
     """reload sub materials"""
     bl_idname = "cyatools.material_remove_submaterial"
-    bl_label = "remove sub materials"    
+    bl_label = "remove sub materials"
     def execute(self, context):
         etc.material_remove_submaterial()
         return {'FINISHED'}
+
+#UVを追加
+class CYATOOLS_OT_material_add_uv(Operator):
+    """UVを追加する"""
+    bl_idname = "cyatools.material_add_uv"
+    bl_label = "add UV"
+    def execute(self, context):
+        etc.material_add_uv()
+        return {'FINISHED'}
+
+#アクティブUVを削除
+class CYATOOLS_OT_remove_uv_index(Operator):
+    """UVを追加する"""
+    bl_idname = "cyatools.remove_uv_index"
+    bl_label = ""
+    def execute(self, context):
+        etc.remove_uv_index()
+        return {'FINISHED'}
+
 
 #---------------------------------------------------------------------------------------
 #スキニングツール
@@ -2124,7 +2165,7 @@ classes = (
     # CYATOOLS_OT_locator_add_bone,
     # CYATOOLS_OT_locator_snap_bone_at_obj,
 
-    
+
     #モデリング
     CYATOOLS_OT_modeling_del_half_x,
     CYATOOLS_OT_modeling_pivot_by_facenormal,
@@ -2136,7 +2177,7 @@ classes = (
     #CYATOOLS_OT_modeling_copy_action,
     CYATOOLS_OT_modeling_extract_missingparts,
     CYATOOLS_OT_modeling_extract_missingparts2,
-    
+
     # transform
     CYATOOLS_OT_swap_axis,
     CYATOOLS_OT_trasnform_apply_x,
@@ -2198,7 +2239,7 @@ classes = (
     CYATOOLS_OT_rename_add_defined,
     CYATOOLS_OT_rename_select,
     CYATOOLS_OT_rename_dropper,
-    
+
 
     #スキニング
     CYATOOLS_MT_skinningtools,
@@ -2227,12 +2268,10 @@ classes = (
     #CYATOOLS_MT_skinning_filebrowse,
 
     #マテリアル
-    # CYATOOLS_OT_material_assign_vertex_color,
-    # CYATOOLS_OT_material_convert_vertex_color,
-    # CYATOOLS_OT_material_pick_vertex_color,
-
     CYATOOLS_OT_material_reload_texture,
     CYATOOLS_OT_material_remove_submaterial,
+    CYATOOLS_OT_material_add_uv,
+    CYATOOLS_OT_remove_uv_index,
 
 
     #ブレンドシェイプ
@@ -2247,6 +2286,7 @@ classes = (
     CYATOOLS_OT_blendshape_push_down,
     CYATOOLS_OT_blendshape_shepekey_mute,
     CYATOOLS_OT_blendshape_remove_shapekey_unmuted,
+    CYATOOLS_OT_blendshape_mob_facial_cleanup,
 
     #シーンセットアップ
     CYATOOLS_OT_scenesetup_makeproxy,

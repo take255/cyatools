@@ -23,6 +23,7 @@ from bpy.props import(
 
     )
 
+
 from . import maintools
 from . import modifierlist
 from . import rigtools
@@ -30,7 +31,7 @@ from . import importexport
 from . import objectlist
 from . import idmaptools
 from . import ue4tools
-# from . import particletools
+from . import scenemanager
 
 imp.reload(maintools)
 imp.reload(modifierlist)
@@ -39,18 +40,18 @@ imp.reload(importexport)
 imp.reload(objectlist)
 imp.reload(idmaptools)
 imp.reload(ue4tools)
-# imp.reload(particletools)
+imp.reload(scenemanager)
 
 bl_info = {
 "name": "cyatools",
 "author": "Takehito Tsuchiya",
-"version": (0, 3.19),
+"version": (0, 3.21),
 "blender": (2, 90, 1),
 "description": "cyatools",
 "category": "Object"}
 
 RIGSHAPEPATH = "E:\data\googledrive\lib\model/rig.blend"
-ADDONPATH ="E:/tmp/cyatools.ZIP"
+ADDONPATH =r"G:\共有ドライブ\fs_yakushi\Art\Character\Library\Blender_Addon\cyatools.ZIP"
 
 #---------------------------------------------------------------------------------------
 #UI Preference
@@ -129,6 +130,7 @@ def register():
     objectlist.register()
     idmaptools.register()
     ue4tools.register()
+    scenemanager.register()
 
 def unregister():
     for cls in classes:
@@ -141,3 +143,4 @@ def unregister():
     objectlist.unregister()
     idmaptools.unregister()
     ue4tools.unregister()
+    scenemanager.unregister()

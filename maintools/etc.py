@@ -22,7 +22,7 @@ def transform_rotate_axis(axis):
         loc = Vector(ob.location)
         m = ob.matrix_local.to_3x3()
         m.transpose()
-        
+
         #m0 = transpose(m)
         if axis == 'x90d':
             m0 = Matrix([ m[0] , -m[2] , m[1]])
@@ -45,7 +45,7 @@ def transform_rotate_axis(axis):
             m0 = Matrix([
                 -m[0] , -m[1] , m[2]])
 
-        m0.transpose()            
+        m0.transpose()
         ob.matrix_local = m0.to_4x4()
         ob.location = loc
 
@@ -69,7 +69,7 @@ def constraint_to_bone():
     #選択されたボーンを取得
     result = []
     for bone in utils.get_selected_bones():
-        result.append(bone.name)    
+        result.append(bone.name)
 
     #アーマチュアをエディットモードのままにしておくと選択がおかしくなるのでいったん全選択解除
     #bpy.ops.object.select_all(action='DESELECT')
@@ -79,7 +79,7 @@ def constraint_to_bone():
     for obj in selected:
         if obj.type != 'ARMATURE':
 
-            utils.activeObj(obj)                    
+            utils.activeObj(obj)
             constraint =obj.constraints.new('COPY_TRANSFORMS')
             constraint.target = amt[0]
             constraint.subtarget = result[0]
@@ -116,7 +116,7 @@ def refernce_make_link(dirpath):
         subprocess.Popen(cmd,shell=True)
 
 #---------------------------------------------------------------------------------------
-#material
+#material UV
 #---------------------------------------------------------------------------------------
 
 def material_reload_texture():
@@ -125,6 +125,33 @@ def material_reload_texture():
 
 #サブマテリアルの削除
 def material_remove_submaterial():
-    for ob in utils.selected():        
+    for ob in utils.selected():
         for i in range( len(ob.data.materials) -1 ):
             ob.data.materials.pop()
+
+def material_add_uv():
+    for ob in utils.selected():
+        utils.act(ob)
+        bpy.ops.mesh.uv_texture_add()
+
+
+def change_uv_index(self,context):
+    props = bpy.context.scene.cyatools_oa
+    index = props.uv_index
+
+    for ob in utils.selected():
+        ob.data.uv_layers.active_index = index
+
+#インデックスで選択しているUVの削除
+def remove_uv_index():
+    props = bpy.context.scene.cyatools_oa
+    index = props.uv_index
+
+    for ob in utils.selected():
+        utils.act(ob)
+        ob.data.uv_layers.active_index = index
+        bpy.ops.mesh.uv_texture_remove()
+
+
+
+

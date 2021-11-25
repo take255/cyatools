@@ -75,7 +75,7 @@ def conv(v):
 
 def color_vertex(ob, vert, color,mode):
     utils.act(ob)
-    mesh = ob.data 
+    mesh = ob.data
 
     if mesh.vertex_colors:
         vcol_layer = mesh.vertex_colors.active
@@ -90,7 +90,7 @@ def color_vertex(ob, vert, color,mode):
             if poly.select == True:
                 for loop_index in poly.loop_indices:
                     vcol_layer.data[loop_index].color = color
-            
+
 
 #---------------------------------------------------------------------------------------
 #頂点カラーをアサイン
@@ -113,9 +113,9 @@ def assign_vertex_color(mode):
         utils.mode_o()
     if mode == 1:
         utils.mode_e()
-        
 
-#---------------------------------------------------------------------------------------    
+
+#---------------------------------------------------------------------------------------
 #モデルのマテリアルカラーを取得。
 #シェーダーはPrincipled BSDFである必要がある。
 #---------------------------------------------------------------------------------------
@@ -128,10 +128,10 @@ def convert_vertex_color():
             print(color)
             color_vertex(ob, 2, color)
 
-#---------------------------------------------------------------------------------------    
+#---------------------------------------------------------------------------------------
 # First, select polugon face (not vertex) and execute this command.
 # 0:assign 1:assign selected  2:pick
-#---------------------------------------------------------------------------------------    
+#---------------------------------------------------------------------------------------
 def pick_vertex_color(mode):
     props = bpy.context.scene.cyamaterialtools_oa
     mesh = bpy.context.object.data
@@ -175,9 +175,9 @@ def pick_vertex_color(mode):
 #         layout= self.layout
 #         layout.label(text= self.text)
 
-#---------------------------------------------------------------------------------------    
+#---------------------------------------------------------------------------------------
 #Popup Error Message
-#---------------------------------------------------------------------------------------    
+#---------------------------------------------------------------------------------------
 def msg01(self, context):
     layout= self.layout
     layout.label(text= "The selected object doesn't have a vertex color.")

@@ -32,7 +32,7 @@ imp.reload(utils)
 imp.reload(cmd)
 
 
-try: 
+try:
     bpy.utils.unregister_class(CYAMODIFIERLIST_Props_item)
 except:
     pass
@@ -43,7 +43,7 @@ CurrentObj = ''
 
 @persistent
 def cyamodifierlist_handler(scene):
-    
+
     props = bpy.context.scene.cyamodifierlist_props
     global CurrentObj
     #global Modcount
@@ -61,13 +61,13 @@ def cyamodifierlist_handler(scene):
         return
 
     if act == None:
-        return 
+        return
 
 
     #選択が変更されたときだけリロード。
     if CurrentObj != act.name:
         print('selection changed')
-        cmd.reload()    
+        cmd.reload()
         CurrentObj = act.name
 
 
@@ -87,10 +87,10 @@ def cyamodifierlist_handler_(scene):
         return
 
     if act == None:
-        return 
+        return
 
     mod_count = len(act.modifiers)
-    
+
     #選択が変わったときにリロード
     #モディファイヤの数を保持しておく。モディファイヤ数が変わったらリロード
     if props.currentobj != act.name:
@@ -117,14 +117,14 @@ class CYAMODIFIERLIST_Props_OA(PropertyGroup):
 #リスト内のアイテムの見た目を指定
 #---------------------------------------------------------------------------------------
 class CYAMODIFIERLIST_UL_uilist(UIList):
-    
+
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
 
             #item.nameが表示される
             layout.prop(item, "bool_val", text = "")
             layout.prop(item, "name", text="", emboss=False, icon_value=icon)
-            
+
             #layout.label(item.name, icon_value='BONE_DATA')
 
         elif self.layout_type == 'GRID':
@@ -256,7 +256,7 @@ def register():
 
 
 def unregister():
-    
+
     for cls in classes:
         bpy.utils.unregister_class(cls)
 

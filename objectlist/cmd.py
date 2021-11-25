@@ -44,20 +44,20 @@ def get_suffix():
     if suffix == 'none':
         suffix = ''
     else:
-        suffix = '_' + suffix    
+        suffix = '_' + suffix
 
     return suffix
 
 def update_rename( result ):
     ui_list = bpy.context.window_manager.cyaobjectlist_list
-    itemlist = ui_list.itemlist    
+    itemlist = ui_list.itemlist
 
     clear()
     for ob in result:
         item = itemlist.add()
         item.name = ob
         item.bool_val = True
-        ui_list.active_index = len(itemlist) - 1    
+        ui_list.active_index = len(itemlist) - 1
 
 #---------------------------------------------------------------------------------------
 #リストのモディファイヤを探しだし、リストでの順位とモディファイヤの順位を比較する
@@ -88,7 +88,7 @@ def update_rename( result ):
 
 #     for order_list,listitem in enumerate(itemlist):
 #         for order,mod in enumerate(ob.modifiers):
-            
+
 #             if mod.name == listitem.name:
 #                 if (order_list < order):
 #                     for i in range(order - order_list):
@@ -103,7 +103,7 @@ def select_all():
 
     if len(itemlist) == 0:
         return {"FINISHED"}
-    
+
     for node in itemlist:
         utils.selectByName( node.name,True )
         #bpy.data.objects[node.name].select = True
@@ -159,7 +159,7 @@ def remove_not_exist():
         if node.name in bpy.data.objects:
             print(node.name)
             result.append(node.name)
-    
+
     itemlist.clear()
 
     for nodename in result:
@@ -187,7 +187,7 @@ def move(dir):
 
 def clear():
     ui_list = bpy.context.window_manager.cyaobjectlist_list
-    itemlist = ui_list.itemlist    
+    itemlist = ui_list.itemlist
     itemlist.clear()
 
 #---------------------------------------------------------------------------------------
@@ -200,7 +200,7 @@ def bone_chain_loop(amt, bone, name, index ):
     for b in amt.data.edit_bones:
         if b.parent == bone:
             b.name = '%s_%02d%s' % (name , index , get_suffix() )
-            
+
             bone_chain_loop(amt, b, name, index + 1 )
 
 def rename_bonecluster():
@@ -208,7 +208,7 @@ def rename_bonecluster():
     name = props.rename_string
 
     ui_list = bpy.context.window_manager.cyaobjectlist_list
-    itemlist = ui_list.itemlist    
+    itemlist = ui_list.itemlist
 
     amt = utils.getActiveObj()
     parentdic = {}
@@ -216,13 +216,13 @@ def rename_bonecluster():
     rootarray = []
     count = 1
     utils.mode_e()
-    
+
     for node in itemlist:
         if node.bool_val == True:
             b = amt.data.edit_bones[node.name]
             chainname = '%s_%02d' % (name , count )
             rootname = '%s_01%s' % (chainname  , get_suffix())
-             
+
             b.name = rootname
             rootarray.append(b.name)
             bone_chain_loop(amt , b, chainname, 2 )
@@ -241,7 +241,7 @@ def rename_bonecluster():
 
 def remove_check_item(op):
     ui_list = bpy.context.window_manager.cyaobjectlist_list
-    itemlist = ui_list.itemlist    
+    itemlist = ui_list.itemlist
 
     #array = []
     indexarray = []
@@ -263,7 +263,7 @@ def remove_check_item(op):
 #---------------------------------------------------------------------------------------
 def check_item(op):
     ui_list = bpy.context.window_manager.cyaobjectlist_list
-    itemlist = ui_list.itemlist    
+    itemlist = ui_list.itemlist
 
     if len(itemlist) == 0:
         return
@@ -277,7 +277,7 @@ def check_item(op):
 
     for node in itemlist:
         if op == 'selected':
-            if utils.current_mode() == 'OBJECT':            
+            if utils.current_mode() == 'OBJECT':
                 if node.name in obset:
                     node.bool_val = True
                 else:
@@ -296,7 +296,7 @@ def check_item(op):
                     if node.name in obset:
                         node.bool_val = True
                     else:
-                        node.bool_val = False                    
+                        node.bool_val = False
 
         elif op == 'select':
             if node.bool_val == True:
@@ -314,7 +314,7 @@ def check_item(op):
         elif op == 'show':
             if node.bool_val == True:
                 utils.showhide(node,False)
- 
+
         elif op == 'hide':
             if node.bool_val == True:
                 utils.showhide(node,True)
@@ -324,7 +324,7 @@ def check_item(op):
 #インデックスを保持したままはめんどいので、ソートしたらリストの末尾に追加
 #def invert():
     # ui_list = bpy.context.window_manager.cyaobjectlist_list
-    # itemlist = ui_list.itemlist    
+    # itemlist = ui_list.itemlist
         elif op == 'invert':
             array = []
             indexarray = []
@@ -355,14 +355,14 @@ def bone_clothmesh_loop( bone , chain ,vtxarray ,bonenamearray):
             bonenamearray.append(b.name)
             vtxarray.append(b.tail)
             bone_clothmesh_loop(b,chain ,vtxarray,bonenamearray)
-            
+
 
 #ジョイントのクラスタからメッシュを作成
 #
 def create_mesh_from_bone():
     props = bpy.context.scene.cyaobjectlist_props
     ui_list = bpy.context.window_manager.cyaobjectlist_list
-    itemlist = ui_list.itemlist    
+    itemlist = ui_list.itemlist
 
     amt = bpy.context.object
     #selected = bpy.context.selected_bones
@@ -406,7 +406,7 @@ def create_mesh_from_bone():
                     r + ic*c ,
                     r + 1 + ic*c ,
                     r + 1  ,
-                    r 
+                    r
                     ]
 
             else:
@@ -418,7 +418,7 @@ def create_mesh_from_bone():
                     ]
 
             polyarray.append(array)
-    
+
     #メッシュの生成
     mesh_data = bpy.data.meshes.new("cube_mesh_data")
     mesh_data.from_pydata(vtxarray, [], polyarray)
@@ -432,7 +432,7 @@ def create_mesh_from_bone():
     utils.select(obj,True)
 
 
-    #IKターゲットの頂点グループ作成    
+    #IKターゲットの頂点グループ作成
     #ウェイト値の設定
     for j,chain in enumerate(chainarray):
         for i,bone in enumerate(chain):
@@ -478,7 +478,7 @@ def parent_chain():
     props = bpy.context.scene.cyaobjectlist_props
 
     ui_list = bpy.context.window_manager.cyaobjectlist_list
-    itemlist = ui_list.itemlist    
+    itemlist = ui_list.itemlist
 
     amt = utils.getActiveObj()
 
@@ -486,8 +486,8 @@ def parent_chain():
     num = props.chain_step
 
     if num == 0:
-        num = len(itemlist)    
-        step = 1 
+        num = len(itemlist)
+        step = 1
     else:
         #num = props.chain_step
         step = int(len(itemlist) / num)
@@ -507,7 +507,7 @@ def parent_chain():
 
             bone = amt.data.edit_bones[itemlist[ index0 ].name]
             parent = amt.data.edit_bones[itemlist[ index1 ].name]
-            bone.parent = parent   
+            bone.parent = parent
             bone.use_connect = True
 
         #Modify bone tail position.
@@ -544,7 +544,7 @@ def bonechain_ue4(part):
     ui_list = bpy.context.window_manager.cyaobjectlist_list
     itemlist = ui_list.itemlist
     index = ui_list.active_index
-    
+
     amt = bpy.context.active_object
 
     result = []
@@ -560,7 +560,7 @@ def bonechain_ue4(part):
 
     elif part == 'leg_twist':
         rename_ue4_1(LEG_TWIST,result)
-        
+
     elif part == 'pelvis_spine':
         l = [i.name for i in itemlist]
         pelvisname = l.pop(0)
@@ -622,7 +622,7 @@ def rename_replace(mode):
     props = bpy.context.scene.cyaobjectlist_props
 
     ui_list = bpy.context.window_manager.cyaobjectlist_list
-    itemlist = ui_list.itemlist    
+    itemlist = ui_list.itemlist
 
     amt = utils.getActiveObj()
     utils.mode_e()
@@ -632,17 +632,17 @@ def rename_replace(mode):
 
     result = []
     for node in itemlist:
-        if node.bool_val == True:            
+        if node.bool_val == True:
             b = amt.data.edit_bones[node.name]
 
             if mode == 'replace':
-                new = b.name.replace( word , replace_word ) 
+                new = b.name.replace( word , replace_word )
 
             elif mode == 'l>r':
-                new = b.name.replace( '_l' , '_r' ) 
+                new = b.name.replace( '_l' , '_r' )
 
             elif mode == 'r>l':
-                new = b.name.replace( '_r' , '_l' ) 
+                new = b.name.replace( '_r' , '_l' )
 
             elif mode == 'del.number':
                 new = b.name.split('.')[0]
@@ -664,7 +664,7 @@ def rename_add_word( mode ):
     props = bpy.context.scene.cyaobjectlist_props
 
     ui_list = bpy.context.window_manager.cyaobjectlist_list
-    itemlist = ui_list.itemlist    
+    itemlist = ui_list.itemlist
 
     amt = utils.getActiveObj()
     utils.mode_e()
@@ -680,9 +680,9 @@ def rename_add_word( mode ):
 
     result = []
     for node in itemlist:
-        if node.bool_val == True:            
+        if node.bool_val == True:
             b = amt.data.edit_bones[node.name]
-            
+
             if mode == 'suffix' or mode == 'suffix_list':
                 b.name = '%s_%s' % ( b.name , word )
 
@@ -713,7 +713,7 @@ def rename_finger(mode):
     props = bpy.context.scene.cyaobjectlist_props
 
     ui_list = bpy.context.window_manager.cyaobjectlist_list
-    itemlist = ui_list.itemlist    
+    itemlist = ui_list.itemlist
 
     amt = utils.getActiveObj()
     parentdic = {}
@@ -723,11 +723,11 @@ def rename_finger(mode):
     utils.mode_e()
     count = 0
     for node in itemlist:
-        if node.bool_val == True:            
+        if node.bool_val == True:
             name = prefix[mode] + FINGER[ count ]
             b = amt.data.edit_bones[node.name]
             rootname = name + '_01_' + props.setupik_lr
-            
+
             b.name = rootname
             rootarray.append(b.name)
             bonechain_finger_loop( b, 2, name )
@@ -746,7 +746,7 @@ def rename_finger(mode):
 def rename_add_sequential_number():
     props = bpy.context.scene.cyaobjectlist_props
     ui_list = bpy.context.window_manager.cyaobjectlist_list
-    itemlist = ui_list.itemlist    
+    itemlist = ui_list.itemlist
     name = props.rename_string
 
     # suffix = props.suffix
@@ -756,11 +756,11 @@ def rename_add_sequential_number():
     #     suffix = '_' + suffix
 
     amt = utils.getActiveObj()
-    
+
     bonearray = []
     utils.mode_e()
     for i,node in enumerate(itemlist):
-        if node.bool_val == True:            
+        if node.bool_val == True:
             b = amt.data.edit_bones[node.name]
             new = '%s_%02d%s' % (name , i+1 , get_suffix() )
             new = '%s_%02d' % (name , i+1 )
