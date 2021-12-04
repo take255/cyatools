@@ -488,11 +488,13 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         row1.prop(props, 'axis_forward',text = 'fwd')
         row1.prop(props, 'axis_up')
 
-
+        #CSVを使ったツール
         box3 = col1.box()
-        box3.label( text = 'bone copy csv' )
+        box3.label( text = 'csv tools' )
         row = box3.row()
         row.operator( "cyarigtools.edit_bone_copy_with_csv")
+        row.operator( "cyarigtools.export_bonelist")
+        row.operator( "cyarigtools.rename_bone_with_csv")
 
 
 
@@ -983,10 +985,13 @@ class CYARIGTOOLS_OT_edit_axis_swap(bpy.types.Operator):
         return {'FINISHED'}
 
 
+#---------------------------------------------------------------------------------------
+# CSVツール
+#---------------------------------------------------------------------------------------
 class CYARIGTOOLS_OT_edit_bone_copy_with_csv(bpy.types.Operator):
     """CSVの情報から骨をコピーする"""
     bl_idname = "cyarigtools.edit_bone_copy_with_csv"
-    bl_label = "bone copy with csv"
+    bl_label = "copy"
 
     filepath : bpy.props.StringProperty(subtype="FILE_PATH")
     filename : StringProperty()
@@ -1001,18 +1006,17 @@ class CYARIGTOOLS_OT_edit_bone_copy_with_csv(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
-
-class CYARIGTOOLS_OT_edit_bone_copy_with_csv(bpy.types.Operator):
-    """CSVの情報から骨をコピーする"""
-    bl_idname = "cyarigtools.edit_bone_copy_with_csv"
-    bl_label = "bone copy with csv"
+class CYARIGTOOLS_OT_export_bonelist(bpy.types.Operator):
+    """骨名のリストを出力する"""
+    bl_idname = "cyarigtools.export_bonelist"
+    bl_label = "export list"
 
     filepath : bpy.props.StringProperty(subtype="FILE_PATH")
     filename : StringProperty()
     directory : StringProperty(subtype="FILE_PATH")
 
     def execute(self, context):
-        edit.bone_copy_with_csv( self.filepath )
+        edit.export_bonelist( self.filepath )
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -1020,6 +1024,22 @@ class CYARIGTOOLS_OT_edit_bone_copy_with_csv(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
+class CYARIGTOOLS_OT_rename_bone_with_csv(bpy.types.Operator):
+    """CSVの情報で骨をリネームする"""
+    bl_idname = "cyarigtools.rename_bone_with_csv"
+    bl_label = "rename"
+
+    filepath : bpy.props.StringProperty(subtype="FILE_PATH")
+    filename : StringProperty()
+    directory : StringProperty(subtype="FILE_PATH")
+
+    def execute(self, context):
+        edit.rename_bone_with_csv( self.filepath )
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 #---------------------------------------------------------------------------------------
 # rig control panel
 #---------------------------------------------------------------------------------------
@@ -1294,6 +1314,8 @@ classes = (
     CYARIGTOOLS_OT_locator_add_bone,
     CYARIGTOOLS_OT_locator_snap_bone_at_obj,
     CYARIGTOOLS_OT_edit_bone_copy_with_csv,
+    CYARIGTOOLS_OT_export_bonelist,
+    CYARIGTOOLS_OT_rename_bone_with_csv,
 
 
     #other tools

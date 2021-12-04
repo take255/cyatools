@@ -16,7 +16,7 @@ def conv(v):
 
 def color_vertex(ob, vert, color,mode):
     utils.act(ob)
-    mesh = ob.data 
+    mesh = ob.data
 
     if mesh.vertex_colors:
         vcol_layer = mesh.vertex_colors.active
@@ -32,7 +32,7 @@ def color_vertex(ob, vert, color,mode):
                 for loop_index in poly.loop_indices:
                     print(loop_index)
                     vcol_layer.data[loop_index].color = color
-            
+
 
 #---------------------------------------------------------------------------------------
 #頂点カラーをアサイン
@@ -57,7 +57,7 @@ def assign_vertex_color(mode):
 
     utils.mode_e()
 
-#---------------------------------------------------------------------------------------    
+#---------------------------------------------------------------------------------------
 #モデルのマテリアルカラーを取得。
 #シェーダーはPrincipled BSDFである必要がある。
 #---------------------------------------------------------------------------------------
@@ -70,9 +70,9 @@ def convert_vertex_color():
             print(color)
             color_vertex(ob, 2, color)
 
-#---------------------------------------------------------------------------------------    
+#---------------------------------------------------------------------------------------
 # First, select polugon face (not vertex) and execute this command.
-#---------------------------------------------------------------------------------------    
+#---------------------------------------------------------------------------------------
 VERTEXCOLOR_BUFFER = [0.0,0.0,0.0,1.0]
 def pick_vertex_color(mode):
     global VERTEXCOLOR_BUFFER

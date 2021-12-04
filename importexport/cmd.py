@@ -35,12 +35,12 @@ class MeshFormat:
     vtxCount = 0
     polygonCount = 0
     def __init__(self,obj):
-        props = bpy.context.scene.cyaimportexport_props 
+        props = bpy.context.scene.cyaimportexport_props
 
         if obj != []:
             self.name = obj.name
             m = Matrix(obj.matrix_world).to_3x3()
-    
+
             self.m_rot = []
             for i in range(3):
                 self.m_rot.append( [x for x in m[i]] )
@@ -48,18 +48,18 @@ class MeshFormat:
 
             loc = [x for x in obj.location ]
             if props.upvector == 'Maya':
-                self.location = [loc[0] , loc[2] , -loc[1]] 
+                self.location = [loc[0] , loc[2] , -loc[1]]
 
             elif props.upvector == 'Blender':
                 self.location = loc
 
-        
+
         self.points = [] #頂点の配列 [ index , [ x ,y , z ] ]
-        self.faces = [] #ポリゴンの配列　[ index, vertexarray[] , uarray[] , varray[] ] 
+        self.faces = [] #ポリゴンの配列　[ index, vertexarray[] , uarray[] , varray[] ]
         self.hardedge = []
         self.sharpedge = []
-        
-    
+
+
     def export(self):
         return [ [ self.name , self.vtxCount , self.polygonCount , self.m_rot ,self.location ] , self.points , self.faces ,  self.hardedge ,self.sharpedge]
 
@@ -95,7 +95,7 @@ class MeshFormat:
 class Vtx:
     """頂点出力のためのクラス"""
     co = ''
-    
+
     class Weight:
         """ウェイトの構造体"""
         value = 0
@@ -197,13 +197,13 @@ class Bone:
 #mesh export
 #---------------------------------------------------------------------------------------
 def mesh_export(filename):
-    props = bpy.context.scene.cyaimportexport_props 
+    props = bpy.context.scene.cyaimportexport_props
 
     meshArray = []
     for obj in utils.selected():
         #objname = obj.name
-        
-        msh = obj.data        
+
+        msh = obj.data
         vertices = obj.data.vertices
         polygons = obj.data.polygons
 
@@ -240,7 +240,7 @@ def mesh_export(filename):
         UVarray = []
         for face in polygons:
             polygonArray.append(face.vertices)
-        
+
             #UVの情報
             u_data = []
             v_data = []
@@ -255,10 +255,7 @@ def mesh_export(filename):
         meshArray.append(meshformat)
 
 
-        # Edge information
-        # Detect hard edge
-        #print(obj.data.use_auto_smooth)
-        #print(obj.data.auto_smooth_angle)
+        # エッジ情報　ハードエッジを検索
         if obj.data.use_auto_smooth:
             #obj.data.auto_smooth_angle = 1.39626
             rad = obj.data.auto_smooth_angle
@@ -279,9 +276,6 @@ def mesh_export(filename):
         #     edgearray.append([angle,[f.index for f in e.link_faces]])
 
         # meshformat.hardedge = [x[1] for x in edgearray if x[0] > 80 ]
-
-
-
 
         #オブジェクト名とマトリックス
         #meshformat.name = objname
@@ -311,11 +305,11 @@ def mesh_export(filename):
 #mesh import
 #---------------------------------------------------------------------------------------
 def mesh_import( filename ):
-    props = bpy.context.scene.cyaimportexport_props 
+    props = bpy.context.scene.cyaimportexport_props
     for md in import_pcl(filename):
         mf = MeshFormat([])
         mf.getData( md ,props.scale )
-        
+
         #メッシュの生成
         mesh_data = bpy.data.meshes.new("cube_mesh_data")
         mesh_data.from_pydata(mf.vtxarray, [], mf.polyarray)
@@ -358,16 +352,16 @@ def get_bonedata(v , loc , matrix):
     #loc = Vector(bone.head)* props.scale
     #m0 = Matrix.Translation(loc) @ Matrix(bone.matrix).to_3x3().to_4x4()
     m0 = Matrix.Translation(loc) @ Matrix(matrix).to_3x3().to_4x4()
-            
+
     if props.upvector == 'Maya':
-        m0 = Matrix.Rotation(math.radians(-90.0), 3, "X").to_4x4() @ m0 
+        m0 = Matrix.Rotation(math.radians(-90.0), 3, "X").to_4x4() @ m0
 
     m0.transpose()
     matrix = np.array(m0).flatten().tolist()
 
     return [matrix,vector]
 
-        
+
 
 
 
@@ -383,7 +377,7 @@ def bone_export( filename ):
         v = Vector(bone.tail) - Vector(bone.head)
         v.normalize()
         loc = Vector(bone.head)* props.scale
-        
+
         matrix = Matrix( bone.matrix )
         #m = Matrix( bone.matrix )
         result = get_bonedata( v , loc, matrix )
@@ -394,14 +388,14 @@ def bone_export( filename ):
 
         # loc = Vector(bone.head)* props.scale
         # m0 = Matrix.Translation(loc) @ Matrix(bone.matrix).to_3x3().to_4x4()
-               
+
         # if props.upvector == 'Maya':
-        #     m0 = Matrix.Rotation(math.radians(-90.0), 3, "X").to_4x4() @ m0 
+        #     m0 = Matrix.Rotation(math.radians(-90.0), 3, "X").to_4x4() @ m0
 
         # m0.transpose()
         # matrix = np.array(m0).flatten().tolist()
 
-        
+
         # if bone.parent != None:
         #     parent = bone.parent.name
         # else:
@@ -425,7 +419,7 @@ def bone_export( filename ):
             tip_loc = Vector(bone.tail) * props.scale
             tip_name = bone.name + '_tip'
             tip_name = tip_name.replace('.' , '_')
-            #tip_matrix = 
+            #tip_matrix =
             tip_parent = bone.name
             result0 = get_bonedata( v , tip_loc , matrix )
             bonearray.append([ tip_name, result0[0] ,result0[1] , tip_parent ,[] ])
@@ -445,7 +439,7 @@ def bone_export( filename ):
 #[bone名,[child1,child2,..],(x,y,z)]
 #---------------------------------------------------------------------------------------
 def bone_import(filename):
-    
+
     boneArray = {}
     bonenameArray = []
 
@@ -495,13 +489,13 @@ def weight_import(path):
             for v in selectedVtx:
                 for i, g in enumerate(v.groups):
                     v.groups[i].weight=0
-        else:            
+        else:
             for v in obj.data.vertices:
                 for i, g in enumerate(v.groups):
                     v.groups[i].weight=0
 
         #ウェイト値読み込む
-        if mode:#edit mode 
+        if mode:#edit mode
             for i,point in enumerate(import_pci()):
                 if i in selectedVtxIndex:
                     for w in point.findall('weight'):
@@ -624,27 +618,27 @@ def weight_export(path):
 #---------------------------------------------------------------------------------------
 def anim_export(filename):
     props = bpy.context.scene.cyaimportexport_props
-    
+
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end
 
     exportdata = [ [start,end] ]
-    
+
     amt = bpy.context.active_object
     num = len(amt.pose.bones)
 
-    for f in range(end):    
+    for f in range(end):
         bpy.context.scene.frame_set(f)
-    
+
         animarray = []
-        for b in amt.pose.bones:       
+        for b in amt.pose.bones:
             #m0 = Matrix(b.matrix)
             loc = Vector(b.head)* props.scale
             m0 = Matrix.Translation(loc) @ Matrix(b.matrix).to_3x3().to_4x4()
 
 
             if props.upvector == 'Maya':
-                m0 = Matrix.Rotation(math.radians(-90.0), 3, "X").to_4x4() @ m0 
+                m0 = Matrix.Rotation(math.radians(-90.0), 3, "X").to_4x4() @ m0
 
             m0.transpose()
 
@@ -658,12 +652,12 @@ def anim_export(filename):
 
 # def anim_export_(filename):
 #     props = bpy.context.scene.cyaimportexport_props
-    
+
 #     start = bpy.context.scene.frame_start
 #     end = bpy.context.scene.frame_end
 
 #     exportdata = [ [start,end] ]
-    
+
 #     amt = bpy.context.active_object
 #     num = len(amt.pose.bones)
 
@@ -676,7 +670,7 @@ def anim_export(filename):
 #             m0 = Matrix(b.matrix)
 
 #             if props.upvector == 'Y':
-#                 m0 = Matrix.Rotation(math.radians(-90.0), 3, "X").to_4x4() @ m0 
+#                 m0 = Matrix.Rotation(math.radians(-90.0), 3, "X").to_4x4() @ m0
 
 #             m0.transpose()
 
@@ -708,7 +702,7 @@ def anim_import(filename):
             if name in allbonename:
                 b = amt.pose.bones[name]
                 matrix = Matrix([m[0:4],m[4:8],m[8:12],m[12:16]])
-                
+
                 matrix.transpose()
                 b.matrix = matrix
                 b.keyframe_insert(data_path="location")
@@ -776,7 +770,7 @@ def correct_name(name):
     return name.replace( '.' , '_' ).replace( ' ' , '_' )
 
 def export_format(mode):
-    props = bpy.context.scene.cyaimportexport_props 
+    props = bpy.context.scene.cyaimportexport_props
     outpath = props.fbx_path
 
 
@@ -801,15 +795,15 @@ def export_format(mode):
 
         col = utils.collection.get_active()
         get_col( col )
-        
+
         outpath += '%s.%s' % (correct_name( col.name ) , mode)
 
         print('>>collection')
         #選択されたコレクションにリンクされたオブジェクトを取得
-        for ob in bpy.context.scene.objects: 
+        for ob in bpy.context.scene.objects:
             c = [x.name for x in ob.users_collection if x.name in Collections]
 
-            if len(c) > 0: 
+            if len(c) > 0:
                 print(ob.name)
                 utils.select(ob,True)
 
@@ -817,7 +811,7 @@ def export_format(mode):
 
 
 def export_cmd(outpath , mode):
-    props = bpy.context.scene.cyaimportexport_props 
+    props = bpy.context.scene.cyaimportexport_props
 
     #現在のフレームを変更
     bpy.context.scene.frame_set( props.export_frame )
@@ -876,7 +870,7 @@ def export_cmd(outpath , mode):
             bpy.ops.export_scene.fbx(filepath=outpath ,global_scale = props.scale , bake_anim_step=2.0 , bake_anim_simplify_factor=0.0 , use_selection = True)
         elif mode == 'obj':
             bpy.ops.export_scene.obj(filepath=outpath ,global_scale = props.scale , use_selection = True)
-        
+
 
     #ユニットスケールをもとに戻す
     if props.temp_unitscale_enable:

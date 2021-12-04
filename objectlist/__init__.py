@@ -2,12 +2,10 @@ import bpy
 from bpy.app.handlers import persistent
 import imp
 
-from bpy.types import( 
+from bpy.types import(
     PropertyGroup,
-    Panel,
     Operator,
     UIList,
-    AddonPreferences
     )
 
 from bpy.props import(
@@ -33,7 +31,7 @@ bl_info = {
 "description": "cyaobjectlist",
 "category": "Object"}
 
-try: 
+try:
     bpy.utils.unregister_class(CYAOBJECTLIST_Props_item)
 except:
     pass
@@ -83,7 +81,7 @@ class CYAOBJECTLIST_Props_OA(PropertyGroup):
 #リスト内のアイテムの見た目を指定
 #---------------------------------------------------------------------------------------
 class CYAOBJECTLIST_UL_uilist(UIList):
-    
+
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
 
@@ -125,7 +123,6 @@ class CYAOBJECTLIST_PT_ui(utils.panel):
         col.operator("cyaobjectlist.remove_not_exist", icon='ERROR')
 
         row = layout.row(align=True)
-        #row.label( text = 'check' )
         row.label( text = '' ,icon = 'CHECKMARK')
 
         array = (
@@ -139,14 +136,7 @@ class CYAOBJECTLIST_PT_ui(utils.panel):
         for x in array:
             row.operator("cyaobjectlist.check_item",icon = x[1] ).op = x[0]
 
-        # for x in ('show' , 'hide' , 'select' , 'selected'):
-        #     row.operator("cyaobjectlist.check_item", text = x ).op = x
-
-        #row = layout.row(align=True)
-        #row.label( text = 'remove' )
         row.label( text = '' ,icon = 'TRASH')
-        # for x in ('checked' , 'unchecked'):
-        #     row.operator("cyaobjectlist.remove_check_item", text = x ).op = x
 
         array = (
         ('checked','CHECKMARK'),
@@ -163,8 +153,8 @@ class CYAOBJECTLIST_PT_ui(utils.panel):
         row = layout.row(align=True)
         row.operator("cyaobjectlist.rename")#リネームのウインドウを表示
         row.operator("cyaobjectlist.bonetool")#リネームのウインドウを表示
-        
-        
+
+
 
 #---------------------------------------------------------------------------------------
 #リネームツール
@@ -196,7 +186,7 @@ class CYAOBJECTLIST_MT_rename(Operator):
         row1.operator("cyaobjectlist.rename_add_word" , text = 'add suffix').mode = 'suffix'
 
         row2 = box.row()
-        for mode in ( 'replace' , 'l>r' , 'r>l' , 'del.number'):            
+        for mode in ( 'replace' , 'l>r' , 'r>l' , 'del.number'):
             row2.operator("cyaobjectlist.rename_replace" , text = mode ).mode = mode
 
 
@@ -223,7 +213,7 @@ class CYAOBJECTLIST_MT_rename(Operator):
         for p in ('clavile_hand' ,'arm_twist' , 'thigh_toe' ,'leg_twist', 'pelvis_spine' , 'neck_head' , 'finger'):
             box.operator("cyaobjectlist.rename_bonechain_ue4" , text = p).pt = p
         box.prop(props, "setupik_lr", expand=True)
-        
+
 
 
 #---------------------------------------------------------------------------------------
@@ -403,7 +393,7 @@ class CYAOBJECTLIST_OT_rename_bonechain_ue4(Operator):
     bl_idname = "cyaobjectlist.rename_bonechain_ue4"
     bl_label = ""
     pt : StringProperty()
-    
+
     def execute(self, context):
         cmd.bonechain_ue4(self.pt)
         return {'FINISHED'}
@@ -433,17 +423,17 @@ class CYAOBJECTLIST_OT_create_mesh_from_bone(Operator):
     """選択ボーンからメッシュを作成する。ルートを選択して実行。名前でソートされる。"""
     bl_idname = "cyaobjectlist.create_mesh_from_bone"
     bl_label = "create mesh from bone"
-    def execute(self, context):    
+    def execute(self, context):
         cmd.create_mesh_from_bone()
-        return {'FINISHED'}        
+        return {'FINISHED'}
 
 class CYAOBJECTLIST_OT_parent_chain(Operator):
     """Allow you to make a bone chain. First, add bones into list ordering from  end to root, and execute this command."""
     bl_idname = "cyaobjectlist.parent_chain"
     bl_label = "parent chain"
-    def execute(self, context):    
+    def execute(self, context):
         cmd.parent_chain()
-        return {'FINISHED'}        
+        return {'FINISHED'}
 
 
 
@@ -478,7 +468,7 @@ classes = (
 
     CYAOBJECTLIST_OT_rename_add_word,
 
-    #bone 
+    #bone
     CYAOBJECTLIST_OT_parent_chain
 
 )
@@ -494,7 +484,7 @@ def register():
 
 
 def unregister():
-    
+
     for cls in classes:
         bpy.utils.unregister_class(cls)
 

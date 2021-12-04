@@ -47,6 +47,7 @@ bl_info = {
 "author": "Takehito Tsuchiya",
 "version": (0, 3.21),
 "blender": (2, 90, 1),
+"location" : "CYA",
 "description": "cyatools",
 "category": "Object"}
 

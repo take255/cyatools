@@ -26,8 +26,8 @@ def bind():
     props = bpy.context.scene.cyatools_oa
     doSkinBind(props.bind_auto_bool)
 
+
 def doSkinBind(bind_auto):
-    #props = bpy.context.scene.cyatools_oa
 
     selected = utils.selected()
 
@@ -44,8 +44,6 @@ def doSkinBind(bind_auto):
             m.object = amt
 
     #頂点グループ追加
-    #If a bone already binded , ignore it .
-    #Ignore bone under rig_root.
     vtxgrp = set()
     for ob in obArray:
         vtxgrp.clear()
@@ -61,7 +59,6 @@ def doSkinBind(bind_auto):
 
                 if b.use_deform == True:
                     b.select = True
-                #if Isrigbone(b):
                     ob.vertex_groups.new(name = b.name)
 
 
@@ -199,8 +196,6 @@ def add_influence_bone():
 #---------------------------------------------------------------------------------------
 def add_influence_bone_auto():
     selected = utils.selected()
-
-
 
     for ob in selected:
 
@@ -406,14 +401,161 @@ def weights_transfer(mode):
                 sourcename = ob.name + suffix
                 utils.actByName(sourcename)
                 utils.select(ob,True)
-                weights_transfer_v2()
+                #weights_transfer_v2()
+                wt = WeightTransfer()
+                wt.do_transfer()
 
         else:
-            weights_transfer_v2()
+            #weights_transfer_v2()
+            wt = WeightTransfer()
+            wt.do_transfer()
+
+
+class WeightTransfer:
+
+    def __init__(self):
+        props = bpy.context.scene.cyatools_oa
+        self.num_sample = props.weight_transfer_samplevtx
+        self.selected_only = props.weight_transfer_selected_vtx
+        self.keep_org = props.weight_transfer_keep_original
+        self.weight_array = []
+
+
+    #バインドされていなかったらバインドする
+    def do_transfer(self):
+        props = bpy.context.scene.cyatools_oa
+        bpy.ops.object.mode_set(mode = 'OBJECT')
+
+        obj_source = bpy.context.active_object
+        mesh = obj_source.data
+
+        #コピー元のkdTreeを作成
+        size = len(mesh.vertices)
+        self.kd = mathutils.kdtree.KDTree(size)
+        for i, v in enumerate(mesh.vertices):
+            self.kd.insert(v.co, i)
+        self.kd.balance()
+
+
+        amt = False
+        #ソースオブジェクトにバインドされている骨を調べる
+        for mod in obj_source.modifiers:
+            if mod.type == 'ARMATURE':
+                amt = mod.object
+
+        #コピー元にアーマチュアモディファイヤが無ければ実行しない
+        if not amt:
+            return
+
+
+        #ボーン名とインデックスの変換テーブル作成
+        #ソースオブジェクトにバインドされている骨の一覧を取得
+        self.bonename2index = {}
+        bonearray = []
+        for i,vg in enumerate( obj_source.vertex_groups ):
+            self.bonename2index[vg.name] = i
+            bonearray.append(vg.name)
+
+
+
+        for v in mesh.vertices:
+            grp =[]
+            for vge in v.groups:
+                grp.append([vge.group, vge.weight])
+            self.weight_array.append(grp)
+
+
+        for obj in utils.selected():
+
+            if obj != obj_source:
+                mesh = obj.data
+
+                #自動バインド
+                #アーマチュアモディファイヤがあるかどうか調べる。無ければ追加する。
+                ExistsAmt = False
+                for mod in obj.modifiers:
+                    if mod.type == 'ARMATURE':
+                        ExistsAmt = True
+
+                if not ExistsAmt:
+                    m = obj.modifiers.new("Armature", type='ARMATURE')
+                    m.object = amt
+
+                    for b in bonearray:
+                        obj.vertex_groups.new(name = b)
+
+
+                #ボーン名からインデックスからインデックスの変換テーブル作成
+                self.index2index = {}
+
+                #選択頂点のインデックスを事前に取得
+                indexarray = []
+
+                if self.selected_only:
+                    for v in mesh.vertices:
+                        if v.select:
+                            indexarray.append(v.index)
+
+                    self.delete_weights( obj , indexarray )#ウェイトの削除
+
+                else:
+                    self.delete_weights( obj , range( len(mesh.vertices))) #ウェイトの削除)
+
+
+                bpy.ops.object.mode_set(mode = 'OBJECT')
+
+
+                #選択された頂点だけ処理するかどうかで処理を分ける
+                if not self.selected_only:
+
+                    for i,v in enumerate(mesh.vertices):
+                        self.calc_weight(i,obj,v)
+
+                else:
+
+                    for i,v in enumerate(mesh.vertices):
+                        if v.select:
+                            self.calc_weight(i,obj,v)
+
+
+
+    def delete_weights(self , obj ,targetvtx ):
+        for i,vg in enumerate(obj.vertex_groups):
+            if vg.name in self.bonename2index:
+                self.index2index[ self.bonename2index[vg.name] ] = i
+
+            if not self.keep_org:#元のウェイトを削除しないでコピー実行
+                vg.remove( targetvtx )
+
+
+    def calc_weight( self, i ,obj  , v):
+        result = self.kd.find_n( v.co , self.num_sample )
+
+        #距離情報から割合を出す 近い方がウェイトが大きいので逆数にする
+        sum_weight = sum([1/x[2] for x in result] ) #result[0][2] + result[1][2]
+        print(sum_weight)
+
+        weight_ratio = [ [ x[1] , 1/x[2]/sum_weight ] for x in result ]#インデックスと距離に応じた割合 近い方がよりウェイトが大きい
+
+        for wr in weight_ratio:
+
+            index = wr[0]
+            ratio = wr[1]
+
+            for w in self.weight_array[index]:#コピー元とコピー先のボーンのインデックスの整合性を合わせている
+                if w[0] in self.index2index:
+                    target_index = self.index2index[w[0]]
+                    vg = obj.vertex_groups[ target_index ]
+
+                    #頂点インデックス、ウェイト値
+                    print( target_index , w[1]*ratio )
+                    vg.add( [i], w[1]*ratio , 'ADD' )#
+
+
 
 
 #バインドされていなかったらバインドする
-def weights_transfer_v2():
+def weights_transfer_v2_():
     props = bpy.context.scene.cyatools_oa
     bpy.ops.object.mode_set(mode = 'OBJECT')
 
@@ -503,16 +645,10 @@ def weights_transfer_v2():
 
                     else:#選択頂点だけコピーの場合は選択されている頂点のウェイトだけ削除
                         vg.remove( indexarray )
-                        # for i,v in enumerate(mesh.vertices):
-                        #     if v.select:
-                        #         vg.remove( [i] )
 
-
-            #bpy.ops.object.mode_set(mode = 'EDIT')
-            #bpy.ops.mesh.select_mode(type="VERT")
-            #bpy.ops.mesh.select_all(action = 'DESELECT')
             bpy.ops.object.mode_set(mode = 'OBJECT')
 
+            #選択された頂点だけ処理するかどうか　
             if not props.weight_transfer_selected_vtx:
 
                 for i,v in enumerate(mesh.vertices):
@@ -535,8 +671,6 @@ def weights_transfer_v2():
                                 vg = obj.vertex_groups[ index2index[w[0]] ]
                                 #頂点インデックス、ウェイト値
                                 vg.add( [i], w[1] , 'REPLACE' )
-
-
 
 #---------------------------------------------------------------------------------------
 #ウェイトのミラー
@@ -870,7 +1004,7 @@ def rename_with_csvtable(path):
 #---------------------------------------------------------------------------------------
 #頂点グループのリストを出力
 #---------------------------------------------------------------------------------------
-def export_vertexgroup_list():
+def export_vertexgroup_list(path):
     obj = bpy.context.object
     result = []
     for group in obj.vertex_groups:
@@ -879,34 +1013,44 @@ def export_vertexgroup_list():
 
 
     print(result)
-    with open('e:/tmp/vertexgroup.csv', 'w' , newline = "") as f:
+    with open(path, 'w' , newline = "") as f:
         writer = csv.writer(f)
         writer.writerows(result)
 
 
 #---------------------------------------------------------------------------------------
 #csvファイルを元にウェイトを転送する
+#転送先の骨がバインドされていなければ追加する
 #---------------------------------------------------------------------------------------
 def transfer_with_csvtable(path):
 
-    #'E:/data/OneDrive/projects/_model/Others/Gmod/mametya/table/transfer01.csv'
     dic = {}
+    target_vtxgrp =set()#不足分の骨がないか調べるための配列
+
     with open( path ) as f:
+
         reader = csv.reader(f)
         for row in reader:
-
             if row[0] != row[1]:#転送元と先が一緒だったら無視する
                 dic[row[0]] = row[1]
+                target_vtxgrp.add(row[1])
 
     for obj in utils.selected():
         boneArray = []
         for group in obj.vertex_groups:
             boneArray.append(group.name)
 
-        size = len(boneArray)
+        #バインドされていない頂点グループがあったら追加する
+        diff = target_vtxgrp.difference(set(boneArray))
+        print('diff',diff)
+        for b in diff:
+            boneArray.append(b)
+            obj.vertex_groups.new(name = b)
+
+
         #頂点の情報
         msh = obj.data
-        vtxCount = str(len(msh.vertices))#頂点数
+        #vtxCount = str(len(msh.vertices))#頂点数
 
         for i,v in enumerate(msh.vertices):
             #いったんweightarrayに頂点の全部のウェイトを格納

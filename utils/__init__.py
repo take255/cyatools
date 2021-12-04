@@ -1,7 +1,7 @@
 from bpy.types import Panel
 import bpy
 
-class panel(Panel):   
+class panel(Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category ='CYA'
@@ -23,7 +23,7 @@ def activeObj(ob):
 
 def getActiveObj():
     return bpy.context.active_object
-    
+
 def select(ob,state):
      ob.select_set(state=state)
 
@@ -165,7 +165,7 @@ def init_cursor():
 def rigroot():
      mode_e()
      root = 'rig_root'
-     amt = bpy.context.object  
+     amt = bpy.context.object
      if root not in amt.data.edit_bones:
           rootbone = amt.data.edit_bones.new(root)
           rootbone.head = (0,0,0)
@@ -184,7 +184,7 @@ def rigroot():
 #---------------------------------------------------------------------------------------
 class collection:
      @classmethod
-     def create( self , name ):          
+     def create( self , name ):
           collection = bpy.context.scene.collection
           if name in [x.name for x in bpy.data.collections]:
                col = bpy.data.collections[name]
@@ -195,12 +195,12 @@ class collection:
 
      # @classmethod
      # def get_obj( self ,col):
-     #      return bpy.context.view_layer.active_layer_collection 
+     #      return bpy.context.view_layer.active_layer_collection
 
      @classmethod
      def get_active( self ):
-          return bpy.context.view_layer.active_layer_collection 
-     
+          return bpy.context.view_layer.active_layer_collection
+
      @classmethod
      def move_obj( self , ob , to_col):
           for col in ob.users_collection:
@@ -218,18 +218,18 @@ class collection:
      def move_col( self , collection ):
           current = bpy.context.window.scene.name
           for col in self.get_parent(collection):
-               col.children.unlink(collection)               
+               col.children.unlink(collection)
           bpy.context.window.scene.collection.children.link(collection)
 
-     @classmethod     
+     @classmethod
      def root(self):
           return bpy.context.scene.collection
 
-     @classmethod     
+     @classmethod
      def children(self , col):
           pass
 
-     @classmethod     
+     @classmethod
      def get_parent(self , col):
           result = []
 
@@ -242,16 +242,16 @@ class collection:
           #以外を調べる
           for c in bpy.data.collections:
                if col.name in [x.name for x in c.children]:
-                    result.append(c)          
+                    result.append(c)
           return result
 
-     @classmethod     
+     @classmethod
      def isMaster(self , col):
           master = bpy.context.window.scene.collection
           if col == master:
                return True
           else:
-               return False           
+               return False
 
      #colがカレントシーンにあるかどうか調べる
      @classmethod
@@ -292,7 +292,7 @@ class collection:
      def get_visible_loop( self , c ):
           if not c.hide_viewport:
                self.visible.append( c.name )
-               for c in c.children:                         
+               for c in c.children:
                     self.get_visible_loop(c)
 
 
@@ -368,7 +368,7 @@ class bone:
                     count += 1
 
                result.append([count,bone.name])
- 
+
           result.sort()
           return [x[1] for x in result]
 

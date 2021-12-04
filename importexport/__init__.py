@@ -1,7 +1,7 @@
 import bpy
 import imp
 
-from bpy.types import( 
+from bpy.types import(
     PropertyGroup,
     Panel,
     Operator,
@@ -56,7 +56,7 @@ def animname():
 #---------------------------------------------------------------------------------------
 class CYAIMPORTEXPORT_Props_OA(PropertyGroup):
     #option
-    upvector : EnumProperty(items = WORLD , name = 'bone upvector',default = 'Blender' ) 
+    upvector : EnumProperty(items = WORLD , name = 'bone upvector',default = 'Blender' )
     add_tipbones : BoolProperty(name="add tip bones" ,  default = False)
 
     #FBX option
@@ -77,10 +77,10 @@ class CYAIMPORTEXPORT_Props_OA(PropertyGroup):
 #---------------------------------------------------------------------------------------
 class CYAIMPORTEXPORT_MT_addonpreferences(AddonPreferences):
     bl_idname = __name__
- 
+
     path : StringProperty(default = PATH)
-    model_name : StringProperty(default = MODEL_NAME) 
-    bone_name : StringProperty(default = BONE_NAME) 
+    model_name : StringProperty(default = MODEL_NAME)
+    bone_name : StringProperty(default = BONE_NAME)
 
     def draw(self, context):
         layout = self.layout
@@ -103,7 +103,7 @@ class CYAIMPORTEXPORT_PT_ui(utils.panel):
         return context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
-        props = bpy.context.scene.cyaimportexport_props        
+        props = bpy.context.scene.cyaimportexport_props
 
         col = self.layout.column()
         self.row = col.row()
@@ -122,11 +122,11 @@ class CYAIMPORTEXPORT_PT_ui(utils.panel):
 
         box = col.box()
         box.label(text="FBX")
-        
+
         row = box.row()
         row.operator( 'cyaimportexport.export_format' , text = 'Export FBX' , icon = 'FILE_TICK').mode = 'fbx'
         row.operator( 'cyaimportexport.export_format' , text = 'Export OBJ' , icon = 'FILE_TICK').mode = 'obj'
-        
+
         row = box.row()
         row.prop(props,"export_option", expand=True)
         row.prop(props,"export_mode", expand=True)
@@ -176,7 +176,7 @@ class CYAIMPORTEXPORT_MT_filebrowse(Operator):
     def execute(self, context):
         #print(self.filepath)
         print((self.filepath, self.filename, self.directory))
-        props = bpy.context.scene.cyaimportexport_props        
+        props = bpy.context.scene.cyaimportexport_props
         props.fbx_path = self.directory
         return {'FINISHED'}
 
@@ -192,7 +192,7 @@ class CYAIMPORTEXPORT_mesh_export(Operator):
     bl_label = ""
     def execute(self, context):
         cmd.mesh_export( modelname() )
-        return {'FINISHED'}        
+        return {'FINISHED'}
 
 class CYAIMPORTEXPORT_mesh_import(Operator):
     """メッシュ情報をインポート"""
@@ -200,7 +200,7 @@ class CYAIMPORTEXPORT_mesh_import(Operator):
     bl_label = ""
     def execute(self, context):
         cmd.mesh_import( modelname() )
-        return {'FINISHED'}        
+        return {'FINISHED'}
 
 class CYAIMPORTEXPORT_weight_export(Operator):
     """ウェイト情報をエクスポート"""
@@ -208,7 +208,7 @@ class CYAIMPORTEXPORT_weight_export(Operator):
     bl_label = ""
     def execute(self, context):
         cmd.weight_export(weightname())
-        return {'FINISHED'}        
+        return {'FINISHED'}
 
 class CYAIMPORTEXPORT_weight_import(Operator):
     """ウェイト情報をインポート"""
@@ -216,7 +216,7 @@ class CYAIMPORTEXPORT_weight_import(Operator):
     bl_label = ""
     def execute(self, context):
         cmd.weight_import(weightname())
-        return {'FINISHED'}        
+        return {'FINISHED'}
 
 class CYAIMPORTEXPORT_bone_export(Operator):
     """ボーン情報をエクスポート"""
@@ -224,7 +224,7 @@ class CYAIMPORTEXPORT_bone_export(Operator):
     bl_label = ""
     def execute(self, context):
         cmd.bone_export( bonename() )
-        return {'FINISHED'}        
+        return {'FINISHED'}
 
 class CYAIMPORTEXPORT_bone_import(Operator):
     """ボーン情報をインポート"""
@@ -232,7 +232,7 @@ class CYAIMPORTEXPORT_bone_import(Operator):
     bl_label = ""
     def execute(self, context):
         cmd.bone_import( bonename() )
-        return {'FINISHED'}        
+        return {'FINISHED'}
 
 class CYAIMPORTEXPORT_anim_export(Operator):
     """アニメーション情報をエクスポート"""
@@ -240,7 +240,7 @@ class CYAIMPORTEXPORT_anim_export(Operator):
     bl_label = ""
     def execute(self, context):
         cmd.anim_export(animname())
-        return {'FINISHED'}        
+        return {'FINISHED'}
 
 class CYAIMPORTEXPORT_anim_import(Operator):
     """アニメーション情報をインポート"""
@@ -248,7 +248,7 @@ class CYAIMPORTEXPORT_anim_import(Operator):
     bl_label = ""
     def execute(self, context):
         cmd.anim_import(animname())
-        return {'FINISHED'}        
+        return {'FINISHED'}
 
 
 #FBX
@@ -256,11 +256,11 @@ class CYAIMPORTEXPORT_export_format(Operator):
     """選択されているモデルのFBX出力"""
     bl_idname = "cyaimportexport.export_format"
     bl_label = ""
-    mode : StringProperty(default='fbx') 
+    mode : StringProperty(default='fbx')
 
     def execute(self, context):
         cmd.export_format(self.mode)
-        return {'FINISHED'}        
+        return {'FINISHED'}
 
 # #OBJ
 # class CYAIMPORTEXPORT_export_obj(Operator):
@@ -269,7 +269,7 @@ class CYAIMPORTEXPORT_export_format(Operator):
 #     bl_label = "Export OBJ"
 #     def execute(self, context):
 #         cmd.export_obj()
-#         return {'FINISHED'}        
+#         return {'FINISHED'}
 
 
 classes = (
@@ -301,7 +301,7 @@ def register():
 
 
 def unregister():
-    
+
     for cls in classes:
         bpy.utils.unregister_class(cls)
 

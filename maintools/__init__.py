@@ -172,12 +172,16 @@ class CYATOOLS_Props_OA(PropertyGroup):
     bone_xray_bool : BoolProperty( name = "bone_xray",update=skinning.bone_xray)
     vertexgrp_string : StringProperty(name = "word")
     weight_margin : FloatProperty(name = "margin", default=0.01 )
+
     batch_weight_transfer_bool : BoolProperty(name="batch" ,  default = False)
     weight_transfer_keep_original : BoolProperty(name="keep original" ,  default = False)
     weight_transfer_selected_vtx : BoolProperty(name="selected vtx" ,  default = False)
+    weight_transfer_samplevtx : IntProperty(name = "sample", default=3 )
+
     bind_auto_bool : BoolProperty(name="auto" ,  default = True)
     batch_weight_transfer_string : StringProperty(name = "suffix")
     threshold_selectweight : FloatProperty(name = "threshold", default=0.9 )
+
 
     weightmirror_dir : EnumProperty(items=(
         ('L>R', 'L>R', ''),
@@ -596,6 +600,7 @@ class CYATOOLS_MT_skinningtools(Operator):
         col1.prop(props,'batch_weight_transfer_string')
         col1.prop(props, "weight_transfer_selected_vtx")
         col1.prop(props, "weight_transfer_keep_original")
+        col1.prop(props, "weight_transfer_samplevtx")
 
 
         box = col.box()
@@ -607,10 +612,6 @@ class CYATOOLS_MT_skinningtools(Operator):
         row1 = col1.row()
         row1.prop(props, 'weightmirror_dir' , expand=True)
 
-        box = col.box()
-        box.label(text = 'select')
-        box.operator("cyatools.skinning_selectgrp"  , icon = 'MOD_MIRROR')
-        box.prop(props, 'threshold_selectweight' , expand=True)
 
 
 
@@ -625,25 +626,6 @@ class CYATOOLS_MT_skinningtools(Operator):
 
         row2 = col1.row()
         row2.prop(props,"skin_filepath")
-        #row2.operator( 'cyatools.skinning_filebrowse' , icon = 'FILE_FOLDER' ,text = "")
-
-        # box = col.box()
-        # box.label(text = 'weight')
-        # col1 = box.column()
-
-        # row1 = col1.row()
-        # row1.operator("cyatools.skinning_assign_maxweights")
-        # row1.operator("cyatools.skinning_weights_transfer").mode = 'v1'
-
-        # row1 = col1.split(factor = 0.4, align = False)
-        # row1.operator("cyatools.skinning_weights_mirror",text = 'mirror_v1' ).mode = 'v1'
-        # row1.prop(props,'weight_margin')
-
-        # row1 = col1.row()
-        # row1.operator("cyatools.skinning_mirror_transfer")#!!!
-
-
-        #row = layout.row(align=False)
         col = row.column()
         box = col.box()
         box.label(text = 'delete vtx group')
@@ -675,6 +657,12 @@ class CYATOOLS_MT_skinningtools(Operator):
         row.operator("cyatools.skinning_delete_allweights")
         row.operator("cyatools.skinning_delete_unselectedweights")
         row.operator("cyatools.skinning_remove_weight_selectedvtx")
+
+        box = col.box()
+        box.label(text = 'select')
+        box.operator("cyatools.skinning_selectgrp"  , icon = 'MOD_MIRROR')
+        box.prop(props, 'threshold_selectweight' , expand=True)
+
 
 
         #row = layout.row(align=False)
@@ -1825,13 +1813,6 @@ class CYATOOLS_OT_skinning_delete_all_vtxgrp(Operator):
 #         skinning.rename_with_csvtable()
 #         return {'FINISHED'}
 
-class CYATOOLS_OT_skinning_export_vertexgroup_list(Operator):
-    """頂点グループのリストを出力"""
-    bl_idname = "cyatools.skinning_export_vertexgroup_list"
-    bl_label = "export vertex group"
-    def execute(self, context):
-        skinning.export_vertexgroup_list()
-        return {'FINISHED'}
 
 
 
@@ -1874,14 +1855,35 @@ class CYATOOLS_MT_skinning_transfer_with_csvtable(Operator):
     filename : StringProperty()
     directory : StringProperty(subtype="FILE_PATH")
 
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 
     def execute(self, context):
         skinning.transfer_with_csvtable(self.filepath)
         return {'FINISHED'}
 
+
+
+class CYATOOLS_OT_skinning_export_vertexgroup_list(Operator):
+    """頂点グループのリストを出力"""
+    bl_idname = "cyatools.skinning_export_vertexgroup_list"
+    bl_label = "export vertex group"
+
+    filepath : bpy.props.StringProperty(subtype="FILE_PATH")
+    filename : StringProperty()
+    directory : StringProperty(subtype="FILE_PATH")
+
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
+
+    def execute(self, context):
+        skinning.export_vertexgroup_list(self.filepath)
+        return {'FINISHED'}
+
+
+
 #---------------------------------------------------------------------------------------
 #Rename
 #---------------------------------------------------------------------------------------

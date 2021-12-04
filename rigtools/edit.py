@@ -841,24 +841,29 @@ def bone_copy_with_csv(path):
     for bdata in bdataarray:
         bdata.generate(target)
 
-            #headbone = ob.data.edit_bones[bdata.headbone]
 
-            # if bdata.head_pos == "head":
-            #      print(headbone.head)
-            # elif bdata.head_pos == "tail":
-            #     print(headbone.tail)
+#---------------------------------------------------------------------------------------
+#CSVに骨名を出力する
+#---------------------------------------------------------------------------------------
+def export_bonelist(path):
 
-            # tailbone = ob.data.edit_bones[bdata.tailbone]
-            # if bdata.tail_pos == "head":
-            #      print(tailbone.head)
-            # elif bdata.tail_pos == "tail":
-            #     print(tailbone.tail)
+    amt = bpy.context.object
+
+    utils.mode_p()
+    result = [[b.name,] for b in amt.pose.bones]
+
+    with open(path, 'w' , newline = "") as f:
+        writer = csv.writer(f)
+        writer.writerows(result)
+
+    utils.mode_o()
+
 
 
 #---------------------------------------------------------------------------------------
-#CSV変換テーブルを使って頂点グループをリネーム
+#CSV変換テーブルを使って骨をリネーム
 #---------------------------------------------------------------------------------------
-def bone_rename_with_csv(path):
+def rename_bone_with_csv(path):
 
     amt = bpy.context.object
 
@@ -866,7 +871,6 @@ def bone_rename_with_csv(path):
     for b in amt.pose.bones:
         print(b.name)
 
-    return
     #辞書として読み込む
     dic = {}
     with open( path ) as f:
@@ -875,11 +879,11 @@ def bone_rename_with_csv(path):
             dic[row[0]] = row[1]
             print(row)
 
-    obj = bpy.context.object
+    amt = utils.getActiveObj()
 
     #辞書に含まれていたらリネームする
-    for group in obj.vertex_groups:
-        if group.name in dic:
-            group.name = dic[group.name]
+    for bone in  amt.pose.bones:
+        if bone.name in dic:
+            bone.name = dic[bone.name]
 
 
