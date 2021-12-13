@@ -45,7 +45,7 @@ imp.reload(proportion)
 AXIS = (('X','X','X'), ('Y','Y','Y'), ('Z','Z','Z'), ('-X','-X','-X'), ('-Y','-Y','-Y'), ('-Z','-Z','-Z'))
 AXIS_PLANE = (('X','X','X'),  ('Z','Z','Z') )
 
-RIGSHAPEPATH = "E:\data\googledrive\lib\model/rig.blend"
+#RIGSHAPEPATH = "E:\data\googledrive\lib\model/rig.blend"
 
 #---------------------------------------------------------------------------------------
 #アーマチュアを拾ってリグコントロールに使う

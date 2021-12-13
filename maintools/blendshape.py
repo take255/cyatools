@@ -366,8 +366,6 @@ def restore_downstream():
 
     bpy.ops.object.mode_set(mode = 'OBJECT')
 
-
-    #spIndex = obj.active_shape_key_index
     spIndex = VARRAY_DOWNSTREAM[0]
 
 
@@ -388,10 +386,13 @@ def restore_downstream():
 
 
 #ブレンドシェイプのキーを全削除
+#ブレンドシェイプが１つもなければエラーになるのでスルーするようにする
 def remove_all_keys():
     for ob in utils.selected():
         utils.act(ob)
-        bpy.ops.object.shape_key_remove(all=True)
+
+        if ob.data.shape_keys != None:
+            bpy.ops.object.shape_key_remove(all=True)
 
 
 #シェイプキークリア

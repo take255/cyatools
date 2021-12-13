@@ -41,6 +41,7 @@ from . import etc
 from . import blendshape
 from . import scenesetup
 from . import facemap
+from . import cc3pipeline
 
 imp.reload(utils)
 imp.reload(modifier)
@@ -57,6 +58,7 @@ imp.reload(etc)
 imp.reload(blendshape)
 imp.reload(scenesetup)
 imp.reload(facemap)
+imp.reload(cc3pipeline)
 
 
 #頂点カラーデータ
@@ -227,6 +229,7 @@ class CYATOOLS_PT_toolPanel(utils.panel):
         self.layout.operator("cyatools.blendshape_tools", icon='MOD_SKIN')
         self.layout.operator("cyatools.scenesetuptools", icon='SCENE_DATA')
         self.layout.operator("cyatools.facemaptools", icon='SCENE_DATA')
+        self.layout.operator("cyatools.cc3tools", icon='SCENE_DATA')
 
 #---------------------------------------------------------------------------------------
 #Modeling Tools
@@ -889,15 +892,52 @@ class CYATOOLS_MT_facemaptools(Operator):
         return context.window_manager.invoke_props_dialog(self, width = 400)
 
     def draw(self, context):
-        props = bpy.context.scene.cyatools_oa
         layout=self.layout
-
         box = layout.box()
         box.operator( "cyatools.facemap_select_backside" , icon = 'LINKED')
 
 
-
 #---------------------------------------------------------------------------------------
+#CC3ツール
+#---------------------------------------------------------------------------------------
+class CYATOOLS_MT_cc3tools(Operator):
+    bl_idname = "cyatools.cc3tools"
+    bl_label = "cc3 tools"
+
+    def execute(self, context):
+        return{'FINISHED'}
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width = 400)
+
+    def draw(self, context):
+        #props = bpy.context.scene.cyatools_oa
+        layout=self.layout
+
+        box = layout.box()
+        box.label( text = 'quick operation' , icon = 'MODIFIER')
+
+        row = box.row()
+        row.operator( "cyatools.cc3_rename_bone" )
+        row.operator( "cyatools.cc3_transfer_vtx_grp" )
+
+        row.operator( "cyatools.cc3_append_bindpose" )
+
+        row.operator( "cyatools.cc3_saveload_uv_quick" ,text = 'save uv').mode = 'save'
+        row.operator( "cyatools.cc3_saveload_uv_quick" ,text = 'load uv').mode = 'load'
+
+
+        box = layout.box()
+        row = box.row()
+        row.operator( "cyatools.cc3_save_textures" )
+        row.operator( "cyatools.cc3_saveload_uv" ,text = 'save uv').mode = 'save'
+        row.operator( "cyatools.cc3_saveload_uv" ,text = 'load uv').mode = 'load'
+
+        row = box.row()
+        row.operator( "cyatools.collect_textures" )
+
+
+#--------------------------------------------------------------------------------------
 #Operator
 #---------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------
@@ -1969,7 +2009,9 @@ class CYATOOLS_OT_rename_dropper(Operator):
 
 
 #---------------------------------------------------------------------------------------
+#
 #Scene Setup Tools
+#
 #---------------------------------------------------------------------------------------
 
 class CYATOOLS_OT_scenesetup_makeproxy(Operator):
@@ -2004,7 +2046,6 @@ class CYATOOLS_OT_scenesetup_create_skin_parts(Operator):
     def execute(self, context):
         scenesetup.create_new_skin_parts()
         return {'FINISHED'}
-
 
 
 class CYATOOLS_OT_scenesetup_pick_collection_name(Operator):
@@ -2052,7 +2093,9 @@ class CYATOOLS_OT_scenesetup_mob_modify_vtxgrp(Operator):
         return {'FINISHED'}
 
 #---------------------------------------------------------------------------------------
+#
 #Facemap Tools
+#
 #---------------------------------------------------------------------------------------
 
 class CYATOOLS_OT_facemap_select_backside(Operator):
@@ -2062,6 +2105,105 @@ class CYATOOLS_OT_facemap_select_backside(Operator):
     def execute(self, context):
         facemap.select_backside()
         return {'FINISHED'}
+
+#---------------------------------------------------------------------------------------
+#
+#CC3パイプラインツール
+#
+#---------------------------------------------------------------------------------------
+
+class CYATOOLS_OT_cc3_save_textures(Operator):
+    bl_idname = "cyatools.cc3_save_textures"
+    bl_label = "save textures"
+
+    directory : StringProperty(subtype="FILE_PATH")
+
+    def execute(self, context):
+        cc3pipeline.save_textures(self.directory)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+#テクスチャを１マテリアルに集める
+class CYATOOLS_OT_cc3_collect_textures(Operator):
+    """新規マテリアルを生成してテクスチャを集める"""
+    bl_idname = "cyatools.cc3_collect_textures"
+    bl_label = "collect textures"
+    def execute(self, context):
+        cc3pipeline.collect_textures()
+        return {'FINISHED'}
+
+#UVの保存
+class CYATOOLS_OT_cc3_saveload_uv_quick(Operator):
+    """新規マテリアルを生成してテクスチャを集める"""
+    bl_idname = "cyatools.cc3_saveload_uv_quick"
+    bl_label = ""
+    mode : StringProperty()
+    def execute(self, context):
+        cc3pipeline.saveload_uv_quick(self.mode)
+        return {'FINISHED'}
+
+
+class CYATOOLS_OT_cc3_saveload_uv(Operator):
+    bl_idname = "cyatools.cc3_saveload_uv"
+    bl_label = "save uv(pickle)"
+
+    mode : StringProperty()
+    #directory : StringProperty(subtype="FILE_PATH")
+    filepath : bpy.props.StringProperty(subtype="FILE_PATH")
+
+    def execute(self, context):
+        cc3pipeline.saveload_uv(self.mode , self.filepath)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+#骨のリネーム
+class CYATOOLS_OT_cc3_rename_bone(Operator):
+    """CC3の骨をCH_Manの骨の名前にリネームする
+    骨を選択して実行する
+    使われていない骨が存在するので、モデルの頂点グループの転送を次に行う
+    """
+    bl_idname = "cyatools.cc3_rename_bone"
+    bl_label = "rename　bone"
+    def execute(self, context):
+        cc3pipeline.rename_bone()
+        return {'FINISHED'}
+
+class CYATOOLS_OT_cc3_transfer_vtx_grp(Operator):
+    """CC3の不要頂点グループを他の骨に転送する
+    モデルを選択して実行する
+    実行後は骨をCH_Manのものと差し替える
+    """
+    bl_idname = "cyatools.cc3_transfer_vtx_grp"
+    bl_label = "transfer vtx grp"
+    def execute(self, context):
+        cc3pipeline.transfer_vtx_grp()
+        return {'FINISHED'}
+
+class CYATOOLS_OT_cc3_append_bindpose(Operator):
+    """骨を載せ替えるためのバインドポーズにする"""
+
+    bl_idname = "cyatools.cc3_append_bindpose"
+    bl_label = "append bindpose"
+
+    def execute(self, context):
+        cc3pipeline.append_bindpose()
+        return {'FINISHED'}
+
+
+#UVの保存
+# class CYATOOLS_OT_cc3_load_uv(Operator):
+#     """新規マテリアルを生成してテクスチャを集める"""
+#     bl_idname = "cyatools.cc3_load_uv"
+#     bl_label = "load uv"
+#     def execute(self, context):
+#         cc3pipeline.load_uv()
+#         return {'FINISHED'}
 
 
 #---------------------------------------------------------------------------------------
@@ -2303,6 +2445,17 @@ classes = (
 
     #フェースマップツール
     CYATOOLS_OT_facemap_select_backside,
+
+    #cc3ツール
+    CYATOOLS_MT_cc3tools,
+    CYATOOLS_OT_cc3_save_textures,
+    CYATOOLS_OT_cc3_collect_textures,
+    CYATOOLS_OT_cc3_saveload_uv,
+    CYATOOLS_OT_cc3_saveload_uv_quick,
+    CYATOOLS_OT_cc3_rename_bone,
+    CYATOOLS_OT_cc3_transfer_vtx_grp,
+    CYATOOLS_OT_cc3_append_bindpose,
+
 
 )
 

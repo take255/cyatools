@@ -16,7 +16,7 @@ imp.reload(utils)
 #リグシェイプ
 #---------------------------------------------------------------------------------------
 def rigshape_change_scale(self,context):
-    props = bpy.context.scene.cyarigtools_props        
+    props = bpy.context.scene.cyarigtools_props
 
     utils.mode_p()
     for bone in utils.get_selected_bones():
@@ -28,14 +28,14 @@ def rigshape_revert():
     for bone in utils.get_selected_bones():
         bone.custom_shape = None
 
+
 def rigshape_append():
-    #filepath = RIGSHAPEPATH
     current_scene_name = bpy.context.scene.name
     filepath = bpy.utils.user_resource('SCRIPTS','addons') + '/cyatools/rigtools/rig.blend'
     #RigShape_Scn 無ければ作成する
     scene = 'RigShape_Scn'
     if bpy.data.scenes.get(scene) is None:
-        bpy.ops.scene.new(type='EMPTY')     
+        bpy.ops.scene.new(type='EMPTY')
         bpy.context.scene.name = scene
 
     utils.sceneActive(scene)
@@ -82,7 +82,7 @@ def rig_change_ctr(self,context):
     for r in RIGARRAY:
         for p in PROPARRAY[r]:
             for lr in ('l' , 'r'):
-                
+
                 ctr = 'ctr.%s.%s' % ( r , lr )
 
                 #if ctr in [o.name for o in bpy.data.objects]:
@@ -91,8 +91,8 @@ def rig_change_ctr(self,context):
                     prop_val = '%s_%s_%s' % (r,p,lr)
                     #print(ctr , prop , prop_val)
                     exec('amt.pose.bones[\'%s\'][\'%s\'] = props.%s' % ( ctr , prop , prop_val ) ) #amt.pose.bones[ctr.arm.l]['ikfk.l'] = props.arm_ikfk_l'
-                    exec('amt.pose.bones[\'%s\'].matrix = amt.pose.bones[\'%s\'].matrix' % (ctr,ctr))  # There is a need to update matrix. 
- 
+                    exec('amt.pose.bones[\'%s\'].matrix = amt.pose.bones[\'%s\'].matrix' % (ctr,ctr))  # There is a need to update matrix.
+
     bpy.context.view_layer.update()
 
 
@@ -102,13 +102,13 @@ def modify_rig_control_panel( rig , lr , propname , value ):
 
     ctr = 'ctr.%s.%s' % ( rig , lr )
 
-    if ctr in [b.name for b in amt.pose.bones]:    
+    if ctr in [b.name for b in amt.pose.bones]:
         prop = '%s.%s' % ( propname , lr )
         prop_val = '%s_%s_%s' % ( rig , propname , lr )
         print( ctr , prop , prop_val )
         exec('props.%s = %f' % ( prop_val ,value ) ) #amt.pose.bones[ctr.arm.l]['ikfk.l'] = props.arm_ikfk_l'
         exec('amt.pose.bones[\'%s\'][\'%s\'] = %f ' % ( ctr , prop , value ) ) #amt.pose.bones[ctr.arm.l]['ikfk.l'] = props.arm_ikfk_l'
-    
+
 
 def modify_rig_control_panel_key( rig , lr , propname ):
     amt = bpy.context.object
@@ -134,7 +134,7 @@ def copy_matrix():
     BONE_MATRIX_DIC.clear()
     utils.mode_p()
 
-    for bone in utils.get_selected_bones():        
+    for bone in utils.get_selected_bones():
         BONE_MATRIX_DIC[bone.name] = Matrix(bone.matrix)
         #m = Matrix(bone.matrix)
         #pos =(m[0][3] , m[1][3] , m[2][3]  )
@@ -165,7 +165,7 @@ def pose_copy_pasete(mode):
     if mode == "copy":
         BONE_MATRIX_DIC.clear()
 
-        for bone in utils.get_selected_bones():        
+        for bone in utils.get_selected_bones():
             BONE_MATRIX_DIC[bone.name] = Matrix(bone.matrix)
             #m = Matrix(bone.matrix)
             #pos =(m[0][3] , m[1][3] , m[2][3]  )
@@ -176,7 +176,7 @@ def pose_copy_pasete(mode):
     else:
         array = []
         for bone in bpy.context.selected_pose_bones:
-    
+
             num = get_parent_loop( bone , 0 )
             print(bone.name,num)
 

@@ -64,14 +64,14 @@ def doKeepArmature():
 
 def target_scene():
     props = bpy.context.scene.cyatools_oa
-    return props.target_scene_name    
+    return props.target_scene_name
 
 def keepTransform():
     props = bpy.context.scene.cyatools_oa
-    return props.keep_transform   
-    
+    return props.keep_transform
+
 #---------------------------------------------------------------------------------------
-#コレクションのソート 
+#コレクションのソート
 #---------------------------------------------------------------------------------------
 def collection_sort():
     children = []
@@ -102,12 +102,12 @@ def get_obj_from_collection(x):
 #何も含まれていないものを検索
 #---------------------------------------------------------------------------------------
 def remove_empty_collection():
-    noEmpty = False    
+    noEmpty = False
     for c in bpy.data.collections:
         if len(c.children) == 0  and len(c.objects) == 0:
             bpy.data.collections.remove(c)
             noEmpty = True
-    
+
     if noEmpty:
         remove_empty_collection()
 
@@ -147,7 +147,7 @@ def put_into_collection(current_scene_name , result ,scn):
     if not props.create_collection:
         col = scn.collection
         objects = [ob.name for ob in col.objects]
-        
+
         for dat in result:
             if not dat.obj.name in objects:
             #if not dat.obj in col.objects:
@@ -189,8 +189,8 @@ def put_into_mastercollection( result ,scn):
         # if not dat.obj.name in objects:
         #     col.objects.link(dat.obj)
             #bpy.data.collections[dat.colname].objects.unlink(dat.obj)
-            
-        
+
+
 
 
 #---------------------------------------------------------------------------------------
@@ -221,7 +221,7 @@ def convert_hair(hairarray, new_name , ob):
         #カーブにUVを設定することであとの調整を容易にする
         bpy.ops.curve.primitive_bezier_circle_add()
         circleobj = bpy.context.active_object
-        circleobj.scale = (0.01,0.01,0.01)                    
+        circleobj.scale = (0.01,0.01,0.01)
         circleobj.data.resolution_u = 1 #<<<<<元は６。あとで数値入力できるように調整
 
         bpy.ops.object.move_to_collection(collection_index = 0)
@@ -254,7 +254,7 @@ def convert_hair(hairarray, new_name , ob):
         else:
            new_obj_array.append(circleobj)
            new_obj_array.append(taperobj)
-    
+
     return new_obj_array
 
 
@@ -282,21 +282,21 @@ def apply_model_sortout(ob , new_name , isMirror ):
     if doDelSame:
         if bpy.data.objects.get(new_name) is not None:
             objs.remove(objs[new_name], do_unlink = True)
-        
+
     hairarray = []
     for mod in ob.modifiers:
         if mod.type == 'PARTICLE_SYSTEM':
             if not props.deleteparticle_apply:#髪の毛として処理しない
                 hairarray.append(mod.name)
                 isHair = True
- 
+
     #髪の毛でなければオブジェクトをコピーする。
     #髪の毛ならパーティクルをコンバートする
     if isHair:
         new_obj_array = convert_hair(hairarray, new_name , ob)
         for new_obj in new_obj_array:
             result = PublishedData(new_obj , col_name ,isMirror)
-   
+
     #髪の毛でない場合
     else:
         new_obj = ob.copy()
@@ -319,16 +319,16 @@ def apply_model_sortout(ob , new_name , isMirror ):
 #カーブならメッシュ化する。前のループで実行するとなぜかorgモデルまでメッシュ化してしまう。なのでここで実行する。
 #髪の毛はここでメッシュ化される
 #---------------------------------------------------------------------------------------
-def apply_model_modifier(dat): 
+def apply_model_modifier(dat):
 
     utils.act(dat.obj)
     bpy.ops.object.parent_clear(type = 'CLEAR_KEEP_TRANSFORM')#親子付けを切る
 
     #print('---------------------------------------------')
-    #print(dat.obj.name , dat.obj.type , not doKeepHair()) 
+    #print(dat.obj.name , dat.obj.type , not doKeepHair())
     if dat.obj.type == 'CURVE':
         if not doKeepHair():
-            bpy.ops.object.convert(target = 'MESH')            
+            bpy.ops.object.convert(target = 'MESH')
 
     #モディファイヤ適用
     #print('objname>>',dat.obj.name)
@@ -348,7 +348,7 @@ def apply_model_modifier(dat):
     if dat.mirror:
         bpy.ops.object.transform_apply( location = True , rotation=True , scale=True )
         mod = dat.obj.modifiers.new( 'mirror' , type = 'MIRROR' )
-        bpy.ops.object.modifier_apply(modifier=mod.name)   
+        bpy.ops.object.modifier_apply(modifier=mod.name)
 
     #スケールにマイナスが入っているならアプライする
 
@@ -368,7 +368,7 @@ def move_object_to_other_scene(mode):
 
         if mode:
             col.objects.unlink(ob)
-    
+
     put_into_collection(current , result ,bpy.data.scenes[target])
     scene.set_current()
     utils.sceneActive(target)
@@ -378,12 +378,12 @@ def move_object_to_other_scene(mode):
 #コレクションを別のシーンに移動
 #---------------------------------------------------------------------------------------
 def move_collection_to_other_scene(mode):
-    
+
     props = bpy.context.scene.cyatools_oa
     target = props.target_scene_name
 
     current = bpy.context.window.scene.name
-    collection = bpy.context.view_layer.active_layer_collection 
+    collection = bpy.context.view_layer.active_layer_collection
 
     move_collection_by_name( collection.name , target , mode )
 
@@ -398,7 +398,7 @@ def move_collection_by_name( name , target , mode ):
     if mode:
         for col in utils.collection.get_parent(c):
             col.children.unlink(c)
-        
+
     bpy.data.scenes[target].collection.children.link(c)
 
 
@@ -416,7 +416,7 @@ def apply_collection():
     only_directly_below = props.only_directly_below
     #current_scene_name = bpy.context.scene.name
     current_scene = bpy.context.scene
-    
+
     collection = utils.collection.get_active()
     fix_scene = bpy.data.scenes[target_scene()]
 
@@ -438,7 +438,7 @@ def apply_collection():
             Collections.clear()
             get_obj_from_collection( col )#Collections配列に取得
             new_obj = apply_collection_loop(col.name)
-            
+
             result.append( PublishedData( new_obj , collection.name ,False ) )
 
     else:
@@ -456,7 +456,7 @@ def apply_collection():
     # if fix_scene != collection.name:
     #     put_into_mastercollection( result , current )
         #put_into_collection(current_scene_name , result , utils.sceneActive(fix_scene))
-    
+
     ApplyCollectionMode = False
 
 
@@ -478,13 +478,13 @@ def apply_collection_loop(name ):
 
     #選択されたコレクションにリンクされたオブジェクトを取得
     #print(Collections)
-    for ob in bpy.context.scene.objects: 
-        
+    for ob in bpy.context.scene.objects:
+
         user_cols = set([x.name for x in ob.users_collection])
         cols = set(Collections)
         #print(ob.name , user_cols & cols)
-        #if set(cols) in Collections: 
-        if len(user_cols & cols) > 0: 
+        #if set(cols) in Collections:
+        if len(user_cols & cols) > 0:
             #ob.hide_viewport = True
             utils.select(ob,True)
 
@@ -494,7 +494,7 @@ def apply_collection_loop(name ):
     for ob in utils.selected():
         print(ob.type)
         if ob.type == 'MESH' or ob.type == 'CURVE':
-                    
+
             result.append( apply_model_sortout( ob , ob.name + '_tmp', False ) )
         else:
             print(ob.name)
@@ -552,7 +552,7 @@ def instance_substantial_loop( col , current , matrix):
     Collections.clear()
     get_obj_from_collection(col_org)
 
-    for ob in bpy.context.scene.objects:        
+    for ob in bpy.context.scene.objects:
         if ob.users_collection[0].name in Collections:
             # print('new_obj>>>>2',ob.name)
             # print(ob.hide_viewport)
@@ -563,7 +563,7 @@ def instance_substantial_loop( col , current , matrix):
 
     obarray = []
     selected = utils.selected()
-    
+
     for ob in selected:
         utils.scene.move_obj_scene(ob)#オブジェクトが他のシーンある場合はそこに移動する
         utils.act(ob)
@@ -594,14 +594,14 @@ def instance_substantial_loop( col , current , matrix):
                     except:
                         bpy.context.object.modifiers.remove(mod)
 
-            obj.matrix_world =  matrix @ obj.matrix_world 
+            obj.matrix_world =  matrix @ obj.matrix_world
 
         act = utils.getActiveObj()
         #act.hide_viewport = False
     #bpy.context.view_layer.update()
     utils.deselectAll()
     scn = utils.sceneActive(current)
-    
+
 
 #---------------------------------------------------------------------------------------
 #apply Collection Instance
@@ -637,10 +637,10 @@ def apply_collection_instance():
 
         #If actname contain '_org' , delete '_org'.
         actname = act.name
-        
+
         if actname.find('_org') != -1:
             actname = actname.replace('_org','')
-        
+
 
         #トランスフォームは一度初期化。マトリックスは最後にかける
         #コンストレインでミラーしている場合は、姿勢を戻したときにコンストレインが不具合を起こす
@@ -654,7 +654,7 @@ def apply_collection_instance():
 
         bpy.context.view_layer.update()#コンストレイン解除時のマトリックスを強制アップデート
         matrix_source = Matrix(act.matrix_world) #コピー元のモデルのためのマトリックス
-        
+
         act.matrix_world = Matrix()
 
 
@@ -674,7 +674,7 @@ def apply_collection_instance():
         #コレクションが無い場合はカレントにコピーしてくる
         if not utils.collection.exist(col):
             utils.collection.move_col(col)
-        
+
         instance_substantial_loop( col , current ,Matrix())
 
         for dat in Duplicated:
@@ -686,7 +686,7 @@ def apply_collection_instance():
 
 
         #姿勢を元に戻し、コンストレインを復帰させる
-        #元のコンスト状態を保持しておらず、すべてONにする処理をしてるので、問題がおきるかも 
+        #元のコンスト状態を保持しておらず、すべてONにする処理をしてるので、問題がおきるかも
         act.matrix_world = matrix_source
         for const in act.constraints:
             const.mute = False
@@ -735,7 +735,7 @@ def apply_collection_instance():
             for v in dic.values():
                 utils.deselectAll()
                 utils.multiSelection(v)
-        
+
                 bpy.ops.object.join()
                 transform_apply()
                 act = utils.getActiveObj()
@@ -798,10 +798,10 @@ def apply_collection_instance_():
 
     #If actname contain '_org' , delete '_org'.
     actname = act.name
-    
+
     if actname.find('_org') != -1:
         actname = actname.replace('_org','')
-    
+
 
     #トランスフォームは一度初期化。マトリックスは最後にかける
     #コンストレインでミラーしている場合は、姿勢を戻したときにコンストレインが不具合を起こす
@@ -815,7 +815,7 @@ def apply_collection_instance_():
 
     bpy.context.view_layer.update()#コンストレイン解除時のマトリックスを強制アップデート
     matrix_source = Matrix(act.matrix_world) #コピー元のモデルのためのマトリックス
-    
+
     act.matrix_world = Matrix()
 
 
@@ -835,7 +835,7 @@ def apply_collection_instance_():
     #コレクションが無い場合はカレントにコピーしてくる
     if not utils.collection.exist(col):
         utils.collection.move_col(col)
-    
+
     instance_substantial_loop( col , current ,Matrix())
 
     for dat in Duplicated:
@@ -847,7 +847,7 @@ def apply_collection_instance_():
 
 
     #姿勢を元に戻し、コンストレインを復帰させる
-    #元のコンスト状態を保持しておらず、すべてONにする処理をしてるので、問題がおきるかも 
+    #元のコンスト状態を保持しておらず、すべてONにする処理をしてるので、問題がおきるかも
     act.matrix_world = matrix_source
     for const in act.constraints:
         const.mute = False
@@ -895,7 +895,7 @@ def apply_collection_instance_():
         for v in dic.values():
             utils.deselectAll()
             utils.multiSelection(v)
-     
+
             bpy.ops.object.join()
             transform_apply()
             act = utils.getActiveObj()
@@ -948,7 +948,7 @@ def model_org():
     if not fix_scn:
         return
     current_scene_name = bpy.context.scene.name
-    
+
     result = []
     for ob in utils.selected():
         isOrg = False
@@ -976,7 +976,7 @@ def model_org():
     #シーンごとのコレクションにまとめるので下記は不要。
     # この行を有効にすると親のコレクションにも含まれてしまい2重に表示されてしまう。
     #bpy.ops.object.make_links_scene(scene = fix_scene)
-    
+
     for dat in result:
         utils.sceneUnlink(dat.obj)
 
@@ -987,7 +987,7 @@ def model_org():
     if domerge:
         utils.multiSelection([x.obj for x in result])
         bpy.ops.object.join()
-    
+
     scene.set_current()
 
 

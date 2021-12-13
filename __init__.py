@@ -51,7 +51,7 @@ bl_info = {
 "description": "cyatools",
 "category": "Object"}
 
-RIGSHAPEPATH = "E:\data\googledrive\lib\model/rig.blend"
+LIBPATH = r"E:\data\OneDrive\projects\_lib\Blender"
 ADDONPATH =r"G:\共有ドライブ\fs_yakushi\Art\Character\Library\Blender_Addon\cyatools.ZIP"
 
 #---------------------------------------------------------------------------------------
@@ -60,14 +60,14 @@ ADDONPATH =r"G:\共有ドライブ\fs_yakushi\Art\Character\Library\Blender_Addo
 class CYATOOLS_MT_addonpreferences(AddonPreferences):
     bl_idname = __name__
 
-    shape_path : StringProperty(default = RIGSHAPEPATH )
+    lib_path : StringProperty(default = LIBPATH )
     addon_path : StringProperty(default = ADDONPATH )
 
     def draw(self, context):
         layout = self.layout
         layout.label(text='Rig Shape Path')
         col = layout.column()
-        col.prop(self, 'shape_path',text = 'shape_path', expand=True)
+        col.prop(self, 'lib_path',text = 'lib', expand=True)
         col.prop(self, 'addon_path',text = 'addon_path', expand=True)
         col.operator( "cyatools.preferences_install_addon", icon = 'TEXTURE')
 
@@ -145,3 +145,4 @@ def unregister():
     idmaptools.unregister()
     ue4tools.unregister()
     scenemanager.unregister()
+
