@@ -31,7 +31,6 @@ from . import importexport
 from . import objectlist
 from . import idmaptools
 from . import ue4tools
-from . import scenemanager
 
 imp.reload(maintools)
 imp.reload(modifierlist)
@@ -40,12 +39,11 @@ imp.reload(importexport)
 imp.reload(objectlist)
 imp.reload(idmaptools)
 imp.reload(ue4tools)
-imp.reload(scenemanager)
 
 bl_info = {
 "name": "cyatools",
 "author": "Takehito Tsuchiya",
-"version": (0, 3.21),
+"version": (0, 3.24),
 "blender": (2, 90, 1),
 "location" : "CYA",
 "description": "cyatools",
@@ -86,8 +84,6 @@ class CYATOOLS_OT_preferences_install_addon(bpy.types.Operator):
 #メッセージダイアログ
 #スペース区切りで改行する
 #使い方
-
-
 class CYATOOLS_MT_messagebox(bpy.types.Operator):
     bl_idname = "cyatools.messagebox"
     bl_label = ""
@@ -110,7 +106,6 @@ class CYATOOLS_MT_messagebox(bpy.types.Operator):
         buf = self.message.split(' ')
         for s in buf:
             self.layout.label(text = s)
-        #self.layout.label("")
 
 
 classes = (
@@ -131,7 +126,6 @@ def register():
     objectlist.register()
     idmaptools.register()
     ue4tools.register()
-    scenemanager.register()
 
 def unregister():
     for cls in classes:
@@ -144,5 +138,4 @@ def unregister():
     objectlist.unregister()
     idmaptools.unregister()
     ue4tools.unregister()
-    scenemanager.unregister()
 

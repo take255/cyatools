@@ -41,7 +41,6 @@ from . import etc
 from . import blendshape
 from . import scenesetup
 from . import facemap
-from . import cc3pipeline
 
 imp.reload(utils)
 imp.reload(modifier)
@@ -58,12 +57,6 @@ imp.reload(etc)
 imp.reload(blendshape)
 imp.reload(scenesetup)
 imp.reload(facemap)
-imp.reload(cc3pipeline)
-
-
-#頂点カラーデータ
-#MATERIAL_TYPE = ( ('METAL','METAL','') , ('LEATHER','LEATHER','') , ('CLOTH','CLOTH','') , ('OTHERS','OTHERS','') , ('BUFFER','BUFFER','') )
-#AXIS = (('X','X','X'), ('Y','Y','Y'), ('Z','Z','Z'), ('-X','-X','-X'), ('-Y','-Y','-Y'), ('-Z','-Z','-Z'))
 
 
 MOB_OFFSET_PATH = 'D:/Prj/B01/Assets/Characters/Common/Data/Mob_Offset.csv'
@@ -180,16 +173,18 @@ class CYATOOLS_Props_OA(PropertyGroup):
     weight_transfer_selected_vtx : BoolProperty(name="selected vtx" ,  default = False)
     weight_transfer_samplevtx : IntProperty(name = "sample", default=3 )
 
+
     bind_auto_bool : BoolProperty(name="auto" ,  default = True)
     batch_weight_transfer_string : StringProperty(name = "suffix")
     threshold_selectweight : FloatProperty(name = "threshold", default=0.9 )
 
-
+    #ミラーウェイト関連
     weightmirror_dir : EnumProperty(items=(
         ('L>R', 'L>R', ''),
         ('R>L', 'R>L', '')),
         default = 'L>R'
         )
+    weightmirror_selected_vtx : BoolProperty(name="selected vtx" ,  default = False)
 
     skin_filepath : StringProperty(name = "path")
 
@@ -229,7 +224,6 @@ class CYATOOLS_PT_toolPanel(utils.panel):
         self.layout.operator("cyatools.blendshape_tools", icon='MOD_SKIN')
         self.layout.operator("cyatools.scenesetuptools", icon='SCENE_DATA')
         self.layout.operator("cyatools.facemaptools", icon='SCENE_DATA')
-        self.layout.operator("cyatools.cc3tools", icon='SCENE_DATA')
 
 #---------------------------------------------------------------------------------------
 #Modeling Tools
@@ -266,7 +260,6 @@ class CYATOOLS_MT_modeling_tools(Operator):
         box2.operator( "cyatools.group" , icon = 'GROUP')
         box2.operator( "cyatools.locator_tobone" , icon = 'CONSTRAINT_BONE')
         box2.operator( "cyatools.locator_tobone_keep" , icon = 'CONSTRAINT_BONE')
-        #box2.operator( "cyatools.modeling_separate_face" , icon = 'CONSTRAINT_BONE')
 
         #トランスフォーム
         box3 = col.box()
@@ -286,6 +279,11 @@ class CYATOOLS_MT_modeling_tools(Operator):
         row5 = box5.row()
         row5.operator( "cyatools.modeling_copy_vertex_pos" , icon = 'MOD_MIRROR')
         row5.operator( "cyatools.modeling_paste_vertex_pos" , icon = 'MOD_MIRROR')
+
+        row6 = box5.row()
+        row6.operator( "cyatools.modeling_copy_vertex_pos_blendshape" , icon = 'MOD_MIRROR')
+        row6.operator( "cyatools.modeling_paste_vertex_pos_blendshape" , icon = 'MOD_MIRROR')
+
 
         #material UV
         box5 = col.box()
@@ -432,16 +430,11 @@ class CYATOOLS_MT_modifier_tools(Operator):
 
         for m in mode:
             row1.operator( "cyatools.constraint_asign" , icon = m[1]).mode = m[0]
-        # row1.operator( "cyatools.modifier_apply" , icon = 'CHECKBOX_HLT')
-        # row1.operator( "cyatools.modifier_show" , icon = 'HIDE_OFF')
-        # row1.operator( "cyatools.modifier_hide" , icon = 'HIDE_ON')
-        # row1.operator( "cyatools.modifier_remove" , icon = 'TRASH')
 
         col = box.column()
         row1 = col.row()
         for i,m in enumerate((('apply','PROP_ON'),('delate','CANCEL'))):
             row1.operator( "cyatools.constraint_apply_all" ,text = m[0] + ' all', icon = m[1] ).mode = i
-        #row1.operator( "cyatools.constraint_apply_all" ,text = 'delete all', icon = 'HIDE_ON').mode = 1
 
 
 
@@ -614,6 +607,7 @@ class CYATOOLS_MT_skinningtools(Operator):
 
         row1 = col1.row()
         row1.prop(props, 'weightmirror_dir' , expand=True)
+        col1.prop(props, "weightmirror_selected_vtx")
 
 
 
@@ -665,16 +659,6 @@ class CYATOOLS_MT_skinningtools(Operator):
         box.label(text = 'select')
         box.operator("cyatools.skinning_selectgrp"  , icon = 'MOD_MIRROR')
         box.prop(props, 'threshold_selectweight' , expand=True)
-
-
-
-        #row = layout.row(align=False)
-        # box = row.box()
-        # box.label(text = '文字を指定して削除')
-        # box.operator("cyatools.skinning_delete_with_word")
-        # box.prop(props, "vertexgrp_string", icon='BLENDER', toggle=True)
-
-
 
 
 #---------------------------------------------------------------------------------------
@@ -767,12 +751,9 @@ class CYATOOLS_MT_blendshape_tools(Operator):
 
         row = box.row()
         row.operator( "cyatools.blendshape_insert_all_keys" , icon = 'MOD_MIRROR')
-        row.operator( "cyatools.blendshape_remove_shapekey_unmuted" , icon = 'MOD_MIRROR')
-
-
-        row = box.row()
-        row.operator( "cyatools.blendshape_remove_all_keys" , icon = 'MOD_MIRROR')
         row.operator( "cyatools.blendshape_shape_key_clear" , icon = 'MOD_MIRROR')
+
+
         row = box.row()
         row.operator( "cyatools.blendshape_copy_action")
         row.operator( "cyatools.blendshape_push_down")
@@ -780,6 +761,19 @@ class CYATOOLS_MT_blendshape_tools(Operator):
         row = box.row()
         row.operator( "cyatools.blendshape_shepekey_mute" ,text = 'Mute').mode = True
         row.operator( "cyatools.blendshape_shepekey_mute" ,text = 'Unute').mode = False
+
+
+        box = layout.box()
+        box.label( text = 'blendshape key remove' , icon = 'MODIFIER')
+        row = box.row()
+        row.operator( "cyatools.blendshape_remove_shapekey_unmuted" , icon = 'MOD_MIRROR')
+        row.operator( "cyatools.blendshape_remove_shapekey_numbered" , icon = 'MOD_MIRROR')
+
+        row = box.row()
+        row.operator( "cyatools.blendshape_remove_all_keys" , icon = 'MOD_MIRROR')
+
+
+
 
 
         box = layout.box()
@@ -799,6 +793,11 @@ class CYATOOLS_MT_blendshape_tools(Operator):
         row = box.row()
         row.operator( "cyatools.blendshape_mob_facial_cleanup" , icon = 'MOD_MIRROR')
 
+        box = layout.box()
+        box.label( text = 'Mob Variation' , icon = 'MODIFIER')
+        row = box.row()
+        row.operator( "cyatools.blendshape_mob_extruct" , icon = 'MOD_MIRROR')
+
 
 
 #---------------------------------------------------------------------------------------
@@ -814,25 +813,16 @@ class CYATOOLS_MT_scenesetuptools(Operator):
 
     def invoke(self, context, event):
         #ウインドウを開くタイミングでモブデータを読み込む
-        #self.mob_type.clear()
         scenesetup.MOB_TYPE_DATA.clear()
         props = bpy.context.scene.cyatools_oa
-        #props.mob_offset.clear()
         props.mob_offset_all.clear()
 
         with open(MOB_OFFSET_PATH, encoding='utf8', newline='') as f:
             csvreader = csv.reader(f)
             for row in csvreader:
-                #item = [row[1].row[0],row[1]]
-                #self.mob_type.append([row[1].row[0],row[1]])
-                #props.mob_offset.add().name =item
-                #print(row[0])
-                #item = [row[1],row[0],row[1]]
                 props.mob_offset_all.add().name = row[0]
                 scenesetup.MOB_TYPE_DATA[row[0]] = row[1]
-                #self.mob_type.append(item)
 
-        #props.mob_offset.items = self.mob_type
 
         return context.window_manager.invoke_props_dialog(self, width = 400)
 
@@ -896,45 +886,6 @@ class CYATOOLS_MT_facemaptools(Operator):
         box = layout.box()
         box.operator( "cyatools.facemap_select_backside" , icon = 'LINKED')
 
-
-#---------------------------------------------------------------------------------------
-#CC3ツール
-#---------------------------------------------------------------------------------------
-class CYATOOLS_MT_cc3tools(Operator):
-    bl_idname = "cyatools.cc3tools"
-    bl_label = "cc3 tools"
-
-    def execute(self, context):
-        return{'FINISHED'}
-
-    def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self, width = 400)
-
-    def draw(self, context):
-        #props = bpy.context.scene.cyatools_oa
-        layout=self.layout
-
-        box = layout.box()
-        box.label( text = 'quick operation' , icon = 'MODIFIER')
-
-        row = box.row()
-        row.operator( "cyatools.cc3_rename_bone" )
-        row.operator( "cyatools.cc3_transfer_vtx_grp" )
-
-        row.operator( "cyatools.cc3_append_bindpose" )
-
-        row.operator( "cyatools.cc3_saveload_uv_quick" ,text = 'save uv').mode = 'save'
-        row.operator( "cyatools.cc3_saveload_uv_quick" ,text = 'load uv').mode = 'load'
-
-
-        box = layout.box()
-        row = box.row()
-        row.operator( "cyatools.cc3_save_textures" )
-        row.operator( "cyatools.cc3_saveload_uv" ,text = 'save uv').mode = 'save'
-        row.operator( "cyatools.cc3_saveload_uv" ,text = 'load uv').mode = 'load'
-
-        row = box.row()
-        row.operator( "cyatools.collect_textures" )
 
 
 #--------------------------------------------------------------------------------------
@@ -1107,14 +1058,6 @@ class CYATOOLS_OT_instance_replace(Operator):
     def execute(self, context):
         locator.instance_replace()
         return {'FINISHED'}
-
-# class CYATOOLS_OT_instance_invert_last_selection(Operator):
-#     """Inverse selected objects using last selection."""
-#     bl_idname = "cyatools.instance_invert_last_selection"
-#     bl_label = "invert using last selection"
-#     def execute(self, context):
-#         locator.invert_last_selection()
-#         return {'FINISHED'}
 
 
 #---------------------------------------------------------------------------------------
@@ -1363,28 +1306,6 @@ class CYATOOLS_OT_constraint_apply_all(Operator):
         constraint.apply_all(self.mode)
         return {'FINISHED'}
 
-#---------------------------------------------------------------------------------------
-#helper
-#---------------------------------------------------------------------------------------
-
-# Add bone at the selected objects
-# class CYATOOLS_OT_locator_add_bone(Operator):
-#     """# Add bone at the selected objects"""
-#     bl_idname = "cyatools.locator_add_bone"
-#     bl_label = "add bone"
-#     def execute(self, context):
-#         locator.add_bone()
-#         return {'FINISHED'}
-
-# class CYATOOLS_OT_locator_snap_bone_at_obj(Operator):
-#     """# Add bone at the selected objects"""
-#     bl_idname = "cyatools.locator_snap_bone_at_obj"
-#     bl_label = "snap bone"
-#     def execute(self, context):
-#         locator.snap_bone_at_obj()
-#         return {'FINISHED'}
-
-
 
 #---------------------------------------------------------------------------------------
 #transform
@@ -1421,17 +1342,6 @@ rot : スケールを用いず回転で反転する"""
     def execute(self, context):
         locator.mirror(self.op)
         return {'FINISHED'}
-
-#インスタンスをミラーするが、トランスフォームのコンストレインをしない
-# class CYATOOLS_OT_instance_mirror_geom(Operator):
-#     """インスタンスをミラーする
-# トランスフォームのコンストレインをしない"""
-#     bl_idname = "cyatools.instance_mirror_geom"
-#     bl_label = ""
-#     op : StringProperty(default='x')
-#     def execute(self, context):
-#         locator.mirror_geom(self.op)
-#         return {'FINISHED'}
 
 
 #オブジェクトをX軸だけapply
@@ -1515,6 +1425,25 @@ class CYATOOLS_OT_modeling_paste_vertex_pos(Operator):
     def execute(self, context):
         modeling.paste_vertex_pos()
         return {'FINISHED'}
+
+
+class CYATOOLS_OT_modeling_paste_vertex_pos_blendshape(Operator):
+    """ブレンドシェイプに頂点の位置をペースト"""
+    bl_idname = "cyatools.modeling_paste_vertex_pos_blendshape"
+    bl_label = "paste vtx blend"
+    def execute(self, context):
+        modeling.paste_vertex_pos_blendshape()
+        return {'FINISHED'}
+
+class CYATOOLS_OT_modeling_copy_vertex_pos_blendshape(Operator):
+    """ブレンドシェイプからに頂点の位置をコピー"""
+    bl_idname = "cyatools.modeling_copy_vertex_pos_blendshape"
+    bl_label = "copy vtx blend"
+    def execute(self, context):
+        modeling.copy_vertex_pos_blendshape()
+        return {'FINISHED'}
+
+
 
 class CYATOOLS_OT_modeling_normal_180deg(Operator):
     """自動スムーズにして角度を180度に設定"""
@@ -1607,12 +1536,21 @@ class CYATOOLS_OT_blendshape_insert_all_keys(Operator):
         return {'FINISHED'}
 
 class CYATOOLS_OT_blendshape_remove_shapekey_unmuted(Operator):
-    """現在のフレームにキーを挿入"""
+    """ミュートされていないキーを削除"""
     bl_idname = "cyatools.blendshape_remove_shapekey_unmuted"
     bl_label = "remove unmuted"
     def execute(self, context):
         blendshape.remove_shapekey_unmuted()
         return {'FINISHED'}
+
+class CYATOOLS_OT_blendshape_remove_shapekey_numbered(Operator):
+    """末尾に番号が入ったキーを削除"""
+    bl_idname = "cyatools.blendshape_remove_shapekey_numbered"
+    bl_label = "remove numbered"
+    def execute(self, context):
+        blendshape.remove_shapekey_numbered()
+        return {'FINISHED'}
+
 
 class CYATOOLS_OT_blendshape_shape_key_clear(Operator):
     """シェイプキーをクリアする(削除はしない)"""
@@ -1659,6 +1597,18 @@ class CYATOOLS_OT_blendshape_mob_facial_cleanup(Operator):
     bl_label = "mob facial cleanup"
     def execute(self, context):
         blendshape.mob_facial_cleanup()
+        return {'FINISHED'}
+
+#モブバリエーションの抽出
+class CYATOOLS_OT_blendshape_mob_extruct(Operator):
+    """モブのブレンドシェイプのクリンナップ
+    Faceitで作成して４つのモブ用フェイシャルターゲットを作成したら実行する
+    余分なターゲットを削除して、ターゲット名を修正する
+    """
+    bl_idname = "cyatools.blendshape_mob_extruct"
+    bl_label = "mob extruct"
+    def execute(self, context):
+        blendshape.mob_extruct()
         return {'FINISHED'}
 
 #---------------------------------------------------------------------------------------
@@ -1810,7 +1760,6 @@ class CYATOOLS_OT_skinning_remove_weight_selectedVTX(Operator):
         return {'FINISHED'}
 
 
-
 class CYATOOLS_OT_skinning_delete_with_word(Operator):
     """指定された文字列が含まれていないバーテックスグループを削除する"""
     bl_idname = "cyatools.skinning_delete_with_word"
@@ -1844,17 +1793,6 @@ class CYATOOLS_OT_skinning_delete_all_vtxgrp(Operator):
     def execute(self, context):
         skinning.delete_all_vtxgrp()
         return {'FINISHED'}
-
-# class CYATOOLS_OT_skinning_rename_with_csvtable(Operator):
-#     """頂点グループをcsvの変換テーブルを使ってリネーム"""
-#     bl_idname = "cyatools.skinning_rename_with_csvtable"
-#     bl_label = "rename vtx grp"
-#     def execute(self, context):
-#         skinning.rename_with_csvtable()
-#         return {'FINISHED'}
-
-
-
 
 class CYATOOLS_OT_skinning_selectgrp(Operator):
     """選択した頂点グループを閾値以上のウェイトの頂点を選択
@@ -2106,105 +2044,6 @@ class CYATOOLS_OT_facemap_select_backside(Operator):
         facemap.select_backside()
         return {'FINISHED'}
 
-#---------------------------------------------------------------------------------------
-#
-#CC3パイプラインツール
-#
-#---------------------------------------------------------------------------------------
-
-class CYATOOLS_OT_cc3_save_textures(Operator):
-    bl_idname = "cyatools.cc3_save_textures"
-    bl_label = "save textures"
-
-    directory : StringProperty(subtype="FILE_PATH")
-
-    def execute(self, context):
-        cc3pipeline.save_textures(self.directory)
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
-
-#テクスチャを１マテリアルに集める
-class CYATOOLS_OT_cc3_collect_textures(Operator):
-    """新規マテリアルを生成してテクスチャを集める"""
-    bl_idname = "cyatools.cc3_collect_textures"
-    bl_label = "collect textures"
-    def execute(self, context):
-        cc3pipeline.collect_textures()
-        return {'FINISHED'}
-
-#UVの保存
-class CYATOOLS_OT_cc3_saveload_uv_quick(Operator):
-    """新規マテリアルを生成してテクスチャを集める"""
-    bl_idname = "cyatools.cc3_saveload_uv_quick"
-    bl_label = ""
-    mode : StringProperty()
-    def execute(self, context):
-        cc3pipeline.saveload_uv_quick(self.mode)
-        return {'FINISHED'}
-
-
-class CYATOOLS_OT_cc3_saveload_uv(Operator):
-    bl_idname = "cyatools.cc3_saveload_uv"
-    bl_label = "save uv(pickle)"
-
-    mode : StringProperty()
-    #directory : StringProperty(subtype="FILE_PATH")
-    filepath : bpy.props.StringProperty(subtype="FILE_PATH")
-
-    def execute(self, context):
-        cc3pipeline.saveload_uv(self.mode , self.filepath)
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
-
-#骨のリネーム
-class CYATOOLS_OT_cc3_rename_bone(Operator):
-    """CC3の骨をCH_Manの骨の名前にリネームする
-    骨を選択して実行する
-    使われていない骨が存在するので、モデルの頂点グループの転送を次に行う
-    """
-    bl_idname = "cyatools.cc3_rename_bone"
-    bl_label = "rename　bone"
-    def execute(self, context):
-        cc3pipeline.rename_bone()
-        return {'FINISHED'}
-
-class CYATOOLS_OT_cc3_transfer_vtx_grp(Operator):
-    """CC3の不要頂点グループを他の骨に転送する
-    モデルを選択して実行する
-    実行後は骨をCH_Manのものと差し替える
-    """
-    bl_idname = "cyatools.cc3_transfer_vtx_grp"
-    bl_label = "transfer vtx grp"
-    def execute(self, context):
-        cc3pipeline.transfer_vtx_grp()
-        return {'FINISHED'}
-
-class CYATOOLS_OT_cc3_append_bindpose(Operator):
-    """骨を載せ替えるためのバインドポーズにする"""
-
-    bl_idname = "cyatools.cc3_append_bindpose"
-    bl_label = "append bindpose"
-
-    def execute(self, context):
-        cc3pipeline.append_bindpose()
-        return {'FINISHED'}
-
-
-#UVの保存
-# class CYATOOLS_OT_cc3_load_uv(Operator):
-#     """新規マテリアルを生成してテクスチャを集める"""
-#     bl_idname = "cyatools.cc3_load_uv"
-#     bl_label = "load uv"
-#     def execute(self, context):
-#         cc3pipeline.load_uv()
-#         return {'FINISHED'}
-
 
 #---------------------------------------------------------------------------------------
 #ここから下のリネームツール、未対応
@@ -2279,12 +2118,6 @@ classes = (
     CYATOOLS_MT_curvetools,
     CYATOOLS_MT_scenesetuptools,
     CYATOOLS_MT_facemaptools,
-    #CYATOOLS_MT_materialtools,
-    #CYATOOLS_MT_etc,
-    #CYATOOLS_MT_particletools,
-
-    # Curve Tool
-    #CYATOOLS_OT_curve_create_with_bevel,
     CYATOOLS_OT_curve_create_liner,
     CYATOOLS_OT_curve_assign_bevel,
     CYATOOLS_OT_curve_assign_circle_bevel,
@@ -2298,16 +2131,10 @@ classes = (
     CYATOOLS_OT_replace_locator,
     CYATOOLS_OT_replace_locator_facenormal,
     CYATOOLS_OT_group,
-    # CYATOOLS_OT_restore_child,
-    # CYATOOLS_OT_preserve_child,
-    # CYATOOLS_OT_collections_hide,
-    # CYATOOLS_OT_preserve_collections,
     CYATOOLS_OT_collection_sort,
     CYATOOLS_OT_locator_tobone,
     CYATOOLS_OT_locator_tobone_keep,
     CYATOOLS_OT_modeling_separate_face,
-    # CYATOOLS_OT_locator_add_bone,
-    # CYATOOLS_OT_locator_snap_bone_at_obj,
 
 
     #モデリング
@@ -2317,8 +2144,11 @@ classes = (
     CYATOOLS_OT_modeling_mirror_l_to_r,
     CYATOOLS_OT_modeling_copy_vertex_pos,
     CYATOOLS_OT_modeling_paste_vertex_pos,
+    CYATOOLS_OT_modeling_paste_vertex_pos_blendshape,
+    CYATOOLS_OT_modeling_copy_vertex_pos_blendshape,
+
+
     CYATOOLS_OT_modeling_normal_180deg,
-    #CYATOOLS_OT_modeling_copy_action,
     CYATOOLS_OT_modeling_extract_missingparts,
     CYATOOLS_OT_modeling_extract_missingparts2,
 
@@ -2335,7 +2165,6 @@ classes = (
     CYATOOLS_OT_instance_instancer,
     CYATOOLS_OT_instance_substantial,
     CYATOOLS_OT_instance_replace,
-    #CYATOOLS_OT_instance_invert_last_selection,
 
     # modifier
     CYATOOLS_OT_modifier_asign,
@@ -2362,15 +2191,6 @@ classes = (
     CYATOOLS_OT_apply_particle_instance,
     CYATOOLS_OT_apply_model,
     CYATOOLS_OT_move_collection,
-
-
-    # etc
-    # CYATOOLS_OT_transform_rotate_axis,
-    # CYATOOLS_OT_transform_scale_abs,
-    # CYATOOLS_OT_constraint_to_bone,
-    # CYATOOLS_OT_refernce_make_proxy,
-    # CYATOOLS_OT_refernce_make_link,
-    # CYATOOLS_OT_invert_pose_blendshape,
 
     #リネーム
     CYATOOLS_MT_rename,
@@ -2401,22 +2221,18 @@ classes = (
     CYATOOLS_OT_skinning_delete_with_word,
     CYATOOLS_OT_skinning_delete_not_exist_vtxgrp,
     CYATOOLS_OT_skinning_delete_all_vtxgrp,
-    #CYATOOLS_OT_skinning_mirror_transfer,
     CYATOOLS_OT_skinning_delete_unselected_vtxgroup,
 
-    #CYATOOLS_OT_skinning_rename_with_csvtable,
     CYATOOLS_MT_skinning_rename_with_csvtable,
     CYATOOLS_OT_skinning_export_vertexgroup_list,
     CYATOOLS_MT_skinning_transfer_with_csvtable,
     CYATOOLS_OT_skinning_selectgrp,
-    #CYATOOLS_MT_skinning_filebrowse,
 
     #マテリアル
     CYATOOLS_OT_material_reload_texture,
     CYATOOLS_OT_material_remove_submaterial,
     CYATOOLS_OT_material_add_uv,
     CYATOOLS_OT_remove_uv_index,
-
 
     #ブレンドシェイプ
     CYATOOLS_OT_blendshape_copy_vertex_pos,
@@ -2430,7 +2246,10 @@ classes = (
     CYATOOLS_OT_blendshape_push_down,
     CYATOOLS_OT_blendshape_shepekey_mute,
     CYATOOLS_OT_blendshape_remove_shapekey_unmuted,
+    CYATOOLS_OT_blendshape_remove_shapekey_numbered,
     CYATOOLS_OT_blendshape_mob_facial_cleanup,
+    CYATOOLS_OT_blendshape_mob_extruct,
+
 
     #シーンセットアップ
     CYATOOLS_OT_scenesetup_makeproxy,
@@ -2445,16 +2264,6 @@ classes = (
 
     #フェースマップツール
     CYATOOLS_OT_facemap_select_backside,
-
-    #cc3ツール
-    CYATOOLS_MT_cc3tools,
-    CYATOOLS_OT_cc3_save_textures,
-    CYATOOLS_OT_cc3_collect_textures,
-    CYATOOLS_OT_cc3_saveload_uv,
-    CYATOOLS_OT_cc3_saveload_uv_quick,
-    CYATOOLS_OT_cc3_rename_bone,
-    CYATOOLS_OT_cc3_transfer_vtx_grp,
-    CYATOOLS_OT_cc3_append_bindpose,
 
 
 )

@@ -454,7 +454,6 @@ def insert_all_keys():
 #ミュートされていないシェイプキーを削除する
 #---------------------------------------------------------------------------------------
 def remove_shapekey_unmuted():
-
     for ob in utils.selected():
         utils.act(ob)
         # シェイプキーのリストを取得する
@@ -470,6 +469,26 @@ def remove_shapekey_unmuted():
                 # シェイプキーを選択して、削除
                 bpy.context.active_object.active_shape_key_index = i
                 bpy.ops.object.shape_key_remove()
+
+
+#---------------------------------------------------------------------------------------
+#末尾に数値がついたシェイプを削除
+#---------------------------------------------------------------------------------------
+def remove_shapekey_numbered():
+    for ob in utils.selected():
+        utils.act(ob)
+        shape_keys = ob.data.shape_keys.key_blocks
+
+        for i, shape_key in reversed(list(enumerate(shape_keys))):
+
+            # 消したくないシェイプキーは除外する
+            # Bufのサイズが２なら数字付きとする
+            buf = shape_key.name.split('.')
+            if len(buf)>1:
+                print(shape_key.name)
+                bpy.context.active_object.active_shape_key_index = i
+                bpy.ops.object.shape_key_remove()
+
 
 
     # for sk in bpy.data.shape_keys:
@@ -525,3 +544,40 @@ def mob_facial_cleanup():
         for shape_key , name in zip(shape_keys,namearray):
             shape_key.name = name
 
+
+#---------------------------------------------------------------------------------------
+#モブのシェイプ抜き出し
+#モデル複製＞現状シェイプ生成＞いらないシェイプ削除
+#名前にフレーム番号を割り振る
+#
+#未対応
+#
+#---------------------------------------------------------------------------------------
+def mob_extruct():
+
+    frame = bpy.context.scene.frame_current
+
+    source = utils.getActiveObj()
+    newname = f"{ source.name }_{frame}"
+
+    bpy.ops.object.duplicate(linked=False)
+    bpy.ops.object.shape_key_add(from_mix=True)
+
+    ob = utils.getActiveObj()
+    ob.name = newname
+    # シェイプキーのリストを取得する
+    shape_keys = ob.data.shape_keys.key_blocks
+
+    # シェイプキーのリストを逆順に舐める
+    #生成された最後のシェイプだけ残す
+    max = len(shape_keys)-2
+
+    for i in range(max, -1, -1):
+        print(i)
+        bpy.context.active_object.active_shape_key_index = i
+        bpy.ops.object.shape_key_remove()
+
+
+    #最後に複製したシェイプの削除
+    bpy.context.active_object.active_shape_key_index = 0
+    bpy.ops.object.shape_key_remove()

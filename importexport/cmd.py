@@ -838,7 +838,10 @@ def export_cmd(outpath , mode):
                 use_selection = True ,
                 global_scale = props.scale ,
                 axis_forward = props.axis_forward ,
-                axis_up = props.axis_up
+                axis_up = props.axis_up,
+                keep_vertex_order=True,
+                use_vertex_groups=True,
+                use_mesh_modifiers=True,
                 )
 
     elif props.export_mode == 'ue':

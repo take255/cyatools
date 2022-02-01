@@ -278,7 +278,7 @@ def copy_vertex_pos():
     mesh = obj.data
 
     bpy.ops.object.mode_set(mode = 'OBJECT')
-    print('----------------------')
+    #print('----------------------')
     for i,v in enumerate(mesh.vertices):
         #print(v.select)
         if v.select:
@@ -290,33 +290,79 @@ def copy_vertex_pos():
 
 #頂点ペースト
 def paste_vertex_pos():
-    # global VARRAY
     global VARRAY_DIC
-    #VARRAY_DIC.clear()
 
-
-    print(VARRAY_DIC)
     obj = bpy.context.active_object
     mesh = obj.data
     bpy.ops.object.mode_set(mode = 'OBJECT')
 
     for i,v in enumerate(mesh.vertices):
         if i in VARRAY_DIC:
-            #print("aaaaa",i,VARRAY_DIC[i])
             v.co = VARRAY_DIC[i]
-            #v.co = Vector((1,1,1))
 
 
-    # for v,v1 in zip(mesh.vertices,VARRAY):
-    # #for v in VARRAY:
-    #     v.co = v1
-    #     # vtx = mesh.vertices[v[0]]
-    #     # print(vtx)
-    #     print(v.co)
+def copy_vertex_pos_blendshape():
+
+    global VARRAY_DIC
+    VARRAY_DIC.clear()
+
+    obj = bpy.context.active_object
+    mesh = obj.data
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+    #選択された頂点インデックスを取得
+    #indexarray = [i for i,v in enumerate(mesh.vertices) if v.select ]
+    #ブレンドシェイプ
+    spIndex = obj.active_shape_key_index
+
+    key = bm.verts.layers.shape.keys()[spIndex]
+    val = bm.verts.layers.shape.get(key)
+
+
+    #選択された頂点インデックスは別に取得
+    # for i,v in enumerate(bm.verts):
+    #     if i in indexarray:
+
+    #         pos = Vector((v[val][0],v[val][1],v[val][2]))
+    #         VARRAY_DIC[i] = pos
+
+    for v in [(v,v.index) for v in bm.verts if v.select]:
+        #v = bm.vert[i]
+        pos = Vector((v[0][val][0],v[0][val][1],v[0][val][2]))
+        VARRAY_DIC[v[1]] = pos
 
 
 
+#シェイプのインデックスが０の時は別処理
+def paste_vertex_pos_blendshape():
+    global VARRAY_DIC
 
+    obj = bpy.context.active_object
+    mesh = obj.data
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+
+    spIndex = obj.active_shape_key_index
+    key = bm.verts.layers.shape.keys()[spIndex]
+    val = bm.verts.layers.shape.get(key)
+
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+
+    # if spIndex > 0:
+    #print(len(bm.verts))
+    for i,v in enumerate(bm.verts):
+        if i in VARRAY_DIC:
+            v[val] = VARRAY_DIC[i]
+            #print(val,i)
+
+    for v in [(v,v.index) for v in bm.verts if v.index in VARRAY_DIC]:
+            v[0][val] = VARRAY_DIC[v[1]]
+
+
+    bm.to_mesh(obj.data)
+    mesh.update()
 
 #---------------------------------------------------------------------------------------
 #選択された頂点をバッファに保持する

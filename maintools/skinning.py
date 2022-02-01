@@ -464,7 +464,6 @@ class WeightTransfer:
                 grp.append([vge.group, vge.weight])
             self.weight_array.append(grp)
 
-
         for obj in utils.selected():
 
             if obj != obj_source:
@@ -472,16 +471,27 @@ class WeightTransfer:
 
                 #自動バインド
                 #アーマチュアモディファイヤがあるかどうか調べる。無ければ追加する。
+
+                #頂点グループの削除
+                utils.act(obj)
+                for group in obj.vertex_groups:
+                    bpy.context.object.vertex_groups.remove(group)
+
+
                 ExistsAmt = False
+
                 for mod in obj.modifiers:
                     if mod.type == 'ARMATURE':
                         ExistsAmt = True
+                        mod.object = amt
 
                 if not ExistsAmt:
                     m = obj.modifiers.new("Armature", type='ARMATURE')
                     m.object = amt
 
-                    for b in bonearray:
+
+                for b in bonearray:
+                    if(b not in [x.name for x in obj.vertex_groups ]):
                         obj.vertex_groups.new(name = b)
 
 
@@ -532,10 +542,29 @@ class WeightTransfer:
         result = self.kd.find_n( v.co , self.num_sample )
 
         #距離情報から割合を出す 近い方がウェイトが大きいので逆数にする
-        sum_weight = sum([1/x[2] for x in result] ) #result[0][2] + result[1][2]
-        print(sum_weight)
+        #距離が０のときはウェイトを全振りする
 
-        weight_ratio = [ [ x[1] , 1/x[2]/sum_weight ] for x in result ]#インデックスと距離に応じた割合 近い方がよりウェイトが大きい
+        #xに０が無いか調査
+
+        # is_overlapping = False
+        # for i,x in enumerate(result):
+        #     if x[2] == 0:
+        #         weight_ratio = [ result[i][1] , 1 ]
+        #         is_overlapping = True
+        #         break
+
+
+        #距離０があるかどうか調べる。あったら100%割り振る
+        if 0 in [x[2] for x in result]:
+            idx = [x[2] for x in result].index(0)
+            weight_ratio = [ [ result[idx][1] , 1.0 ] ]
+
+        else:
+            sum_weight = sum([1/x[2] for x in result] ) #result[0][2] + result[1][2]
+            weight_ratio = [ [ x[1] , 1/x[2]/sum_weight ] for x in result ]#インデックスと距離に応じた割合 近い方がよりウェイトが大きい
+
+
+
 
         for wr in weight_ratio:
 
@@ -548,7 +577,7 @@ class WeightTransfer:
                     vg = obj.vertex_groups[ target_index ]
 
                     #頂点インデックス、ウェイト値
-                    print( target_index , w[1]*ratio )
+                    #print( target_index , w[1]*ratio )
                     vg.add( [i], w[1]*ratio , 'ADD' )#
 
 
@@ -802,18 +831,22 @@ def weights_mirror_v2():
     #lside_pos = [[i,(-v.co.x , v.co.y , v.co.z )] for i,v in enumerate(mesh.vertices) if v.co.x < -0.0001]
 
     props = bpy.context.scene.cyatools_oa
-    print(props.weightmirror_dir)
-    if props.weightmirror_dir == 'L>R':
-        opposit_pos = [[i,(-v.co.x , v.co.y , v.co.z )] for i,v in enumerate(mesh.vertices) if v.co.x < -0.0001]
-    elif props.weightmirror_dir == 'R>L':
-        opposit_pos = [[i,(-v.co.x , v.co.y , v.co.z )] for i,v in enumerate(mesh.vertices) if v.co.x > 0.0001]
+
+    #選択された頂点だけ処理するかどうか　
+    if props.weightmirror_selected_vtx:
+        if props.weightmirror_dir == 'L>R':
+            opposit_pos = [[i,(-v.co.x , v.co.y , v.co.z )] for i,v in enumerate(mesh.vertices) if v.co.x < -0.0001 and v.select]
+        elif props.weightmirror_dir == 'R>L':
+            opposit_pos = [[i,(-v.co.x , v.co.y , v.co.z )] for i,v in enumerate(mesh.vertices) if v.co.x > 0.0001 and v.select]
 
 
+    else:
+        if props.weightmirror_dir == 'L>R':
+            opposit_pos = [[i,(-v.co.x , v.co.y , v.co.z )] for i,v in enumerate(mesh.vertices) if v.co.x < -0.0001]
+        elif props.weightmirror_dir == 'R>L':
+            opposit_pos = [[i,(-v.co.x , v.co.y , v.co.z )] for i,v in enumerate(mesh.vertices) if v.co.x > 0.0001]
 
-    # print('rside>' ,rside_indices)
-    # print('lsidepos>')
-    # for p in lside_pos:
-    #     print(p)
+
 
 
     for i, v in enumerate(mesh.vertices):
@@ -821,10 +854,10 @@ def weights_mirror_v2():
 
     kd.balance()
 
-    bpy.ops.object.mode_set(mode = 'EDIT')
-    bpy.ops.mesh.select_mode(type="VERT")
-    bpy.ops.mesh.select_all(action = 'DESELECT')
-    bpy.ops.object.mode_set(mode = 'OBJECT')
+    # bpy.ops.object.mode_set(mode = 'EDIT')
+    # bpy.ops.mesh.select_mode(type="VERT")
+    # bpy.ops.mesh.select_all(action = 'DESELECT')
+    # bpy.ops.object.mode_set(mode = 'OBJECT')
 
     for p in opposit_pos:
         #中心付近の頂点で近接を探索したときに自分自身のインデックスがかえってくる
