@@ -1,5 +1,6 @@
 import bpy
 import imp
+from pathlib import Path
 
 from bpy.types import(
     PropertyGroup,
@@ -44,8 +45,9 @@ def bonename():
     return fullpath(prefs.path,prefs.bone_name)
 
 def weightname():
-    prefs = bpy.context.preferences.addons[__name__].preferences
-    return prefs.path
+    #prefs = bpy.context.preferences.addons[__name__].preferences
+    path = bpy.context.preferences.addons['cyatools'].preferences.importexport
+    return path
 
 def animname():
     prefs = bpy.context.preferences.addons[__name__].preferences
@@ -142,17 +144,27 @@ class CYAIMPORTEXPORT_PT_ui(utils.panel):
         row.prop(props, 'temp_unitscale_enable')
         row.prop(props, 'temp_unitscale', icon='BLENDER')
 
-        box = col.box()
+
+        row0 = col.row()
+        box = row0.box()
         box.label(text="Export Frame Number")
         row = box.row()
         row.prop(props, 'export_frame')
 
+        row0 = col.row()
+        box = row0.box()
+        box.label(text="Scale")
+        col1=box.column()
+        col1.prop(props, 'scale', icon='BLENDER', toggle=True)
 
-        col.prop(props, 'scale', icon='BLENDER', toggle=True)
-
-        row = col.row()
+        row = col1.row()
         row.prop(props, 'axis_forward', icon='BLENDER' )
         row.prop(props, 'axis_up', icon='BLENDER')
+
+
+        row0 = col.row()
+        box = row0.box()
+        box.operator( 'cyaimportexport.rot90')
 
 
 
@@ -272,6 +284,19 @@ class CYAIMPORTEXPORT_export_format(Operator):
 #         return {'FINISHED'}
 
 
+#FBX
+class CYAIMPORTEXPORT_rot90(Operator):
+    """X軸に90度回転を入れる
+    Unityなどで90度入ってしまうのを回避する
+    """
+    bl_idname = "cyaimportexport.rot90"
+    bl_label = "rot90"
+
+    def execute(self, context):
+        cmd.rot90()
+        return {'FINISHED'}
+
+
 classes = (
     CYAIMPORTEXPORT_Props_OA,
     CYAIMPORTEXPORT_PT_ui,
@@ -288,7 +313,9 @@ classes = (
 
 
     CYAIMPORTEXPORT_export_format,
-    CYAIMPORTEXPORT_MT_filebrowse
+    CYAIMPORTEXPORT_MT_filebrowse,
+
+    CYAIMPORTEXPORT_rot90
 
 )
 

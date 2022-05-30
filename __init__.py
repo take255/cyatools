@@ -60,11 +60,13 @@ class CYATOOLS_MT_addonpreferences(AddonPreferences):
 
     lib_path : StringProperty(default = LIBPATH )
     addon_path : StringProperty(default = ADDONPATH )
+    importexport : StringProperty(default = "c:/tmp" )
 
     def draw(self, context):
         layout = self.layout
         layout.label(text='Rig Shape Path')
         col = layout.column()
+        col.prop(self, 'importexport',text = 'ie', expand=True)
         col.prop(self, 'lib_path',text = 'lib', expand=True)
         col.prop(self, 'addon_path',text = 'addon_path', expand=True)
         col.operator( "cyatools.preferences_install_addon", icon = 'TEXTURE')

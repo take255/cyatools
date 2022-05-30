@@ -4,6 +4,7 @@ import bmesh
 from mathutils import ( Vector , Matrix , Quaternion )
 import math
 import imp
+import pickle
 
 from . import utils
 imp.reload(utils)
@@ -235,86 +236,67 @@ def invert():
             bm.to_mesh(obj.data)
 
 
-VARRAY = []
-VARRAY_DIC = {}
+# VARRAY = []
+# VARRAY_DIC = {}
 
-#選択された頂点をバッファに保持する
-#エディットモードのままだと適用されないことに注意
-def copy_pos():
-    global VARRAY
-    VARRAY.clear()
+# #選択された頂点をバッファに保持する
+# #エディットモードのままだと適用されないことに注意
+# def copy_pos():
+#     global VARRAY
+#     VARRAY.clear()
 
-    global VARRAY_DIC
-    VARRAY_DIC.clear()
+#     global VARRAY_DIC
+#     VARRAY_DIC.clear()
 
-    obj = bpy.context.active_object
-    mesh = obj.data
-    bm = bmesh.new()
-    bm.from_mesh(mesh)
+#     obj = bpy.context.active_object
+#     mesh = obj.data
+#     bm = bmesh.new()
+#     bm.from_mesh(mesh)
 
-    bpy.ops.object.mode_set(mode = 'OBJECT')
-    #選択された頂点インデックスを取得
-    #indexarray = []
-    indexarray = [i for i,v in enumerate(mesh.vertices) if v.select ]
-    # for i,v in enumerate(mesh.vertices):
-    #     if v.select:
-    #         VARRAY.append([v,v.co])
-    #         print(v.co)
+#     bpy.ops.object.mode_set(mode = 'OBJECT')
+#     #選択された頂点インデックスを取得
+#     indexarray = [i for i,v in enumerate(mesh.vertices) if v.select ]
+#     spIndex = obj.active_shape_key_index
 
-    # print(indexarray)
-    # return
-    #ブレンドシェイプ
-    spIndex = obj.active_shape_key_index
-
-    key = bm.verts.layers.shape.keys()[spIndex]
-    val = bm.verts.layers.shape.get(key)
+#     key = bm.verts.layers.shape.keys()[spIndex]
+#     val = bm.verts.layers.shape.get(key)
 
 
-    #選択された頂点インデックスは別に取得
-    for i,v in enumerate(bm.verts):
-        if i in indexarray:
+#     #選択された頂点インデックスは別に取得
+#     for i,v in enumerate(bm.verts):
+#         if i in indexarray:
 
-            pos = Vector((v[val][0],v[val][1],v[val][2]))
-            VARRAY.append([i,pos])
-            VARRAY_DIC[i] = pos
-            #print([i,pos])
-    #print(VARRAY_DIC)
+#             pos = Vector((v[val][0],v[val][1],v[val][2]))
+#             VARRAY.append([i,pos])
+#             VARRAY_DIC[i] = pos
 
 
-#シェイプのインデックスが０の時は別処理
-def paste_pos():
-    global VARRAY
-    global VARRAY_DIC
+# #シェイプのインデックスが０の時は別処理
+# def paste_pos():
+#     global VARRAY
+#     global VARRAY_DIC
 
-    obj = bpy.context.active_object
-    mesh = obj.data
-    bm = bmesh.new()
-    bm.from_mesh(mesh)
+#     obj = bpy.context.active_object
+#     mesh = obj.data
+#     bm = bmesh.new()
+#     bm.from_mesh(mesh)
 
-    spIndex = obj.active_shape_key_index
-    key = bm.verts.layers.shape.keys()[spIndex]
-    val = bm.verts.layers.shape.get(key)
+#     spIndex = obj.active_shape_key_index
+#     key = bm.verts.layers.shape.keys()[spIndex]
+#     val = bm.verts.layers.shape.get(key)
 
-    bpy.ops.object.mode_set(mode = 'OBJECT')
+#     bpy.ops.object.mode_set(mode = 'OBJECT')
 
-    # if spIndex > 0:
-    print(len(bm.verts))
-    for i,v in enumerate(bm.verts):
-        if i in VARRAY_DIC:
-            v[val] = VARRAY_DIC[i]
-            print(val,i)
-        #print(v[val],v1[1])
-        #if i == v1[0]:
-        #v[val] = v1[1]
 
-    bm.to_mesh(obj.data)
-    mesh.update()
+#     print(len(bm.verts))
+#     for i,v in enumerate(bm.verts):
+#         if i in VARRAY_DIC:
+#             v[val] = VARRAY_DIC[i]
+#             print(val,i)
 
-    # else:
-    #     for i,v in enumerate(mesh.vertices):
-    #         if i in VARRAY_DIC:
-    #             print(VARRAY_DIC[i])
-    #             v.co = VARRAY_DIC[i]
+#     bm.to_mesh(obj.data)
+#     mesh.update()
+
 
 
 VARRAY_DOWNSTREAM = []
@@ -553,12 +535,66 @@ def mob_facial_cleanup():
 #未対応
 #
 #---------------------------------------------------------------------------------------
-def mob_extruct():
+MOBDIC={
+10:"M_01",
+20:"M_02",
+30:"M_03",
+40:"M_04",
+50:"M_05",
+60:"M_06",
+70:"M_07",
+110:"F_01",
+120:"F_02",
+130:"F_03",
+140:"F_04",
+150:"F_05",
+160:"F_06",
+170:"F_07"
+}
 
+MOBDIC_Body={
+0:"01",
+200:"02",
+400:"03",
+600:"04",
+800:"05",
+1000:"06",
+1200:"07",
+}
+
+MOBDIC_FACE={
+10:"01",
+20:"02",
+30:"03",
+40:"04",
+50:"05",
+60:"06",
+70:"07",
+80:"08",
+90:"09",
+100:"10",
+110:"11",
+120:"12",
+130:"13",
+140:"14",
+150:"15",
+160:"16"
+}
+
+def mob_extruct0():
     frame = bpy.context.scene.frame_current
+    mob_extruct(frame)
+
+def mob_extruct(frame):
+
+    #frame = bpy.context.scene.frame_current
 
     source = utils.getActiveObj()
-    newname = f"{ source.name }_{frame}"
+
+    if frame in MOBDIC:
+        newname = "Mob_" + MOBDIC[frame]
+    else:
+        newname = f"{ source.name }_{frame}"
 
     bpy.ops.object.duplicate(linked=False)
     bpy.ops.object.shape_key_add(from_mix=True)
@@ -581,3 +617,197 @@ def mob_extruct():
     #最後に複製したシェイプの削除
     bpy.context.active_object.active_shape_key_index = 0
     bpy.ops.object.shape_key_remove()
+
+#全種類のモブを抽出
+def mob_extruct_all():
+    props = bpy.context.scene.cyatools_oa
+    source = utils.getActiveObj()
+
+    start = props.mob_extructall_startframe
+    for f in MOBDIC:
+        bpy.context.scene.frame_set(start+f )
+        print(f)
+        utils.act(source)
+        mob_extruct(f)
+
+
+
+def mob_extruct1(newname):
+
+    source = utils.getActiveObj()
+
+    bpy.ops.object.duplicate(linked=False)
+    bpy.ops.object.shape_key_add(from_mix=True)
+
+    ob = utils.getActiveObj()
+    ob.name = newname
+    # シェイプキーのリストを取得する
+    shape_keys = ob.data.shape_keys.key_blocks
+
+    # シェイプキーのリストを逆順に舐める
+    #生成された最後のシェイプだけ残す
+    max = len(shape_keys)-2
+
+    for i in range(max, -1, -1):
+        bpy.context.active_object.active_shape_key_index = i
+        bpy.ops.object.shape_key_remove()
+
+
+    #最後に複製したシェイプの削除
+    bpy.context.active_object.active_shape_key_index = 0
+    bpy.ops.object.shape_key_remove()
+
+
+
+
+#顔バリエーションモデル出力
+def mob_extruct_face():
+    source = utils.getActiveObj()
+    props = bpy.context.scene.cyatools_oa
+
+
+    #for f0 in MOBDIC_Body:
+    for f1 in MOBDIC_FACE:
+        #num= f0+f1
+        num= 200*(props.mob_body_number-1) +f1
+
+        bpy.context.scene.frame_set( num )
+        #frame = bpy.context.scene.frame_current
+
+        newname = "Mob_%s_%02d_0%s" % (props.mob_sex , props.mob_body_number , MOBDIC_FACE[f1] )
+        print(newname)
+
+        utils.act(source)
+        mob_extruct1(newname)
+
+
+#終了フレームを指定してブレンドシェイプを抽出
+def mob_extruct_frame():
+    source = utils.getActiveObj()
+    props = bpy.context.scene.cyatools_oa
+
+    for f1 in range(props.mob_extruct_frame):
+        #num= f0+f1
+
+        bpy.context.scene.frame_set( f1+1 )
+        #frame = bpy.context.scene.frame_current
+
+        newname = "Mob_%02d" % (f1+1)
+        print(newname)
+
+        utils.act(source)
+        mob_extruct1(newname)
+
+
+#全種類のモブを抽出
+def mob_extruct_():
+    source = utils.getActiveObj()
+
+    for f in MOBDIC:
+        bpy.context.scene.frame_set( f )
+        print(f)
+        utils.act(source)
+        mob_extruct()
+
+#キーの削除
+def remove_transform_key(mode):
+    print(mode)
+
+    for ob in utils.selected():
+        ad = ob.animation_data
+
+        if ad:
+            action = ad.action
+
+            remove_types = ["location", "scale", "rotation"]
+            # select all that have datapath above
+            # fcurves = [fc for fc in action.fcurves
+            #         for type in remove_types
+            #         if fc.data_path.startswith(type)
+            #         ]
+            fcurves = [fc for fc in action.fcurves if fc.data_path.startswith(mode) ]
+            # remove fcurves
+            while(fcurves):
+                fc = fcurves.pop()
+                action.fcurves.remove(fc)
+
+
+
+#
+#
+def save_vtxpos_delta(filename):
+    VARRAY=[]
+    #bpy.ops.object.mode_set(mode = 'OBJECT')
+    print(filename)
+
+    selected = utils.selected()
+    act = bpy.context.active_object
+    mesh = act.data
+
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+
+    for i,v in enumerate(mesh.vertices):
+        #if v.select:
+        VARRAY.append(Vector((v.co[0],v.co[1],v.co[2])))
+
+
+    export_data=[]
+    for ob in selected:
+        if(ob != act):
+            mesh = ob.data
+            for v,vt in zip(mesh.vertices,VARRAY):
+                vec = Vector((v.co[0],v.co[1],v.co[2]))-vt
+                export_data.append([vec[0],vec[1],vec[2]])
+                print(vec)
+
+
+    f = open( filename, 'wb' )
+    pickle.dump( export_data, f ,protocol=0)
+    f.close()
+
+
+def import_vtxpos_delta(filename):
+    f = open(  filename  ,'rb')
+    dat = pickle.load( f )
+    f.close()
+
+    for d in dat:
+        print(d)
+
+
+    obj = bpy.context.active_object
+    mesh = obj.data
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+
+    for v,vt in zip(mesh.vertices,dat):
+        #pos = Vector((v.co[0],v.co[1],v.co[2]))
+        v.co = v.co+Vector((vt[0],vt[1],vt[2]))
+
+
+
+
+#シェイプのインデックスが０の時は別処理
+# def paste_pos():
+#     global VARRAY
+#     global VARRAY_DIC
+
+#     obj = bpy.context.active_object
+#     mesh = obj.data
+#     bm = bmesh.new()
+#     bm.from_mesh(mesh)
+
+#     spIndex = obj.active_shape_key_index
+#     key = bm.verts.layers.shape.keys()[spIndex]
+#     val = bm.verts.layers.shape.get(key)
+
+#     bpy.ops.object.mode_set(mode = 'OBJECT')
+
+
+#     print(len(bm.verts))
+#     for i,v in enumerate(bm.verts):
+#         if i in VARRAY_DIC:
+#             v[val] = VARRAY_DIC[i]
+#             print(val,i)
+
+#     bm.to_mesh(obj.data)
+#     mesh.update()

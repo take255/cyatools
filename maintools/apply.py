@@ -406,11 +406,17 @@ def move_collection_by_name( name , target , mode ):
 #コレクションに所属しているオブジェクトをapply
 #---------------------------------------------------------------------------------------
 def apply_collection():
+    props = bpy.context.scene.cyatools_oa
+
+    #現在のフレームを変更
+    bpy.context.scene.frame_set( props.apply_frame )
+
+
     print('---------------------------------------------------')
     global ApplyCollectionMode
     ApplyCollectionMode = True #コレクションインスタンスの実体化時に強制マージする
 
-    props = bpy.context.scene.cyatools_oa
+
 
     #suffix = props.add_suffix
     only_directly_below = props.only_directly_below
@@ -458,7 +464,7 @@ def apply_collection():
         #put_into_collection(current_scene_name , result , utils.sceneActive(fix_scene))
 
     ApplyCollectionMode = False
-
+    return new_obj
 
 
 #def apply_collection_loop(name , fix_scene):

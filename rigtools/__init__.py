@@ -296,6 +296,7 @@ class CYARIGTOOLS_MT_rigsetuptools(bpy.types.Operator):
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 
+
     def draw(self, context):
         props = bpy.context.scene.cyarigtools_props
 
@@ -377,7 +378,8 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
     def invoke(self, context, event):
         props = bpy.context.scene.cyarigtools_props
         props.handler_through = False
-        return context.window_manager.invoke_props_dialog(self)
+        #return context.window_manager.invoke_props_dialog(self)
+        return context.window_manager.invoke_props_dialog(self , width=600)
 
     def draw(self, context):
         props = bpy.context.scene.cyarigtools_props
@@ -386,10 +388,10 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         box = col_root.box()
         box.prop(props,'axismethod')
 
-        row = col_root.split(factor = 0.4, align = False)
+        row_main = col_root.split(factor = 0.3, align = False)
 
         #上部左
-        col = row.box()
+        col = row_main.box()
 
         box = col.box()
         box.label(text = 'copy')
@@ -398,6 +400,7 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         box = col.box()
         box.label(text = 'length')
         box.operator("cyarigtools.edit_length_uniform")
+        box.operator("cyarigtools.edit_length_uniform_all")
         box.operator("cyarigtools.edit_length_half")
         box.operator("cyarigtools.edit_check_ratio")
 
@@ -424,7 +427,7 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         row1.operator("cyarigtools.edit_constraint_empty_cleanup")
 
         #上部中央
-        box = row.box()
+        box = row_main.box()
         col1 = box.column()
         row1 = col1.row()
         box1 = row1.box()
@@ -476,6 +479,12 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         row.operator("cyarigtools.edit_adjust_roll")
         row.operator("cyarigtools.edit_align_roll_global")
 
+
+
+        #右
+        box = row_main.box()
+        col1 = box.column()
+
         #Add bone at the selected objects
         # First, select some objects ,select bone in the end.
         box3 = col1.box()
@@ -495,6 +504,12 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         row.operator( "cyarigtools.edit_bone_copy_with_csv")
         row.operator( "cyarigtools.export_bonelist")
         row.operator( "cyarigtools.rename_bone_with_csv")
+
+        #リネーム
+        box3 = col1.box()
+        box3.label( text = 'Rename' )
+        row = box3.row()
+        row.operator( "cyarigtools.edit_bone_rename_delete_prefix")
 
 
 
@@ -842,6 +857,16 @@ class CYARIGTOOLS_OT_edit_length_uniform(bpy.types.Operator):
         edit.length_uniform()
         return {'FINISHED'}
 
+class CYARIGTOOLS_OT_edit_length_uniform_all(bpy.types.Operator):
+    """選択されたボーンの長さを全体の長さをそろえる。\n最後に選択されたボーンに他のを合わせる"""
+    bl_idname = "cyarigtools.edit_length_uniform_all"
+    bl_label = "uniform all"
+
+    def execute(self, context):
+        edit.length_uniform_all()
+        return {'FINISHED'}
+
+
 class CYARIGTOOLS_OT_edit_length_half(bpy.types.Operator):
     """選択されたボーンの長さを半分にする"""
     bl_idname = "cyarigtools.edit_length_half"
@@ -984,6 +1009,13 @@ class CYARIGTOOLS_OT_edit_axis_swap(bpy.types.Operator):
         edit.axis_swap(self.op)
         return {'FINISHED'}
 
+class CYARIGTOOLS_OT_edit_bone_rename_delete_prefix(bpy.types.Operator):
+    """プレフィックスの削除"""
+    bl_idname = "cyarigtools.edit_bone_rename_delete_prefix"
+    bl_label = "remove prefix"
+    def execute(self, context):
+        edit.bone_rename_delete_prefix()
+        return {'FINISHED'}
 
 #---------------------------------------------------------------------------------------
 # CSVツール
@@ -1293,6 +1325,7 @@ classes = (
     CYARIGTOOLS_OT_edit_copy_from_another,
 
     CYARIGTOOLS_OT_edit_length_uniform,
+    CYARIGTOOLS_OT_edit_length_uniform_all,
     CYARIGTOOLS_OT_edit_length_half,
     CYARIGTOOLS_OT_edit_check_ratio,
 
@@ -1316,6 +1349,7 @@ classes = (
     CYARIGTOOLS_OT_edit_bone_copy_with_csv,
     CYARIGTOOLS_OT_export_bonelist,
     CYARIGTOOLS_OT_rename_bone_with_csv,
+    CYARIGTOOLS_OT_edit_bone_rename_delete_prefix,
 
 
     #other tools

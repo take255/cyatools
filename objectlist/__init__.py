@@ -74,6 +74,7 @@ class CYAOBJECTLIST_Props_OA(PropertyGroup):
     setupik_lr : EnumProperty(items= (('l', 'l', 'L'),('r', 'r', 'R')))
     finger_step : IntProperty(default = 3 )
     chain_step : IntProperty(default = 0 )
+    prefix_underbar : BoolProperty(default = True)
 
     suffix : EnumProperty(items= (('none', 'none', 'none'),('l', 'l', 'L'),('r', 'r', 'R'),('c', 'c', 'C')) )
 
@@ -184,6 +185,8 @@ class CYAOBJECTLIST_MT_rename(Operator):
         row1.operator("cyaobjectlist.rename_add_sequential_number" , icon = 'LINENUMBERS_ON')
         row1.operator("cyaobjectlist.rename_add_word" , text = 'add prefix').mode = 'prefix'
         row1.operator("cyaobjectlist.rename_add_word" , text = 'add suffix').mode = 'suffix'
+        row1.prop(props, "prefix_underbar" , text = '_')
+
 
         row2 = box.row()
         for mode in ( 'replace' , 'l>r' , 'r>l' , 'del.number'):

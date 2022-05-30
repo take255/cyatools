@@ -22,7 +22,7 @@ def make_proxy():
         binding = False
 
     proxyObjects = []
-    
+
     for obj in utils.selected():
         #linkedObj = bpy.context.active_object
         col = obj.instance_collection
@@ -36,7 +36,7 @@ def make_proxy():
 
             proxyObjects.append(act)
 
-        
+
         #元のオブジェクトをハイドする
         if props.proxy_hide_source:
             utils.showhide(obj,True)
@@ -49,7 +49,7 @@ def make_proxy():
         # for o in proxyObjects:
         #     print(o.name)
             #utils.selectByName(o,True)
-        
+
         utils.multiSelection(proxyObjects)
         utils.selectByName('root',True)
         skinning.doSkinBind(False)
@@ -67,17 +67,17 @@ def rename_collection_model():
 
             basename = c.name.replace( '00_Model_' , 'model_' ).lower()
             num = 1
-            for ob in bpy.context.scene.objects: 
+            for ob in bpy.context.scene.objects:
                 if ob.type == 'MESH':
                     cols = [x.name for x in ob.users_collection]
                     if c.name in cols:
-                        
+
                         print( '%s_%02d' % ( basename , num) )
                         ob.name =  '%s_%02d' % ( basename , num)
                         ob.data.name = ob.name
                         num += 1
-                    
-    
+
+
 PartsCollection = None
 #コレクション生成
 #もしPartsというコレクションがあったら子供にする
@@ -91,10 +91,10 @@ def create_new_collection():
     #該当のコレクションの種類がすでにある場合、番号を調査して付加する
     category = props.newcollection_name2
     name0 = '00_Model_%s_%s_%s' % ( props.newcollection_name1 , category , props.newcollection_name3 )
-    
-    
+
+
     num = 1
-    
+
     while True:
         name = '%s%02d' % (name0,num)
         if collection_search(name):
@@ -158,7 +158,7 @@ def create_new_skin_parts():
 #     if c.name == 'Parts':
 #         PartsCollection = c
 #     else:
-#         for c in c.children:                         
+#         for c in c.children:
 #             get_collection_loop(c)
 
 
@@ -187,7 +187,7 @@ def save_collection_state():
     visible = utils.collection.get_visible()#表示されている
 
     layers = [l.name for l in bpy.context.scene.view_layers]
-    
+
     for l in layers:
         vlayer = bpy.context.scene.view_layers[l]
         bpy.context.window.view_layer = vlayer
@@ -202,7 +202,7 @@ def save_collection_state():
     # json_file = open('c:/tmp/test.json', 'w')
     # json.dump(dict, json_file)
     with open('c:/tmp/test.json', mode='wt', encoding='utf-8') as file:
-        json.dump(data, file, ensure_ascii=False, indent=2)    
+        json.dump(data, file, ensure_ascii=False, indent=2)
 
 
 #---------------------------------------------------------------------------------------
@@ -222,7 +222,7 @@ def match_render_to_view():
 
         bpy.data.objects[c.name].hide_viewport = not c.visible_get()
         bpy.data.objects[c.name].hide_render = not c.visible_get()
-        
+
 
     visible = utils.collection.get_visible()#表示されている
 
@@ -237,7 +237,8 @@ def mob_offset():
     print(val)
 
     for ob in utils.selected():
-        ob.location.y = float(val)
+        ob.location.z = float(val)
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True, properties=True)
 
 
 #---------------------------------------------------------------------------------------

@@ -71,6 +71,26 @@ def length_uniform():
         vec = Vector(bone.head) - Vector(bone.tail)
         bone.tail = -(length/vec.length)*vec + bone.head
 
+#選択されたボーンを全体の長さをキープしてそろえる
+def length_uniform_all():
+    amt = bpy.context.object
+    utils.mode_e()
+    selected = utils.get_selected_bones()
+    #active = utils.get_active_bone()
+
+    vec = Vector(selected[-1].tail) - Vector(selected[0].head)
+    length = vec.length/len(selected)
+    #num = len(selected)
+
+    print(length)
+    for b in selected:
+        bone = amt.data.edit_bones[b.name]
+        vec = Vector(bone.tail) - Vector(bone.head)
+        bone.tail = (length/vec.length)*vec + bone.head
+
+
+
+
 #選択されたボーンの長さを半分に
 def length_half():
     amt = bpy.context.object
@@ -887,3 +907,22 @@ def rename_bone_with_csv(path):
             bone.name = dic[bone.name]
 
 
+
+#---------------------------------------------------------------------------------------
+#リネーム
+#---------------------------------------------------------------------------------------
+
+#プレフィックスの削除
+def bone_rename_delete_prefix():
+
+    act_name = utils.get_active_bone().name
+    selected = [x.name for x in utils.get_selected_bones() if x.name != act_name]
+    amt=bpy.context.object
+    utils.mode_e()
+
+    for b in selected:
+        bone = amt.data.edit_bones[b]
+        n = bone.name
+        buf = n.split(':')
+        print(buf[-1])
+        bone.name = buf[-1]

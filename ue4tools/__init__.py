@@ -1,7 +1,8 @@
+from email.policy import default
 import bpy
 import imp
 
-from bpy.types import( 
+from bpy.types import(
     PropertyGroup,
     # Panel,
     Operator,
@@ -13,9 +14,9 @@ from bpy.props import(
     FloatProperty,
     PointerProperty,
     StringProperty,
-    IntProperty,
-    # EnumProperty,
-    # BoolProperty
+    #IntProperty,
+    EnumProperty,
+    BoolProperty
     )
 
 from .. import utils
@@ -29,7 +30,13 @@ imp.reload(cmd)
 #---------------------------------------------------------------------------------------
 class CYAUE4TOOLS_Props_OA(PropertyGroup):
     filepath : StringProperty(name = "path")
-
+    csvpath : StringProperty(name = "csv")
+    add_ch : BoolProperty(name = "Add CH",default=True)
+    #exportmode : BoolProperty(name = "Add CH",default=True)
+    exportmode : EnumProperty(items=(
+        ('Path', 'Path', ''),
+        ('CSV', 'CSV', ''),
+        ))
 
 
 #---------------------------------------------------------------------------------------
@@ -42,7 +49,7 @@ class CYAUE4TOOLS_PT_ui(utils.panel):
         return context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
-        props = bpy.context.scene.cyaue4tools_props        
+        props = bpy.context.scene.cyaue4tools_props
 
 
         col = self.layout.column(align=False)
@@ -59,15 +66,24 @@ class CYAUE4TOOLS_PT_ui(utils.panel):
         box = col.box()
         box.label(text="Export")
 
-        for mode in ('model','anim','anim_linked','facial'):
+        for mode in ('model','anim','anim_linked','facial','model&anim'):
             box.operator("cyaue4tools.export" , text = mode ).mode = mode
+
+
+        row = box.row()
+        row.prop(props,"exportmode" , expand=True)
+
 
         row = box.row()
         row.prop(props,"filepath")
         row.operator( 'cyaue4tools.filebrowse' , icon = 'FILE_FOLDER' ,text = "")
 
-        # box = col.box()
-        # box.label(text="Adjust ARP")
+
+
+        box = col.box()
+        box.label(text="Option")
+        row = box.row()
+        row.prop(props,"add_ch")
         # row = box.row()
         # row.operator( 'cyaue4tools.adjust_arp',text = "UE4").mode = 'UE4'
         # row.operator( 'cyaue4tools.adjust_arp',text = "MIXAMO").mode = 'MIXAMO'
@@ -88,8 +104,14 @@ class CYAUE4TOOLS_MT_filebrowse(Operator):
 
     def execute(self, context):
         print((self.filepath, self.filename, self.directory))
-        props = bpy.context.scene.cyaue4tools_props        
-        props.filepath = self.directory
+        props = bpy.context.scene.cyaue4tools_props
+
+        if props.exportmode == 'Path':
+            props.filepath = self.directory
+
+        elif props.exportmode == 'CSV':
+            props.filepath = self.filepath
+
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -162,7 +184,7 @@ def register():
     bpy.types.Scene.cyaue4tools_props = PointerProperty(type=CYAUE4TOOLS_Props_OA)
 
 
-def unregister():    
+def unregister():
     for cls in classes:
         bpy.utils.unregister_class(cls)
 

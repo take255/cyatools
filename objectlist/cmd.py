@@ -119,19 +119,23 @@ def add():
         for ob in utils.selected():
             item = itemlist.add()
             item.name = ob.name
+            item.bool_val = True
             ui_list.active_index = len(itemlist) - 1
 
     elif mode == 'EDIT':
         for bone in utils.get_selected_bones():
             item = itemlist.add()
             item.name = bone.name
+            item.bool_val = True
             ui_list.active_index = len(itemlist) - 1
 
     elif mode == 'POSE':
         for bone in utils.get_selected_bones():
             item = itemlist.add()
             item.name = bone.name
+            item.bool_val = True
             ui_list.active_index = len(itemlist) - 1
+
 
 
 def remove():
@@ -678,16 +682,21 @@ def rename_add_word( mode ):
 
     #replace_word = props.replace_string
 
+    if(props.prefix_underbar):
+        s='%s_%s'
+    else:
+        s='%s%s'
+
     result = []
     for node in itemlist:
         if node.bool_val == True:
             b = amt.data.edit_bones[node.name]
 
             if mode == 'suffix' or mode == 'suffix_list':
-                b.name = '%s_%s' % ( b.name , word )
+                b.name = s % ( b.name , word )
 
             elif mode == 'prefix':
-                b.name = '%s_%s' % ( word , b.name )
+                b.name = s % ( word , b.name )
 
             result.append(b.name)
 
@@ -697,6 +706,7 @@ def rename_add_word( mode ):
         item = itemlist.add()
         item.name = ob
         ui_list.active_index = len(itemlist) - 1
+        item.bool_val = True
 
 
 def bonechain_finger_loop( bone , index , name ):
@@ -742,6 +752,8 @@ def rename_finger(mode):
     for name in rootarray:
         item = itemlist.add()
         item.name = name
+        item.bool_val = True
+
 
 def rename_add_sequential_number():
     props = bpy.context.scene.cyaobjectlist_props
@@ -772,5 +784,6 @@ def rename_add_sequential_number():
     for n in bonearray:
         item = itemlist.add()
         item.name = n
+        item.bool_val = True
 
 

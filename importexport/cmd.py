@@ -496,7 +496,7 @@ def weight_import(path):
 
         #ウェイト値読み込む
         if mode:#edit mode
-            for i,point in enumerate(import_pci()):
+            for i,point in enumerate(import_pcl(filename)):
                 if i in selectedVtxIndex:
                     for w in point.findall('weight'):
                         vg = obj.vertex_groups[w[0]]
@@ -829,7 +829,9 @@ def export_cmd(outpath , mode):
                 use_selection = True ,
                 global_scale = props.scale ,
                 axis_forward = props.axis_forward ,
-                axis_up = props.axis_up
+                axis_up = props.axis_up ,
+                bake_anim =False
+
                 )
 
         elif mode == 'obj':
@@ -842,6 +844,7 @@ def export_cmd(outpath , mode):
                 keep_vertex_order=True,
                 use_vertex_groups=True,
                 use_mesh_modifiers=True,
+                use_materials =False,
                 )
 
     elif props.export_mode == 'ue':
@@ -864,7 +867,8 @@ def export_cmd(outpath , mode):
                 use_selection = True ,
                 global_scale = props.scale ,
                 axis_forward = props.axis_forward ,
-                axis_up = props.axis_up
+                axis_up = props.axis_up,
+                use_materials =False
                 )
 
 
@@ -878,3 +882,14 @@ def export_cmd(outpath , mode):
     #ユニットスケールをもとに戻す
     if props.temp_unitscale_enable:
         bpy.context.scene.unit_settings.scale_length = current_unitscale
+
+
+def rot90():
+    selected = utils.selected()
+    for ob in selected:
+        ob.rotation_euler.x = -1.5708
+
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True, properties=True)
+
+    for ob in selected:
+        ob.rotation_euler.x = 1.5708

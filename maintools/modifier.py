@@ -72,7 +72,7 @@ def get_param():
 def apply(self,context):
     act = utils.getActiveObj()
     props = bpy.context.scene.cyatools_oa
-    
+
     print(props.mod_init)
     if props.mod_init:
         #props.mod_init = False
@@ -99,7 +99,7 @@ def apply(self,context):
 #モディファイヤにターゲットを割り当てる場合とそれ以外で分ける
 #---------------------------------------------------------------------------------------
 def assign():
-    props = bpy.context.scene.cyatools_oa    
+    props = bpy.context.scene.cyatools_oa
     modtype = props.modifier_type
 
     sel = bpy.context.selected_objects
@@ -119,7 +119,7 @@ def assign():
 
                 elif modtype == 'SHRINKWRAP':
                     m.target = active
-    
+
     else:
         for obj in sel:
             result.append(obj)
@@ -132,28 +132,28 @@ def assign():
     for ob in result:
         utils.select(ob,True)
         utils.activeObj(ob)
-    
+
     get_param()
 
 
 #---------------------------------------------------------------------------------------
 def show(status):
-    props = bpy.context.scene.cyatools_oa    
+    props = bpy.context.scene.cyatools_oa
     modtype = props.modifier_type
 
     sel = utils.selected()
     active = utils.getActiveObj()
 
     for obj in sel:
-        for mod in obj.modifiers:        
-            
+        for mod in obj.modifiers:
+
             if modtype == mod.type:
                 mod.show_viewport = status
 
 
 #---------------------------------------------------------------------------------------
 def apply_mod():
-    props = bpy.context.scene.cyatools_oa    
+    props = bpy.context.scene.cyatools_oa
     modtype = props.modifier_type
 
     sel = utils.selected()
@@ -161,20 +161,20 @@ def apply_mod():
 
     for obj in sel:
         utils.activeObj(obj)
-        for mod in obj.modifiers:                    
+        for mod in obj.modifiers:
             if modtype == mod.type:
                 bpy.ops.object.modifier_apply( modifier = mod.name )
 
 #---------------------------------------------------------------------------------------
 def delete_mod():
-    props = bpy.context.scene.cyatools_oa    
+    props = bpy.context.scene.cyatools_oa
     modtype = props.modifier_type
 
     sel = utils.selected()
 
     for obj in sel:
         utils.activeObj(obj)
-        for mod in obj.modifiers:                    
+        for mod in obj.modifiers:
             if modtype == mod.type:
                 bpy.ops.object.modifier_remove( modifier = mod.name )
 
@@ -199,13 +199,13 @@ def select(TYPE):
 
 
     utils.mode_e()
-    
+
 
 #---------------------------------------------------------------------------------------
 #Apply all modifiers
 #---------------------------------------------------------------------------------------
 def apply_all(mode):
-    props = bpy.context.scene.cyatools_oa    
+    props = bpy.context.scene.cyatools_oa
     modtype = props.modifier_type
 
     sel = utils.selected()
@@ -218,4 +218,4 @@ def apply_all(mode):
                 bpy.ops.object.modifier_apply( modifier = mod.name )
             elif mode == 1:
                 bpy.ops.object.modifier_remove( modifier = mod.name )
-                
+

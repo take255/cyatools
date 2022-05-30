@@ -5,8 +5,13 @@ import re
 import math
 import mathutils
 import csv
+import pickle
+from pathlib import Path
 
+from . import apply
 from . import utils
+
+imp.reload(apply)
 imp.reload(utils)
 
 #選択したモデルのアーマチュアモディファイヤを全面に出す
@@ -265,11 +270,14 @@ def apply_without_armature_modifiers():
 
 
 def delete_all_vtxgrp():
+    objects = utils.selected()
     for obj in utils.selected():
         utils.act(obj)
         for group in obj.vertex_groups:
             bpy.context.object.vertex_groups.remove(group)
 
+    for obj in objects:
+        utils.select(obj,True)
 
 
 def delete_notexist_vtxgrp():
@@ -320,6 +328,16 @@ def delete_with_word():
         bpy.context.object.vertex_groups.remove(group)
 
 
+
+#---------------------------------------------------------------------------------------
+#
+#ウェイト削除
+#
+#---------------------------------------------------------------------------------------
+
+#------------------------------
+#全ウェイト削除
+#------------------------------
 def delete_allweights():
     obj=bpy.context.active_object
 
@@ -334,12 +352,13 @@ def delete_allweights():
         for vge in v.groups:
             vge.weight = 0
 
-
+#------------------------------
+#選択されているボーン以外のウェイト以外を削除
+#------------------------------
 def delete_unselectedweights():
     selected = bpy.context.selected_objects
     print( selected[1].name)
     result =set()
-
 
     #選択されたボーンを取得
     for bone in bpy.context.selected_bones:
@@ -353,14 +372,10 @@ def delete_unselectedweights():
     #アーマチュアをエディットモードのままにしておくと選択がおかしくなるのでいったん全選択解除
     bpy.ops.object.select_all(action='DESELECT')
 
-
     # objArray = []
     for obj in selected:
         if obj.type != 'ARMATURE':
-            #選択モデルをアクティブに
-            #objects.active =obj
             utils.act(obj)
-
             msh = obj.data
             vtxCount = len(msh.vertices)#頂点数
 
@@ -370,8 +385,62 @@ def delete_unselectedweights():
                     if group.name not in result:
                         group.add( [i], 0, 'REPLACE' )
 
-            #obj.select = True
             utils.select(obj,True)
+
+
+#------------------------------
+#選択頂点の部分から選択した骨のウェイトを削除する
+#モデルの頂点を選択、除外したいアーマチュアの骨を選択して実行
+#------------------------------
+def remove_weights_selectedbone():
+    selected = bpy.context.selected_objects
+    result =set()
+
+    #選択されたボーンを取得
+    for bone in bpy.context.selected_bones:
+        result.add(bone.name)
+
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+
+    objects = bpy.context.scene.objects
+
+    #アーマチュアをエディットモードのままにしておくと選択がおかしくなるのでいったん全選択解除
+    bpy.ops.object.select_all(action='DESELECT')
+
+    # objArray = []
+    for obj in selected:
+        if obj.type != 'ARMATURE':
+            utils.act(obj)
+            mesh = obj.data
+            #vtxCount = len(msh.vertices)#頂点数
+
+            for i,v in enumerate(mesh.vertices):
+                if v.select:
+                    for group in obj.vertex_groups:
+                        if group.name in result:
+                            group.add( [i], 0, 'REPLACE' )
+
+            utils.select(obj,True)
+
+
+#---------------------------------------------------------------------------------------
+#ウェイトのクリンナップ
+#---------------------------------------------------------------------------------------
+#weight_cleanup
+
+#------------------------------
+#選択されている頂点のウェイトをすべて削除
+#------------------------------
+def remove_weight_selectedVTX():
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+    obj = bpy.context.active_object
+
+    #頂点の情報
+    msh = obj.data
+    for v in msh.vertices:
+        if v.select:
+            for vge in v.groups:
+                vge.weight = 0
 
 
 
@@ -474,8 +543,8 @@ class WeightTransfer:
 
                 #頂点グループの削除
                 utils.act(obj)
-                for group in obj.vertex_groups:
-                    bpy.context.object.vertex_groups.remove(group)
+                # for group in obj.vertex_groups:
+                #     bpy.context.object.vertex_groups.remove(group)
 
 
                 ExistsAmt = False
@@ -501,15 +570,16 @@ class WeightTransfer:
                 #選択頂点のインデックスを事前に取得
                 indexarray = []
 
-                if self.selected_only:
-                    for v in mesh.vertices:
-                        if v.select:
-                            indexarray.append(v.index)
+                self.delete_weights( obj , range( len(mesh.vertices))) #ウェイトの削除)
+                # if self.selected_only:
+                #     for v in mesh.vertices:
+                #         if v.select:
+                #             indexarray.append(v.index)
 
-                    self.delete_weights( obj , indexarray )#ウェイトの削除
+                #     self.delete_weights( obj , indexarray )#ウェイトの削除
 
-                else:
-                    self.delete_weights( obj , range( len(mesh.vertices))) #ウェイトの削除)
+                # else:
+                #     self.delete_weights( obj , range( len(mesh.vertices))) #ウェイトの削除)
 
 
                 bpy.ops.object.mode_set(mode = 'OBJECT')
@@ -517,12 +587,9 @@ class WeightTransfer:
 
                 #選択された頂点だけ処理するかどうかで処理を分ける
                 if not self.selected_only:
-
                     for i,v in enumerate(mesh.vertices):
                         self.calc_weight(i,obj,v)
-
                 else:
-
                     for i,v in enumerate(mesh.vertices):
                         if v.select:
                             self.calc_weight(i,obj,v)
@@ -534,12 +601,15 @@ class WeightTransfer:
             if vg.name in self.bonename2index:
                 self.index2index[ self.bonename2index[vg.name] ] = i
 
-            if not self.keep_org:#元のウェイトを削除しないでコピー実行
-                vg.remove( targetvtx )
+            # if not self.keep_org:#元のウェイトを削除しないでコピー実行
+            #     vg.remove( targetvtx )
 
 
     def calc_weight( self, i ,obj  , v):
         result = self.kd.find_n( v.co , self.num_sample )
+
+        for vg in obj.vertex_groups:
+            vg.remove([i])
 
         #距離情報から割合を出す 近い方がウェイトが大きいので逆数にする
         #距離が０のときはウェイトを全振りする
@@ -575,6 +645,7 @@ class WeightTransfer:
                 if w[0] in self.index2index:
                     target_index = self.index2index[w[0]]
                     vg = obj.vertex_groups[ target_index ]
+                    #vg.remove([i])
 
                     #頂点インデックス、ウェイト値
                     #print( target_index , w[1]*ratio )
@@ -714,6 +785,7 @@ signdic = { 'R_':'L_' , 'L_':'R_' , '_l':'_r' , '_r':'_l' , 'Left':'Right' , 'Ri
 
 sign_prefix = { 'R_':'L_' , 'L_':'R_' , 'Left':'Right' , 'Right':'Left' }
 sign_suffix = { '_l':'_r' , '_r':'_l' , '_L':'_R' , '_R':'_L' }
+sign_facerig={'.L':'.R','.R':'.L'}
 
 
 def nameFlip_(name):
@@ -742,6 +814,11 @@ def nameFlip(name):
     for sign in sign_suffix:
         if name[ -len(sign) : ] == sign:
             new = name[:-len(sign)] + sign_suffix[sign]
+            return new
+
+    for sign in sign_facerig:
+        if name.find(sign)!=-1:
+            new = name.replace(sign,sign_facerig[sign])
             return new
 
     return name
@@ -994,20 +1071,6 @@ def mirror_transfer():
                 vg.add( [i], float(w[1]), 'REPLACE' )
 
 
-#---------------------------------------------------------------------------------------
-#選択されている頂点のウェイトをすべて削除
-#---------------------------------------------------------------------------------------
-def remove_weight_selectedVTX():
-    bpy.ops.object.mode_set(mode = 'OBJECT')
-    obj = bpy.context.active_object
-
-    #頂点の情報
-    msh = obj.data
-    vtxCount = str(len(msh.vertices))#頂点数
-    for v in msh.vertices:
-        if v.select:
-            for vge in v.groups:
-                vge.weight = 0
 
 
 #---------------------------------------------------------------------------------------
@@ -1169,4 +1232,473 @@ def selectgrp():
     for obj in selected:
         utils.select(obj,True)
     utils.mode_e()
+
+
+
+def weight_export(filename):
+    #ボーン名
+    bonearray = set()
+
+    for obj in utils.selected():
+
+        objname = obj.name
+        boneArray = []
+        for group in obj.vertex_groups:
+            boneArray.append(group.name)
+
+        #print(boneArray)
+        size = len(boneArray)
+        #頂点の情報
+        msh = obj.data
+        #vtxCount = str(len(msh.vertices))#頂点数
+
+        export_data = []
+        for v in msh.vertices:
+            vtx = Vtx()
+            for vge in v.groups:
+                if vge.weight > 0.00001 and vge.group < size :#ウェイト値０は除外 and prevent index out of range
+                    vtx.getWeight(vge.group, vge.weight ,boneArray) #boneArrayから骨名を割り出して格納
+            #vtx.normalize_weight() #ウェイトをノーマライズする
+
+            for bone in [x.name for x in vtx.weight]:
+                bonearray.add(bone)
+
+            export_data.append(vtx.export())
+        export_data.insert(0,list(bonearray))
+
+        #filename = path + objname + '.wgt'
+        #print(export_data[0])
+        export_pcl( filename ,  export_data )
+
+
+
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+
+def weight_import(filename):
+
+    mode = True
+    if utils.current_mode() == 'OBJECT':
+        mode = False
+
+    for obj in bpy.context.selected_objects:
+
+        #filename = '%s%s.wgt' % (path ,obj.name)
+
+        #選択された頂点のインデックスのセットをつくり、ウェイトを描き戻すときにチェックする
+        #インデックスは０から始まる
+        selectedVtx = [v for v in obj.data.vertices if v.select]
+        selectedVtxIndex = set([v.index for v in obj.data.vertices if v.select])
+
+
+        vtxgrp = set()
+
+        for group in obj.vertex_groups:
+            vtxgrp.add(group.name)
+
+
+        #ウェイト値のクリア
+        if mode:
+            for v in selectedVtx:
+                for i, g in enumerate(v.groups):
+                    v.groups[i].weight=0
+        else:
+            for v in obj.data.vertices:
+                for i, g in enumerate(v.groups):
+                    v.groups[i].weight=0
+
+        #ウェイト値読み込む
+        if mode:#edit mode
+            for i,point in enumerate(import_pcl()):
+                if i in selectedVtxIndex:
+                    for w in point.findall('weight'):
+                        vg = obj.vertex_groups[w[0]]
+                        vg.add( [i], float(w[1]), 'REPLACE' )
+
+        else:#object mode
+            dat = import_pcl(filename)
+
+            bonearray = dat.pop(0)#頂点グループ一覧
+
+            for b in bonearray:
+                if b not in vtxgrp:
+                    obj.vertex_groups.new(name = b)
+
+            for i,point in enumerate(dat):
+
+                result = []
+                for w in point:
+                    vg = obj.vertex_groups[w[0]]
+                    vg.add( [i], float(w[1]), 'REPLACE' )
+                    result.append([w[0],w[1]])
+
+
+
+
+#---------------------------------------------------------------------------------------
+#pickle
+#---------------------------------------------------------------------------------------
+def import_pcl(filename):
+    f = open(  filename  ,'rb')
+    dat = pickle.load( f )
+    f.close()
+    return dat
+
+def export_pcl(filename , export_data):
+    f = open( filename, 'wb' )
+    pickle.dump( export_data, f ,protocol=0)
+    f.close()
+
+#---------------------------------------------------------------------------------------
+#vertex format
+#---------------------------------------------------------------------------------------
+class Vtx:
+    """頂点出力のためのクラス"""
+    co = ''
+
+    class Weight:
+        """ウェイトの構造体"""
+        value = 0
+        name = ''
+
+    def __init__(self):
+        self.weight = []
+
+    def getWeight(self,index,weight,boneArray):
+        w = self.Weight()
+        w.value = weight
+        w.name =  boneArray[index]
+        self.weight.append(w)
+
+    def normalize_weight(self):
+        sum = 0
+        for w in self.weight:
+            sum += w.value
+
+        for w in self.weight:
+            #w.value = str(w.value/sum)
+            w.value = w.value/sum
+
+    def export(self):
+        return [[w.name , w.value] for w in self.weight]
+
+#---------------------------------------------------------------------------------------
+#小さいウェイトの削除
+#---------------------------------------------------------------------------------------
+def hummer():
+    props = bpy.context.scene.cyatools_oa
+    threshold = props.threshold_selectweight
+    act = utils.getActiveObj()
+    mesh = act.data
+
+    utils.mode_o()
+    for v in [x for x in mesh.vertices if x.select]:
+        print(v.index)
+        for vge in v.groups:
+            print(vge.group, vge.weight)
+            if( vge.weight < threshold ):
+                vg = act.vertex_groups[vge.group]
+                vg.add( [v.index], 0.0 , 'REPLACE' )
+
+
+Parts ={"Body","Eyes","Tangue","Teeth","FemaleBody","Sandal","BodyNoFinger","FemaleBodyNoFinger",
+        "Base","Eye","LowerGum","Tongue","UpperGum","Zsandal"
+        }
+
+
+def mob_import_faceit():
+    mob_import_main("faceit")
+
+#---------------------------------------------
+def mob_import_faceitrig():
+    mob_import_main("faceitrig")
+
+
+#---------------------------------------------
+def mob_import_ingame():
+    mob_import_main("ingame")
+
+
+def mob_import_main(mode):
+    props = bpy.context.scene.cyatools_oa
+
+
+    for obj in bpy.context.selected_objects:
+
+        #buf = obj.name.split("_")
+        buf = re.split('[_.]', obj.name)
+        print(buf)
+
+        path=""
+        for p in Parts:
+            if(p in buf):
+                print(p)
+                if(p == "Base"):#Baseの時は個別処理
+                    s = props.import_mob_weight_sex
+                    if(s=="Male"):
+                        p += "_M"
+
+                    elif(s=="Female"):
+                        p += "_F"
+
+
+                path = Path(bpy.context.preferences.addons['cyatools'].preferences.lib_path) / Path(f'Mob/weight/{mode}_{p}.wgt')
+
+        print(path)
+
+        if(path!=""):
+            mob_weight_import(obj,path)
+
+
+
+
+
+
+def mob_weight_import(obj,path):
+    vtxgrp = set()
+
+    for group in obj.vertex_groups:
+        vtxgrp.add(group.name)
+
+    #ウェイト値のクリア
+    for v in obj.data.vertices:
+        for i, g in enumerate(v.groups):
+            v.groups[i].weight=0
+
+    #ウェイト値読み込む
+    dat = import_pcl(path)
+
+    bonearray = dat.pop(0)#頂点グループ一覧
+
+    for b in bonearray:
+        if b not in vtxgrp:
+            obj.vertex_groups.new(name = b)
+
+    for i,point in enumerate(dat):
+
+        result = []
+        for w in point:
+            vg = obj.vertex_groups[w[0]]
+            vg.add( [i], float(w[1]), 'REPLACE' )
+            result.append([w[0],w[1]])
+
+
+def mob_process():
+    props = bpy.context.scene.cyatools_oa
+
+    if(props.mobproecss_index==1):
+        mob_process01()
+    elif(props.mobproecss_index==2):
+        mob_process02()
+    elif(props.mobproecss_index==3):
+        mob_process03()
+
+
+#Mob_Model_CS Mob_Model以下のサンダル以外のモデルを削除
+#PoseModel以下のモデルを複製
+# レイヤー移動、アーマチュアモディファイヤのアプライ、頂点グループ削除、faceitウェイトインポート
+#PoseModelレイヤ非表示
+
+def mob_process01():
+
+    #Mob_Model_CS Mob_Model以下のサンダル以外のモデルを削除
+    utils.deselectAll()
+    for ob in bpy.data.objects:
+        col = [c.name for c in ob.users_collection]
+
+        if('Mob_Model_CS' in col or 'Mob_Model' in col):
+            if(ob.name != 'Sandal'):
+                utils.select(ob,True)
+    bpy.ops.object.delete()
+
+
+    #poseModelのモデルをFasceit用に複製
+    utils.deselectAll()
+    objs=[]
+    for ob in bpy.data.objects:
+        col = [c.name for c in ob.users_collection]
+        if('PoseModel' in col):
+            if(ob.name != 'Sandal'):
+                utils.select(ob,True)
+
+
+
+    for ob in utils.selected():
+        utils.act(ob)
+        bpy.ops.object.duplicate(linked=False)
+        objs.append(utils.getActiveObj())
+
+    #１０フレーム目でモディファイヤアプライ
+    bpy.context.scene.frame_set( 10 )
+
+    for ob in objs:
+        utils.activeObj(ob)
+        for mod in ob.modifiers:
+            if "ARMATURE" == mod.type:
+                bpy.ops.object.modifier_apply( modifier = mod.name )
+
+
+    for ob in objs:
+        utils.select(ob,True)
+
+    delete_all_vtxgrp()
+    mob_import_faceit()
+
+
+    #コレクション移動
+    for c in bpy.data.collections:
+        if c.name.find('Mob_Model_CS') != -1:
+            for ob in objs:
+                c.objects.link(ob)
+
+        if c.name.find('PoseModel') != -1:
+            for ob in objs:
+                c.objects.unlink(ob)
+
+    #PoseModelのハイド
+    layer = bpy.context.window.view_layer.layer_collection
+    show_collection_by_name(layer,'PoseModel',True)
+
+#--------------------------------------------------------------------
+#Process02
+#Faceitでインゲーム用のフェイシャルをセットアップしたらこれを実行する
+#Eye Bodyを複製して CSじゃないコレクションに移動　コレクションを非表示にする
+def mob_process02():
+    pattern = re.compile(r'Base|Eye')
+    objs=[]
+    objs0=[]
+    for ob in bpy.data.objects:
+        if(bool(pattern.search(ob.name))):
+            if('Mob_Model_CS' in [c.name for c in ob.users_collection]):
+                #utils.act(ob)
+                objs0.append(ob)
+                #bpy.ops.object.duplicate(linked=False)
+                #objs.append(utils.getActiveObj())
+
+    for ob in objs0:
+        utils.act(ob)
+        bpy.ops.object.duplicate(linked=False)
+        objs.append(utils.getActiveObj())
+
+
+
+    #コレクション移動
+    for c in bpy.data.collections:
+        if c.name=='Mob_Model':
+            for ob in objs:
+                c.objects.link(ob)
+
+        if c.name=='Mob_Model_CS':
+            for ob in objs:
+                c.objects.unlink(ob)
+
+
+    #Mob_Modelのハイド
+    layer = bpy.context.window.view_layer.layer_collection
+    show_collection_by_name(layer,'Mob_Model',True)
+
+
+
+#--------------------------------------------------------------------
+#Process03
+#Faceitでフェイシャルを設定し終わったら実行。ゲームモデルを生成する
+#--------------------------------------------------------------------
+def mob_process03():
+    #インゲームウェイトの読み込み
+    utils.deselectAll()
+    for ob in bpy.data.objects:
+        col = [c.name for c in ob.users_collection]
+
+        if('Mob_Model_CS' in col or 'Mob_Model' in col):
+            utils.select(ob,True)
+
+    delete_all_vtxgrp()
+    mob_import_ingame()
+
+
+    #モデルを一体化する
+    layer = bpy.context.window.view_layer.layer_collection
+    pattern = re.compile(r'00_Model_Mob')
+    pattern0 = re.compile(r'CS$')
+    pattern1 = re.compile(r'^(?!.*(CS)).+$')
+
+
+    for i,model_col in enumerate(('Mob_Model','Mob_Model_CS')):
+        utils.deselectAll()
+        active_collection_by_name(layer,model_col)
+        ob = apply.apply_collection()
+
+        m = ob.modifiers.new("Armature", type='ARMATURE')
+        m.object = bpy.data.objects["root"]
+
+        #コレクション移動
+        for collection in bpy.data.collections:
+            if(i==1 and bool(pattern.search(collection.name)) and bool(pattern0.search(collection.name))):
+                col=collection.name
+
+            if(i==0 and bool(pattern.search(collection.name)) and bool(pattern1.search(collection.name))):
+                col=collection.name
+
+        for c in bpy.data.collections:
+            if c.name==col:
+                c.objects.link(ob)
+
+
+        #ルートからアンリンク
+        bpy.context.scene.collection.objects.unlink(ob)
+
+
+
+
+
+def mob_process03_():
+    pattern = re.compile(r'Body|Eyes|Tangue|Teeth')
+    objs=[]
+
+    utils.deselectAll()
+    for ob in bpy.data.objects:
+        if(bool(pattern.search(ob.name))):
+            l=[c.name for c in ob.users_collection]
+            if('Mob_Model_CS' in l or 'Mob_Model' in l):
+                objs.append(ob)
+
+    for ob in objs:
+        utils.select(ob,True)
+
+    delete_all_vtxgrp()
+    mob_import_ingame()
+
+
+#Process03
+#Faceitのウェイトを削除してインゲームのウェイトをコピー
+
+#Process04
+#アプライ済のモデルをコレクションに移動してrootにバインドする
+
+
+#---------------------------------------------------------------------------------------
+#ビューレイヤーを名前で表示状態切替
+#---------------------------------------------------------------------------------------
+def show_collection_by_name(layer ,name , state):
+    props = bpy.context.scene.cyatools_oa
+    children = layer.children
+
+    if children != None:
+        for ly in children:
+            if name == ly.name:
+                ly.hide_viewport = state
+
+            show_collection_by_name(ly , name , state)
+
+def active_collection_by_name(layer ,name):
+    props = bpy.context.scene.cyatools_oa
+    children = layer.children
+
+    if children != None:
+        for ly in children:
+            if name == ly.name:
+                bpy.context.view_layer.active_layer_collection = ly
+
+            active_collection_by_name(ly , name)
+
 

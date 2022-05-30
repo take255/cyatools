@@ -1,6 +1,7 @@
 import bpy
 import imp
 import re
+import csv
 
 from .. import utils
 imp.reload(utils)
@@ -18,15 +19,26 @@ def unitscale(value):
 #     fullpath = bpy.data.filepath
 #     buf = fullpath.split('\\')
 #     animname = buf[-1].split('.')[0]
-    
+
 
 #     export_cmd('anim',animname)
 
 
+CSV_PATH={}
+
 def export(mode):
 
-    props = bpy.context.scene.cyaue4tools_props 
+    props = bpy.context.scene.cyaue4tools_props
     name = ''
+
+    if props.exportmode == 'CSV':
+        with open(props.filepath) as f:
+            #print(f.read())
+            reader = csv.reader(f)
+            for row in reader:
+                #print(row)
+                CSV_PATH[row[0]]=row[1]
+
 
     act = utils.getActiveObj()
     currentMode = utils.current_mode()
@@ -39,7 +51,7 @@ def export(mode):
         # lib = bpy.data.libraries
         # if len(lib) == 0:
         #     msg = 'シーンにキャラクターがリンクされていません'
-        #     bpy.ops.cyatools.messagebox('INVOKE_DEFAULT', message = msg)            
+        #     bpy.ops.cyatools.messagebox('INVOKE_DEFAULT', message = msg)
         #     return
         # else:
         #     buf =  re.split('[_.]', lib[0].name )
@@ -58,10 +70,10 @@ def export(mode):
             if c.name.find('00_Anim_') != -1:
                 #name = 'AN%s_%s' % (charname , c.name.replace('00_Anim_',''))
                 name = 'AN_%s' % (c.name.replace('00_Anim_',''))
-                for ob in bpy.context.scene.objects: 
+                for ob in bpy.context.scene.objects:
                     cols = [x.name for x in ob.users_collection]
                     print(ob.name,cols,c in cols)
-                    if c.name in cols: 
+                    if c.name in cols:
                         utils.select(ob,True)
                         utils.activeObj(ob)
 
@@ -79,7 +91,7 @@ def export(mode):
         lib = bpy.data.libraries
         if len(lib) == 0:
             msg = 'シーンにキャラクターがリンクされていません'
-            bpy.ops.cyatools.messagebox('INVOKE_DEFAULT', message = msg)            
+            bpy.ops.cyatools.messagebox('INVOKE_DEFAULT', message = msg)
             return
         else:
             buf =  re.split('[_.]', lib[0].name )
@@ -97,10 +109,10 @@ def export(mode):
         for c in bpy.data.collections:
             if c.name.find('00_Anim_') != -1:
                 name = 'AN%s_%s' % (charname , c.name.replace('00_Anim_',''))
-                for ob in bpy.context.scene.objects: 
+                for ob in bpy.context.scene.objects:
                     cols = [x.name for x in ob.users_collection]
                     print(ob.name,cols,c in cols)
-                    if c.name in cols: 
+                    if c.name in cols:
                         utils.select(ob,True)
                         utils.activeObj(ob)
 
@@ -117,10 +129,10 @@ def export(mode):
             if c.name.find('00_Anim_') != -1:
                 #name = 'AN%s_%s' % (charname , c.name.replace('00_Anim_',''))
                 name = 'AN_%s' % (c.name.replace('00_Anim_',''))
-                for ob in bpy.context.scene.objects: 
+                for ob in bpy.context.scene.objects:
                     cols = [x.name for x in ob.users_collection]
                     print(ob.name,cols,c in cols)
-                    if c.name in cols: 
+                    if c.name in cols:
                         utils.select(ob,True)
                         utils.activeObj(ob)
 
@@ -130,7 +142,7 @@ def export(mode):
         utils.mode(currentMode)
 
 
-    elif mode == 'model':
+    elif mode == 'model' or mode == 'model&anim':
         # for i in  utils.collection.get_visible():
         #     print(i)
         # return
@@ -157,12 +169,15 @@ def export(mode):
 
                 if c.name in visible:
                     utils.deselectAll()
-                    name = c.name.replace('00_Model_','CH_')
+                    if( props.add_ch):
+                        name = c.name.replace('00_Model_','CH_')
+                    else:
+                        name = c.name.replace('00_Model_','')
 
-                    for ob in bpy.context.scene.objects: 
+                    for ob in bpy.context.scene.objects:
                         cols = set([x.name for x in ob.users_collection])
                         #print(ob.name,cols,c in cols)
-                        #if c.name in cols: 
+                        #if c.name in cols:
                         #print(cols <= colset)
 
                         #オブジェクトが含まれるコレクションと00_Modelとそれ以下のコレクションで共通があるか調べる
@@ -176,16 +191,25 @@ def export(mode):
 
                     export_core( mode , name )
                     msg += name + '.fbx '
-            
-        bpy.ops.cyatools.messagebox('INVOKE_DEFAULT', message = msg)            
-    
+
+        bpy.ops.cyatools.messagebox('INVOKE_DEFAULT', message = msg)
+
 
 
 def export_core( mode , name ):
-    props = bpy.context.scene.cyaue4tools_props 
+    props = bpy.context.scene.cyaue4tools_props
 
-    outpath = '%s\%s.fbx' % ( props.filepath , name )
-    print(outpath)
+
+    if props.exportmode == 'Path':
+        outpath = '%s\%s.fbx' % ( props.filepath , name )
+        print(outpath)
+
+    elif props.exportmode == 'CSV':
+        path = CSV_PATH[name]
+        outpath = '%s\%s.fbx' % ( path , name )
+        print(outpath)
+
+
 
     #スケールを0.01に強制
     unitscale = bpy.context.scene.unit_settings.scale_length
@@ -195,7 +219,7 @@ def export_core( mode , name ):
         scale = 1.0
         axis_forward = '-Z'
         axis_up = 'Y'
-        object_types = {'ARMATURE',} 
+        object_types = {'ARMATURE',}
 
         bpy.ops.export_scene.fbx(
             filepath=outpath ,
@@ -223,7 +247,7 @@ def export_core( mode , name ):
         scale = 1.0
         axis_forward = '-Z'
         axis_up = 'Y'
-        object_types = {'MESH','ARMATURE'} 
+        object_types = {'MESH','ARMATURE'}
 
         bpy.ops.export_scene.fbx(
             filepath=outpath ,
@@ -250,7 +274,7 @@ def export_core( mode , name ):
             scale = 1.0
             axis_forward = '-Z'
             axis_up = 'Y'
-            object_types = {'MESH','ARMATURE'} 
+            object_types = {'MESH','ARMATURE'}
 
             bpy.ops.export_scene.fbx(
                 filepath=outpath ,
@@ -274,11 +298,39 @@ def export_core( mode , name ):
                 bake_anim_simplify_factor = 0.0
             )
 
+    elif mode == 'model&anim':
+        scale = 1.0
+        axis_forward = '-Z'
+        axis_up = 'Y'
+        object_types = {'MESH','ARMATURE'}
+
+        bpy.ops.export_scene.fbx(
+            filepath=outpath ,
+            use_selection = True ,
+            global_scale = scale ,
+            axis_forward = axis_forward ,
+            axis_up = axis_up,
+            object_types = object_types,
+
+            primary_bone_axis = 'Y',
+            secondary_bone_axis = 'X',
+            add_leaf_bones = False,
+
+            #bake animation
+            bake_anim = True,
+            bake_anim_use_all_bones = True,
+            bake_anim_use_nla_strips = False,
+            bake_anim_use_all_actions = False,
+            bake_anim_force_startend_keying = True,
+            #bake_anim_step = 0.1
+            bake_anim_simplify_factor = 0.0
+            )
+
     #ユニットスケールをもとに戻す
     bpy.context.scene.unit_settings.scale_length = unitscale
 
 
     #msg = outpath + ' '
-    # bpy.ops.cyatools.messagebox('INVOKE_DEFAULT', message = msg)            
+    # bpy.ops.cyatools.messagebox('INVOKE_DEFAULT', message = msg)
     #return msg
 
