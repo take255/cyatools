@@ -266,45 +266,49 @@ def mirror_l_to_r_back():
 VARRAY_DIC = {}
 
 #頂点コピー
-def copy_vertex_pos():
-    #global VARRAY
-    #VARRAY.clear()
+def copy_vertex_pos(mode):
     global VARRAY_DIC
-    VARRAY_DIC.clear()
 
-
-    #bpy.ops.object.mode_set(mode = 'OBJECT')
     obj = bpy.context.active_object
     mesh = obj.data
-
     bpy.ops.object.mode_set(mode = 'OBJECT')
-    #print('----------------------')
-    for i,v in enumerate(mesh.vertices):
-        #print(v.select)
-        if v.select:
-            #pos = Vector((v[val][0],v[val][1],v[val][2]))
+
+    #copy selected
+    if mode == 0:
+        VARRAY_DIC.clear()
+        for i,v in enumerate(mesh.vertices):
+            if v.select:
+                VARRAY_DIC[i] = Vector((v.co[0],v.co[1],v.co[2]))
+    #copy all
+    if mode == 1:
+        VARRAY_DIC.clear()
+        for i,v in enumerate(mesh.vertices):
             VARRAY_DIC[i] = Vector((v.co[0],v.co[1],v.co[2]))
-            #VARRAY.append(v.co)
-            #print(v.co)
+
+    #paste
+    elif mode == 2:
+        for i,v in enumerate(mesh.vertices):
+            if i in VARRAY_DIC:
+                v.co = VARRAY_DIC[i]
+
 
 
 #頂点ペースト
-def paste_vertex_pos():
+# def paste_vertex_pos():
+#     global VARRAY_DIC
+
+#     obj = bpy.context.active_object
+#     mesh = obj.data
+#     bpy.ops.object.mode_set(mode = 'OBJECT')
+
+#     for i,v in enumerate(mesh.vertices):
+#         if i in VARRAY_DIC:
+#             v.co = VARRAY_DIC[i]
+
+
+def copy_vertex_pos_blendshape(mode):
+
     global VARRAY_DIC
-
-    obj = bpy.context.active_object
-    mesh = obj.data
-    bpy.ops.object.mode_set(mode = 'OBJECT')
-
-    for i,v in enumerate(mesh.vertices):
-        if i in VARRAY_DIC:
-            v.co = VARRAY_DIC[i]
-
-
-def copy_vertex_pos_blendshape():
-
-    global VARRAY_DIC
-    VARRAY_DIC.clear()
 
     obj = bpy.context.active_object
     mesh = obj.data
@@ -312,57 +316,84 @@ def copy_vertex_pos_blendshape():
     bm.from_mesh(mesh)
 
     bpy.ops.object.mode_set(mode = 'OBJECT')
+
     #選択された頂点インデックスを取得
     #indexarray = [i for i,v in enumerate(mesh.vertices) if v.select ]
     #ブレンドシェイプ
     spIndex = obj.active_shape_key_index
-
     key = bm.verts.layers.shape.keys()[spIndex]
     val = bm.verts.layers.shape.get(key)
 
+    if mode == 0:
+        VARRAY_DIC.clear()
+        for v in [(v,v.index) for v in bm.verts if v.select]:
+            pos = Vector((v[0][val][0],v[0][val][1],v[0][val][2]))
+            VARRAY_DIC[v[1]] = pos
 
-    #選択された頂点インデックスは別に取得
-    # for i,v in enumerate(bm.verts):
-    #     if i in indexarray:
+    elif mode == 1:
+        VARRAY_DIC.clear()
+        for v in [(v,v.index) for v in bm.verts]:
+            pos = Vector((v[0][val][0],v[0][val][1],v[0][val][2]))
+            VARRAY_DIC[v[1]] = pos
 
-    #         pos = Vector((v[val][0],v[val][1],v[val][2]))
-    #         VARRAY_DIC[i] = pos
+    elif mode == 2:
+        for i,v in enumerate(bm.verts):
+            if i in VARRAY_DIC:
+                v[val] = VARRAY_DIC[i]
 
-    for v in [(v,v.index) for v in bm.verts if v.select]:
-        #v = bm.vert[i]
-        pos = Vector((v[0][val][0],v[0][val][1],v[0][val][2]))
-        VARRAY_DIC[v[1]] = pos
+        for v in [(v,v.index) for v in bm.verts if v.index in VARRAY_DIC]:
+                v[0][val] = VARRAY_DIC[v[1]]
 
-
-
-#シェイプのインデックスが０の時は別処理
-def paste_vertex_pos_blendshape():
-    global VARRAY_DIC
-
-    obj = bpy.context.active_object
-    mesh = obj.data
-    bm = bmesh.new()
-    bm.from_mesh(mesh)
-
-    spIndex = obj.active_shape_key_index
-    key = bm.verts.layers.shape.keys()[spIndex]
-    val = bm.verts.layers.shape.get(key)
-
-    bpy.ops.object.mode_set(mode = 'OBJECT')
-
-    # if spIndex > 0:
-    #print(len(bm.verts))
-    for i,v in enumerate(bm.verts):
-        if i in VARRAY_DIC:
-            v[val] = VARRAY_DIC[i]
-            #print(val,i)
-
-    for v in [(v,v.index) for v in bm.verts if v.index in VARRAY_DIC]:
-            v[0][val] = VARRAY_DIC[v[1]]
+        bm.to_mesh(obj.data)
+        mesh.update()
 
 
-    bm.to_mesh(obj.data)
-    mesh.update()
+def copy_vertex_pos_paste_to_blendshape():
+
+    act = bpy.context.active_object
+    source = ''
+    for ob in utils.selected():
+        if ob != act:
+            source = ob
+            break
+
+    if source == '':
+        return
+
+    utils.act(source)
+    copy_vertex_pos(1)
+
+    utils.act(act)
+    copy_vertex_pos_blendshape(2)
+
+# #シェイプのインデックスが０の時は別処理
+# def paste_vertex_pos_blendshape():
+#     global VARRAY_DIC
+
+#     obj = bpy.context.active_object
+#     mesh = obj.data
+#     bm = bmesh.new()
+#     bm.from_mesh(mesh)
+
+#     spIndex = obj.active_shape_key_index
+#     key = bm.verts.layers.shape.keys()[spIndex]
+#     val = bm.verts.layers.shape.get(key)
+
+#     bpy.ops.object.mode_set(mode = 'OBJECT')
+
+#     # if spIndex > 0:
+#     #print(len(bm.verts))
+#     for i,v in enumerate(bm.verts):
+#         if i in VARRAY_DIC:
+#             v[val] = VARRAY_DIC[i]
+#             #print(val,i)
+
+#     for v in [(v,v.index) for v in bm.verts if v.index in VARRAY_DIC]:
+#             v[0][val] = VARRAY_DIC[v[1]]
+
+
+#     bm.to_mesh(obj.data)
+#     mesh.update()
 
 #---------------------------------------------------------------------------------------
 #選択された頂点をバッファに保持する
@@ -420,6 +451,13 @@ def normal_180deg():
     for ob in utils.selected():
         ob.data.use_auto_smooth = True
         ob.data.auto_smooth_angle = 180
+
+def normal_clear():
+    for o in utils.selected():
+        #bpy.context.view_layer.objects.active = o
+        utils.act(o)
+        bpy.ops.mesh.customdata_custom_splitnormals_clear()
+
 
 
 #---------------------------------------------------------------------------------------

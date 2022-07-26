@@ -339,10 +339,11 @@ def apply_model_modifier(dat):
         elif mod.show_viewport == False:#モディファイヤが非表示なら削除する
             bpy.context.object.modifiers.remove(mod)
         else:
-            try:#モディファイヤのターゲットがない場合など、適用でエラーが出る場合は削除
-                bpy.ops.object.modifier_apply(modifier=mod.name)
-            except:
-                bpy.context.object.modifiers.remove(mod)
+            bpy.ops.object.apply_all_modifier()
+            # try:#モディファイヤのターゲットがない場合など、適用でエラーが出る場合は削除
+            #     bpy.ops.object.modifier_apply(modifier=mod.name)
+            # except:
+            #     bpy.context.object.modifiers.remove(mod)
 
     #ミラーパブリッシュモード(この前のループで処理しようとするとエラーが出るのでここで実行)
     if dat.mirror:
@@ -464,6 +465,8 @@ def apply_collection():
         #put_into_collection(current_scene_name , result , utils.sceneActive(fix_scene))
 
     ApplyCollectionMode = False
+
+    utils.deselectAll()
     return new_obj
 
 
@@ -595,10 +598,12 @@ def instance_substantial_loop( col , current , matrix):
                 elif mod.show_viewport == False:#モディファイヤが非表示なら削除する
                     bpy.context.object.modifiers.remove(mod)
                 else:
-                    try:#モディファイヤのターゲットがない場合など、適用でエラーが出る場合は削除
-                        bpy.ops.object.modifier_apply(modifier=mod.name)
-                    except:
-                        bpy.context.object.modifiers.remove(mod)
+                    bpy.ops.object.apply_all_modifier()
+                    # try:#モディファイヤのターゲットがない場合など、適用でエラーが出る場合は削除
+                    #     bpy.ops.object.modifier_apply(modifier=mod.name)
+
+                    # except:
+                    #     bpy.context.object.modifiers.remove(mod)
 
             obj.matrix_world =  matrix @ obj.matrix_world
 

@@ -49,7 +49,7 @@ def tobone():
     amt = utils.getActiveObj()
     bone  = utils.bone.get_active_bone()
     matrix = Matrix(bone.matrix)
-    
+
     matrix.invert()
     location = Vector(bone.head)
     mat_loc = Matrix.Translation(Vector(bone.head))
@@ -86,7 +86,7 @@ def tobone_keep():
     amt = utils.getActiveObj()
     bone  = utils.bone.get_active_bone()
     matrix = Matrix(bone.matrix)
-    
+
     matrix.invert()
     location = Vector(bone.head)
     mat_loc = Matrix.Translation(Vector(bone.head))
@@ -130,7 +130,7 @@ def create_locator(name , matrix):
     empty.matrix_world = matrix
 
     move_collection(empty , col)
-    
+
 
     #親のロケータを作成
     bpy.ops.object.empty_add(type='SPHERE')
@@ -153,10 +153,10 @@ def create_locator(name , matrix):
 #---------------------------------------------------------------------------------------
 def replace():
     selected = utils.selected()
-    
+
     for obj in selected:
         empty_p = create_locator(obj.name , obj.matrix_world)
-        
+
         obj.matrix_world = Matrix()
         obj.parent = empty_p
 
@@ -184,18 +184,18 @@ def replace_facenormal():
             normal.normalize()
             xaxis.normalize()
             yaxis.normalize()
-            
+
             x = [x for x in xaxis] +[0.0]
             y = [x for x in yaxis] +[0.0]
             z = [x for x in normal] +[0.0]
             p = [x for x in pos] +[0.0]
-            
+
             m0 = Matrix([xaxis,yaxis,normal])
             m0.transpose()
 
             matrix = Matrix([x , y , z , p])
             matrix.transpose()
- 
+
 
     utils.mode_o()
 
@@ -204,7 +204,7 @@ def replace_facenormal():
     #親子付けする前に逆変換しておいて親子付け時の変形を打ち消す
     mat_loc = Matrix.Translation([-x for x in pos])
     obj.matrix_world = m0.inverted().to_4x4() @ mat_loc
-    
+
     obj.parent = empty_p
 
 #---------------------------------------------------------------------------------------
@@ -236,7 +236,7 @@ def instancer():
     #選択したオブジェクトのコレクションを選択
     #回転matrixと位置vectorに分ける
     act = utils.getActiveObj()
-    pos_act = Vector(act.location) 
+    pos_act = Vector(act.location)
     m_rot = act.matrix_world.to_3x3()
     m_rot.invert()
 
@@ -282,12 +282,12 @@ def instance_substantial_loop( col , current ):
 
     obarray = []
     selected = utils.selected()
-    
+
     for ob in selected:
         utils.act(ob)
         if ob.data == None:
             if ob.instance_type == 'COLLECTION':
-                instance_substantial_loop(col , current)            
+                instance_substantial_loop(col , current)
         else:
             bpy.ops.object.duplicate_move()
             act = utils.getActiveObj()
@@ -300,11 +300,11 @@ def instance_substantial_loop( col , current ):
 
         act = utils.getActiveObj()
         #obarray.append(act.name)
-    
+
     utils.deselectAll()
 
     scn = utils.sceneActive(current)
-    
+
     # for ob in obarray:
     #     print(ob)
     #     utils.selectByName(ob,True)
@@ -334,7 +334,7 @@ def instance_substantial():
         return
     col = utils.collection.create('01_substantial')
 
-    
+
 
     instance_substantial_loop( col , current )
     transform_apply()
@@ -346,7 +346,7 @@ def instance_substantial():
         print(ob.name)
         utils.activeObj(ob)
         for mod in ob.modifiers:
-            bpy.ops.object.modifier_apply( modifier = mod.name )        
+            bpy.ops.object.modifier_apply( modifier = mod.name )
 
     bpy.ops.object.join()
     utils.getActiveObj().matrix_world = matrix
@@ -355,7 +355,7 @@ def instance_substantial():
 
     return utils.getActiveObj()
 
- 
+
 #---------------------------------------------------------------------------------------
 #トランスフォームをアプライする
 #スケールの正負判定　スケールに一つでも負の値が入っていたら法線をフリップする
@@ -396,12 +396,12 @@ def instance_select_collection():
                 if exist:
                     utils.sceneActive(scn.name)
                     break
-                               
+
     layer = bpy.context.window.view_layer.layer_collection
     show_collection_by_name( layer , col.name , False)
     collection_unhide_loop(layer,col)
 
-    utils.deselectAll()                  
+    utils.deselectAll()
     collection = bpy.data.collections[col.name]
     for ob in collection.objects:
         utils.select(ob,True)
@@ -418,7 +418,7 @@ def collection_unhide_loop(layer ,col):
 #---------------------------------------------------------------------------------------
 #Invert selected object using last selection.
 #---------------------------------------------------------------------------------------
-def invert_last_selection():    
+def invert_last_selection():
     amt = utils.getActiveObj()
     selected = utils.selected()
     matrix = Matrix(amt.matrix_world)
@@ -460,7 +460,7 @@ def show_collection_by_name(layer ,name , state):
     if children != None:
         for ly in children:
             if name == ly.name:
-                ly.hide_viewport = state                
+                ly.hide_viewport = state
 
             show_collection_by_name(ly , name , state)
 
@@ -476,7 +476,7 @@ def swap_axis(axis):
     pos = Vector(act.location)
 
     #第一段階
-    #rotate direction : crockwize, view from the positive directon of the axis. 
+    #rotate direction : crockwize, view from the positive directon of the axis.
     if axis == 'x':
         m = Matrix(((1,0,0),(0,0,-1),(0,1,0)))
     elif axis == 'y':
@@ -487,8 +487,8 @@ def swap_axis(axis):
     m.transpose()
     act.matrix_world = m.to_4x4()
     bpy.ops.object.transform_apply( location = True , rotation=True , scale=True )
-    
-    
+
+
     #第二段階　転置して成分分離
     matrix.transpose()
 
@@ -591,7 +591,7 @@ def mirror(axis):
 
             ob_target.matrix_world = m_new
 
-    elif props.mirror_mode == 'normal':    
+    elif props.mirror_mode == 'normal':
         for ob in utils.selected():
             utils.act(ob)
 
@@ -657,17 +657,17 @@ def mirror_geom(axis):
 #---------------------------------------------------------------------------------------
 def instance_replace():
     act_org = utils.getActiveObj()
-    selected = utils.selected() 
-    
+    selected = utils.selected()
+
     for ob in selected:
         col_ob = ob.users_collection[0]
         p = ob.parent
         m = Matrix(ob.matrix_world)
 
-        utils.act(act_org)    
+        utils.act(act_org)
         bpy.ops.object.duplicate_move_linked()
 
-        act_dup = utils.getActiveObj()    
+        act_dup = utils.getActiveObj()
         act_dup.matrix_world = m
         act_dup.parent = p
 
@@ -676,7 +676,7 @@ def instance_replace():
             c.objects.unlink(act_dup)
 
         col_ob.objects.link(act_dup)
-    
+
     for ob in selected:
         utils.delete(ob)
 
@@ -715,8 +715,8 @@ def add_bone():
     m_array = []
     for ob in utils.selected():
         if ob != amt:
-            m_array.append( AddBoneObj(ob) )  
-    
+            m_array.append( AddBoneObj(ob) )
+
     utils.act(amt)
     utils.mode_e()
 
@@ -727,7 +727,7 @@ def add_bone():
         b.tail = m.head + m.axis_forward[ af ]
         print(m.axis_forward[ af ])
         bpy.ops.armature.select_all(action='DESELECT')
-        
+
 
 # First, select object next select armature. Enter edit mode and select bone to align.
 def snap_bone_at_obj():
@@ -737,7 +737,7 @@ def snap_bone_at_obj():
     for ob in utils.selected():
         if ob != amt:
             loc = ob.location
-    
+
     bone.head = loc
 
 
@@ -765,7 +765,7 @@ def separate_face():
 
     bpy.ops.object.join()
 
-        
+
 
 
 

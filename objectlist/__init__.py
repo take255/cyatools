@@ -23,14 +23,6 @@ from . import cmd
 imp.reload(utils)
 imp.reload(cmd)
 
-bl_info = {
-"name": "cyaobjectlist",
-"author": "kisecyakeshi",
-"version": (0, 1),
-"blender": (2, 80, 0),
-"description": "cyaobjectlist",
-"category": "Object"}
-
 try:
     bpy.utils.unregister_class(CYAOBJECTLIST_Props_item)
 except:

@@ -97,7 +97,7 @@ def cyarigtools_handler(scene):
                 index_notExists.append(i)
 
         for index in reversed(index_notExists):
-             props.allbones.remove(index)
+            props.allbones.remove(index)
 
 
 #---------------------------------------------------------------------------------------
@@ -141,7 +141,8 @@ class CYARIGTOOLS_Props_OA(PropertyGroup):
     clavicle_scale : FloatProperty(name="clavicle",min=0.001,default=1.0)
     hand_scale : FloatProperty(name="hand",min=0.001,default=1.0)
 
-
+    #ミラー
+    mirror_pos_only : BoolProperty( name = 'pos only')
 
 #---------------------------------------------------------------------------------------
 #UI
@@ -408,7 +409,9 @@ class CYARIGTOOLS_MT_edittools(bpy.types.Operator):
         box.label(text = 'modify')
         box.operator("cyarigtools.edit_genarate_symmetry",text = "symmetry0").mode = 0
         box.operator("cyarigtools.edit_genarate_symmetry",text = "symmetry1").mode = 1
+        box.prop(props,"mirror_pos_only")
         box.operator("cyarigtools.edit_connect_chain")
+
 
 
         box = col.box()

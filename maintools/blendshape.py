@@ -581,9 +581,20 @@ MOBDIC_FACE={
 160:"16"
 }
 
-def mob_extruct0():
+def mob_extruct0(mode):
     frame = bpy.context.scene.frame_current
-    mob_extruct(frame)
+    act = utils.getActiveObj()
+
+    if mode==0:
+        mob_extruct(frame)
+
+    elif mode==1:
+        mob_extruct(frame)
+
+        bpy.context.scene.frame_set(frame+200)
+        utils.act(act)
+        mob_extruct(frame+200)
+
 
 def mob_extruct(frame):
 
@@ -591,10 +602,11 @@ def mob_extruct(frame):
 
     source = utils.getActiveObj()
 
-    if frame in MOBDIC:
-        newname = "Mob_" + MOBDIC[frame]
-    else:
-        newname = f"{ source.name }_{frame}"
+    # if frame in MOBDIC:
+    #     newname = "Mob_" + MOBDIC[frame]
+    # else:
+    #     newname = f"{ source.name }_{frame}"
+    newname = f"{ source.name }_{frame}"
 
     bpy.ops.object.duplicate(linked=False)
     bpy.ops.object.shape_key_add(from_mix=True)
@@ -766,23 +778,151 @@ def save_vtxpos_delta(filename):
     f.close()
 
 
-def import_vtxpos_delta(filename):
+#mode=0: メッシュ　1: ブレンドシェイプ
+def import_vtxpos_delta(filename,mode):
     f = open(  filename  ,'rb')
     dat = pickle.load( f )
     f.close()
 
-    for d in dat:
-        print(d)
 
 
     obj = bpy.context.active_object
     mesh = obj.data
     bpy.ops.object.mode_set(mode = 'OBJECT')
 
-    for v,vt in zip(mesh.vertices,dat):
-        #pos = Vector((v.co[0],v.co[1],v.co[2]))
-        v.co = v.co+Vector((vt[0],vt[1],vt[2]))
 
+    if mode == 0:
+        for v,vt in zip(mesh.vertices,dat):
+            v.co = v.co+Vector((vt[0],vt[1],vt[2]))
+
+    elif mode == 1:
+        bm = bmesh.new()
+        bm.from_mesh(mesh)
+
+
+        spIndex = obj.active_shape_key_index
+        key = bm.verts.layers.shape.keys()[spIndex]
+        val = bm.verts.layers.shape.get(key)
+
+        for v,vt in zip(bm.verts,dat):
+            #v[val] = v1[1]
+            pos = Vector((v[val][0],v[val][1],v[val][2]))
+            v[val] = pos + Vector((vt[0],vt[1],vt[2]))
+
+
+        bm.to_mesh(obj.data)
+        mesh.update()
+
+
+
+
+#---------------------------------------------------------------------------------------
+#モブフェイシャルのセットアップ
+#---------------------------------------------------------------------------------------
+def setup_mob_face(mode):
+
+    namearray = (
+    (
+    'Unique01',
+    'Negative01',
+    'Negative02',
+    'Negative03'
+    ),
+
+    (
+    'browsWrinkles01',
+    'browsWrinkles02'
+    )
+    )
+
+    obj = bpy.context.active_object
+    mesh = obj.data
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+
+    bpy.ops.object.mode_set(mode = 'OBJECT')
+
+
+    size = len(namearray[mode])
+
+    if mode == 0:
+        bpy.ops.object.shape_key_add()
+
+    for idx in range( size ):
+        bpy.ops.object.shape_key_add()
+
+    bm.to_mesh(obj.data)
+    mesh.update()
+
+    shape_keys = obj.data.shape_keys.key_blocks
+
+    #ブレンドシェイプのリネーム
+    for shape_key , name in zip( shape_keys[-size : ] , namearray[mode] ):
+        shape_key.name = name
+        print("sk>",shape_key)
+
+    bm.to_mesh(obj.data)
+    mesh.update()
+
+#---------------------------------------------------------------------------------------
+#モブフェイシャルのセットアップ
+#---------------------------------------------------------------------------------------
+def setup_mob_face2(mode):
+
+    namearray = (
+    (
+    'Negative_M_01',
+    'Negative_M_02',
+    'Negative_M_03',
+    'Negative_M_04',
+    ),
+
+    (
+    'browsWrinkles_M_01',
+    'browsWrinkles_M_02'
+    ),
+
+    (
+    'Negative_F_01',
+    'Negative_F_02',
+    'Negative_F_03',
+    'Negative_F_04',
+    ),
+
+    (
+    'browsWrinkles_F_01',
+    'browsWrinkles_F_02'
+    )
+
+    )
+
+
+    obj = bpy.context.active_object
+    mesh = obj.data
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+
+    size = len(namearray[mode])
+
+    for idx in range(size):
+        filename = "E:/data/project/YKS/Characters/Data/Mob/FacialData/%s.dat" % namearray[mode][idx]
+        f = open(  filename  ,'rb')
+        dat = pickle.load( f )
+        f.close()
+
+        bpy.context.active_object.active_shape_key_index = idx
+        #print(idx)
+        key = bm.verts.layers.shape.keys()[-size + idx]
+        val = bm.verts.layers.shape.get(key)
+        print("val>",val)
+
+
+        for v,vt in zip(bm.verts,dat):
+            pos = Vector((v[val][0],v[val][1],v[val][2]))
+            v[val] = pos + Vector((vt[0],vt[1],vt[2]))
+
+    bm.to_mesh(obj.data)
+    mesh.update()
 
 
 

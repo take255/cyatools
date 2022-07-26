@@ -136,8 +136,8 @@ def genarate_bone_from2():
 #選択したボーンの名前を取得、LR入れ替えた骨を探し　LRの候補を数種類使えるように改良
 #最初か最後に識別子があるかどうかに限定する
 #---------------------------------------------------------------------------------------
-Lsign = ('L_' , '_l' , '.l' ,'_L')
-Rsign = ('R_' , '_r' , '.r' ,'_R')
+Lsign = ('L_' , '_l' , '.l' ,'_L','.L')
+Rsign = ('R_' , '_r' , '.r' ,'_R','.R')
 
 def genarate_symmetry(mode):
     if mode == 1:
@@ -145,7 +145,6 @@ def genarate_symmetry(mode):
         return
 
     props = bpy.context.scene.cyarigtools_props
-
     amt = bpy.context.active_object
 
     for bone in bpy.context.selected_bones:
@@ -173,11 +172,13 @@ def genarate_symmetry(mode):
                 newbone.head = (-head[0],head[1], head[2])
                 newbone.tail = (-tail[0],tail[1], tail[2])
 
-                if props.axismethod == 'old':
-                    newbone.roll = -roll + math.pi #反転したあと１８０°回転させる
+                if not props.mirror_pos_only:
 
-                elif props.axismethod == 'new':
-                    newbone.roll = -roll
+                    if props.axismethod == 'old':
+                        newbone.roll = -roll + math.pi #反転したあと１８０°回転させる
+
+                    elif props.axismethod == 'new':
+                        newbone.roll = -roll
 
 
 #---------------------------------------------------------------------------------------

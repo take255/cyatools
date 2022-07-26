@@ -17,7 +17,8 @@ TYPE = (
 ('SKIN','SKIN',''),
 ('SOLIDIFY','SOLIDIFY',''),
 ('SUBSURF','SUBSURF',''),
-('TRIANGULATE','TRIANGULATE','')
+('TRIANGULATE','TRIANGULATE',''),
+('NODES','GEOMETRYNODES','')
 )
 
 COLLECTION_SEND_TO = '09_ModifierObjects'
@@ -218,4 +219,26 @@ def apply_all(mode):
                 bpy.ops.object.modifier_apply( modifier = mod.name )
             elif mode == 1:
                 bpy.ops.object.modifier_remove( modifier = mod.name )
+
+
+def simple(mode):
+    props = bpy.context.scene.cyatools_oa
+    modtype = props.modifier_type
+
+    #sel = bpy.context.selected_objects
+    active = utils.getActiveObj()
+    result = []
+
+    if mode == 0:#mirror
+        for obj in utils.selected():
+            m = obj.modifiers.new( 'MIRROR' , type = 'MIRROR' )
+            m.use_bisect_axis[0]=True
+            m.use_clip=True
+
+    # utils.mode_o()
+    # utils.deselectAll()
+
+    # for ob in result:
+    #     utils.select(ob,True)
+    #     utils.activeObj(ob)
 

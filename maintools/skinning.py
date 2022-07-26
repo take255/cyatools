@@ -786,6 +786,7 @@ signdic = { 'R_':'L_' , 'L_':'R_' , '_l':'_r' , '_r':'_l' , 'Left':'Right' , 'Ri
 sign_prefix = { 'R_':'L_' , 'L_':'R_' , 'Left':'Right' , 'Right':'Left' }
 sign_suffix = { '_l':'_r' , '_r':'_l' , '_L':'_R' , '_R':'_L' }
 sign_facerig={'.L':'.R','.R':'.L'}
+sign_vroid={'R':'L','L':'R'}
 
 
 def nameFlip_(name):
@@ -804,22 +805,31 @@ def nameFlip(name):
     if(strlen<1):
         return name
 
-    #prefixを調べる
-    for sign in sign_prefix:
-        if name[ : len(sign) ] == sign:
-            new = sign_prefix[sign] + name[ len(sign): ]
-            return new
+    props = bpy.context.scene.cyatools_oa
 
-    #suffixを調べる
-    for sign in sign_suffix:
-        if name[ -len(sign) : ] == sign:
-            new = name[:-len(sign)] + sign_suffix[sign]
-            return new
+    if(props.weightmirror_vroidmode):#_L_ _R_でミラーリング
+        buf = name.split('_')
+        for sign in sign_vroid:
+            if sign in buf:
+                new = name.replace('_%s_' % sign, '_%s_' % sign_vroid[sign])
+                return new
+    else:
+        #prefixを調べる
+        for sign in sign_prefix:
+            if name[ : len(sign) ] == sign:
+                new = sign_prefix[sign] + name[ len(sign): ]
+                return new
 
-    for sign in sign_facerig:
-        if name.find(sign)!=-1:
-            new = name.replace(sign,sign_facerig[sign])
-            return new
+        #suffixを調べる
+        for sign in sign_suffix:
+            if name[ -len(sign) : ] == sign:
+                new = name[:-len(sign)] + sign_suffix[sign]
+                return new
+
+        for sign in sign_facerig:
+            if name.find(sign)!=-1:
+                new = name.replace(sign,sign_facerig[sign])
+                return new
 
     return name
 
@@ -896,6 +906,7 @@ def weights_mirror_v2():
         index2name[vg.index]=vg.name
         nameflip[vg.index] = nameFlip(vg.name)
         namedic[vg.name] = vg.index
+        print(vg.name)
 
     for i in range(bonesize):
         index_inv[i] = namedic[ nameflip[i] ]
@@ -1276,6 +1287,7 @@ def weight_export(filename):
 
 
 def weight_import(filename):
+    props = bpy.context.scene.cyatools_oa
 
     mode = True
     if utils.current_mode() == 'OBJECT':
@@ -1298,14 +1310,16 @@ def weight_import(filename):
 
 
         #ウェイト値のクリア
-        if mode:
-            for v in selectedVtx:
-                for i, g in enumerate(v.groups):
-                    v.groups[i].weight=0
-        else:
-            for v in obj.data.vertices:
-                for i, g in enumerate(v.groups):
-                    v.groups[i].weight=0
+
+        if not props.weight_import_clear:
+            if mode:
+                for v in selectedVtx:
+                    for i, g in enumerate(v.groups):
+                        v.groups[i].weight=0
+            else:
+                for v in obj.data.vertices:
+                    for i, g in enumerate(v.groups):
+                        v.groups[i].weight=0
 
         #ウェイト値読み込む
         if mode:#edit mode
@@ -1700,5 +1714,6 @@ def active_collection_by_name(layer ,name):
                 bpy.context.view_layer.active_layer_collection = ly
 
             active_collection_by_name(ly , name)
+
 
 

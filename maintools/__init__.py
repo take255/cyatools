@@ -175,10 +175,11 @@ class CYATOOLS_Props_OA(PropertyGroup):
     weight_transfer_selected_vtx : BoolProperty(name="selected vtx" ,  default = False)
     weight_transfer_samplevtx : IntProperty(name = "sample", default=3 )
 
-
     bind_auto_bool : BoolProperty(name="auto" ,  default = True)
     batch_weight_transfer_string : StringProperty(name = "suffix")
     threshold_selectweight : FloatProperty(name = "threshold", default=0.9 )
+
+    weight_import_clear : BoolProperty(name="weight import clear" ,  default = False)
 
 
     mobproecss_index : IntProperty( name = "number", min=1, max=10, default=1 )
@@ -190,6 +191,8 @@ class CYATOOLS_Props_OA(PropertyGroup):
         default = 'L>R'
         )
     weightmirror_selected_vtx : BoolProperty(name="selected vtx" ,  default = False)
+    weightmirror_vroidmode : BoolProperty(name="vroid" ,  default = False)
+
     skin_filepath : StringProperty(name = "path")
 
     #モブのウェイト
@@ -269,21 +272,26 @@ class CYATOOLS_MT_modeling_tools(Operator):
         props.outline_width = view3d.outline_width
         props.origin_size = view3d.object_origin_size
 
-        return context.window_manager.invoke_props_dialog(self ,width = 400)
+        return context.window_manager.invoke_props_dialog(self ,width = 600)
 
     def draw(self, context):
         props = bpy.context.scene.cyatools_oa
         layout=self.layout
-        row = layout.split(factor = 0.5, align = False)
+        row = layout.split(factor = 0.6, align = False)
 
         col = row.column()
         box2 = col.box()
         box2.label( text = 'locator' )
-        box2.operator( "cyatools.replace_locator" , icon = 'OUTLINER_DATA_EMPTY')
-        box2.operator( "cyatools.replace_locator_facenormal" , icon = 'NORMALS_FACE')
-        box2.operator( "cyatools.group" , icon = 'GROUP')
-        box2.operator( "cyatools.locator_tobone" , icon = 'CONSTRAINT_BONE')
-        box2.operator( "cyatools.locator_tobone_keep" , icon = 'CONSTRAINT_BONE')
+        row0 = box2.row()
+        row0.operator( "cyatools.replace_locator" , icon = 'OUTLINER_DATA_EMPTY')
+        row0.operator( "cyatools.replace_locator_facenormal" , icon = 'NORMALS_FACE')
+
+        row0 = box2.row()
+        row0.operator( "cyatools.group" , icon = 'GROUP')
+        row0.operator( "cyatools.locator_tobone" , icon = 'CONSTRAINT_BONE')
+
+        row0 = box2.row()
+        row0.operator( "cyatools.locator_tobone_keep" , icon = 'CONSTRAINT_BONE')
 
         #トランスフォーム
         box3 = col.box()
@@ -300,13 +308,31 @@ class CYATOOLS_MT_modeling_tools(Operator):
         box5.operator( "cyatools.modeling_mirror_l_to_r" , icon = 'MOD_MIRROR')
         box5.operator( "cyatools.modeling_separate_face" , icon = 'CONSTRAINT_BONE')
 
+
+        #頂点コピー
+        box5 = col.box()
+        box5.label( text = 'vertex copy' )
+
         row5 = box5.row()
-        row5.operator( "cyatools.modeling_copy_vertex_pos" , icon = 'MOD_MIRROR')
-        row5.operator( "cyatools.modeling_paste_vertex_pos" , icon = 'MOD_MIRROR')
+        row5.label( text = 'vertex' )
+        row5.operator( "cyatools.modeling_copy_vertex_pos" , icon = 'SNAP_VERTEX',text='copy sel').mode = 0
+        row5.operator( "cyatools.modeling_copy_vertex_pos" , icon = 'SNAP_VOLUME',text='copy all').mode = 1
+
+        row5.operator( "cyatools.modeling_copy_vertex_pos" , icon = 'PASTEDOWN',text='paste').mode = 2
+
+#        row5.operator( "cyatools.modeling_paste_vertex_pos" , icon = 'PASTEDOWN')
 
         row6 = box5.row()
-        row6.operator( "cyatools.modeling_copy_vertex_pos_blendshape" , icon = 'MOD_MIRROR')
-        row6.operator( "cyatools.modeling_paste_vertex_pos_blendshape" , icon = 'MOD_MIRROR')
+        row6.label( text = 'blend' )
+        row6.operator( "cyatools.modeling_copy_vertex_pos_blendshape" , icon = 'SNAP_VERTEX',text='copy sel').mode = 0
+        row6.operator( "cyatools.modeling_copy_vertex_pos_blendshape" , icon = 'SNAP_VOLUME',text='copy all').mode = 1
+        row6.operator( "cyatools.modeling_copy_vertex_pos_blendshape" , icon = 'PASTEDOWN',text='paste').mode = 2
+        #row6.operator( "cyatools.modeling_paste_vertex_pos_blendshape" , icon = 'MOD_MIRROR')
+
+        row6 = box5.row()
+        row6.operator( "cyatools.modeling_copy_vertex_pos_paste_to_blendshape" , icon = 'PASTEDOWN')
+        #row6.operator( "cyatools.modeling_paste_vertex_pos_blendshape" , icon = 'PASTEDOWN').mode = 2
+
 
 
         #material UV
@@ -367,6 +393,7 @@ class CYATOOLS_MT_modeling_tools(Operator):
         col1 = box4.column()
         row = col1.row()
         row.operator( "cyatools.modeling_normal_180deg")
+        row.operator( "cyatools.modeling_normal_clear")
 
         box4 = col.box()
         box4.label( text = 'special' )
@@ -391,6 +418,12 @@ class CYATOOLS_MT_modifier_tools(Operator):
     def draw(self, context):
         props = bpy.context.scene.cyatools_oa
         layout=self.layout
+
+        box = layout.box()
+        box.label( text = 'simplemodifier' , icon = 'MODIFIER')
+        row = box.row()
+        row.operator( "cyatools.modifier_simple" ,text = 'Mirror', icon = 'MOD_MIRROR').mode = 0
+
         box = layout.box()
         box.label( text = 'modifier edit' , icon = 'MODIFIER')
 
@@ -634,6 +667,7 @@ class CYATOOLS_MT_skinningtools(Operator):
         row1 = col1.row()
         row1.prop(props, 'weightmirror_dir' , expand=True)
         col1.prop(props, "weightmirror_selected_vtx")
+        col1.prop(props, "weightmirror_vroidmode")
 
         box = col.box()
         box.label(text = 'mob')
@@ -706,9 +740,14 @@ class CYATOOLS_MT_skinningtools(Operator):
 
         box = col.box()
         box.label(text = 'importexport')
-        row = box.row()
+
+        col1 = box.column()
+        row = col1.row()
         row.operator("cyatools.skinning_weight_export"  , icon = 'MOD_MIRROR')
         row.operator("cyatools.skinning_weight_import"  , icon = 'MOD_MIRROR')
+
+        row = col1.row()
+        row.prop(props, 'weight_import_clear' , expand=True)
 
         box.label(text = 'mob')
         row = box.row()
@@ -800,7 +839,8 @@ class CYATOOLS_MT_blendshape_tools(Operator):
         return{'FINISHED'}
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
+        #return context.window_manager.invoke_props_dialog(self)
+        return context.window_manager.invoke_props_dialog(self, width = 400)
 
     def draw(self, context):
         props = bpy.context.scene.cyatools_oa
@@ -821,7 +861,7 @@ class CYATOOLS_MT_blendshape_tools(Operator):
 
         row = box.row()
         row.operator( "cyatools.blendshape_shepekey_mute" ,text = 'Mute').mode = True
-        row.operator( "cyatools.blendshape_shepekey_mute" ,text = 'Unute').mode = False
+        row.operator( "cyatools.blendshape_shepekey_mute" ,text = 'UnMute').mode = False
 
 
         box = layout.box()
@@ -839,11 +879,30 @@ class CYATOOLS_MT_blendshape_tools(Operator):
 
         box = layout.box()
         box.label( text = 'blendshape vtx copy paste' , icon = 'MODIFIER')
-        row = box.row()
+        col0 = box.column()
+        col0.operator( "cyatools.blendshape_save_vtxpos_delta" , icon = 'MOD_MIRROR')
+
+        row = col0.row()
         #row.operator( "cyatools.blendshape_copy_vertex_pos" , icon = 'MOD_MIRROR')
         #row.operator( "cyatools.blendshape_paste_vertex_pos" , icon = 'MOD_MIRROR')
-        row.operator( "cyatools.blendshape_save_vtxpos_delta" , icon = 'MOD_MIRROR')
-        row.operator( "cyatools.blendshape_import_vtxpos_delta" , icon = 'MOD_MIRROR')
+
+        row.label( text = 'Import Shape',icon = "RADIOBUT_ON")
+        row.operator( "cyatools.blendshape_import_vtxpos_delta" ,text = 'Mesh').mode = 0
+        row.operator( "cyatools.blendshape_import_vtxpos_delta" ,text = 'BlendShape').mode = 1
+
+        row = col0.row()
+        row.label( text = 'In Game',icon = "RADIOBUT_ON")
+        row.operator( "cyatools.blendshape_setup_mob_face").mode = 0
+        row.operator( "cyatools.blendshape_setup_mob_face2",text = 'import M').mode = 0
+        row.operator( "cyatools.blendshape_setup_mob_face2",text = 'import F').mode = 2
+
+
+        row = col0.row()
+        row.label( text = 'CS',icon = "RADIOBUT_ON")
+        row.operator( "cyatools.blendshape_setup_mob_face").mode = 1
+        row.operator( "cyatools.blendshape_setup_mob_face2",text = 'import M').mode = 1
+        row.operator( "cyatools.blendshape_setup_mob_face2",text = 'import F').mode = 3
+
 
 
 
@@ -858,13 +917,14 @@ class CYATOOLS_MT_blendshape_tools(Operator):
         row = box.row()
         row.operator( "cyatools.blendshape_mob_facial_cleanup" , icon = 'MOD_MIRROR')
 
+
+        #モブバリエーション
         box = layout.box()
         box.label( text = 'Mob Variation' , icon = 'MODIFIER')
         col=box.column()
         row = col.row()
-        row.operator( "cyatools.blendshape_mob_extruct" , icon = 'MOD_MIRROR')
-
-
+        row.operator( "cyatools.blendshape_mob_extruct" , text = 'extruct').mode=0
+        row.operator( "cyatools.blendshape_mob_extruct" , text = 'extruct(+mouth open)').mode=1
 
 
         row = col.row()
@@ -962,7 +1022,10 @@ class CYATOOLS_MT_scenesetuptools(Operator):
         box.label( text = 'MobSetup' , icon = 'MODIFIER')
         row = box.row()
         row.prop_search(props, "mob_offset", props, "mob_offset_all", icon='SCENE_DATA')
-        row.operator("cyatools.scenesetup_mob_offset" , icon = 'DUPLICATE')
+        row.operator("cyatools.scenesetup_mob_offset" , text = 'offset').mode = 0
+        row.operator("cyatools.scenesetup_mob_offset" , text = '-offset').mode = 1
+
+        row = box.row()
         row.operator("cyatools.scenesetup_mob_modify_vtxgrp" , icon = 'DUPLICATE')
 
 
@@ -1344,6 +1407,16 @@ class CYATOOLS_OT_modifier_remove(Operator):
         modifier.delete_mod()
         return {'FINISHED'}
 
+class CYATOOLS_OT_modifier_simple(Operator):
+    """簡易モディファイヤ実行"""
+    bl_idname = "cyatools.modifier_simple"
+    bl_label = ""
+    mode : IntProperty()
+
+    def execute(self, context):
+        modifier.simple(self.mode)
+        return {'FINISHED'}
+
 
 #選択したモデルのモディファイヤカーブのカーブ選択。
 class CYATOOLS_OT_modifier_select_curve(Operator):
@@ -1486,7 +1559,7 @@ class CYATOOLS_OT_modeling_del_half_x(Operator):
 class CYATOOLS_OT_modeling_mirror_l_to_r(Operator):
     """mirror geometry from left side to right side. """
     bl_idname = "cyatools.modeling_mirror_l_to_r"
-    bl_label = "mirror"
+    bl_label = "mirror vtx"
     def execute(self, context):
         modeling.mirror_l_to_r()
         return {'FINISHED'}
@@ -1511,36 +1584,51 @@ class CYATOOLS_OT_modeling_pivot_by_facenormal(Operator):
 class CYATOOLS_OT_modeling_copy_vertex_pos(Operator):
     """選択した頂点の位置をコピー"""
     bl_idname = "cyatools.modeling_copy_vertex_pos"
-    bl_label = "copy vtx"
+    bl_label = ""
+    mode : IntProperty()
+
     def execute(self, context):
-        modeling.copy_vertex_pos()
+        modeling.copy_vertex_pos(self.mode)
         return {'FINISHED'}
 
-class CYATOOLS_OT_modeling_paste_vertex_pos(Operator):
-    """選択した頂点の位置をコピー"""
-    bl_idname = "cyatools.modeling_paste_vertex_pos"
-    bl_label = "paste vtx"
-    def execute(self, context):
-        modeling.paste_vertex_pos()
-        return {'FINISHED'}
+# class CYATOOLS_OT_modeling_paste_vertex_pos(Operator):
+#     """選択した頂点の位置をコピー"""
+#     bl_idname = "cyatools.modeling_paste_vertex_pos"
+#     bl_label = "paste vtx"
+#     def execute(self, context):
+#         modeling.paste_vertex_pos()
+#         return {'FINISHED'}
 
-
-class CYATOOLS_OT_modeling_paste_vertex_pos_blendshape(Operator):
-    """ブレンドシェイプに頂点の位置をペースト"""
-    bl_idname = "cyatools.modeling_paste_vertex_pos_blendshape"
-    bl_label = "paste vtx blend"
-    def execute(self, context):
-        modeling.paste_vertex_pos_blendshape()
-        return {'FINISHED'}
 
 class CYATOOLS_OT_modeling_copy_vertex_pos_blendshape(Operator):
     """ブレンドシェイプからに頂点の位置をコピー"""
     bl_idname = "cyatools.modeling_copy_vertex_pos_blendshape"
-    bl_label = "copy vtx blend"
+    bl_label = ""
+    mode : IntProperty()
+
     def execute(self, context):
-        modeling.copy_vertex_pos_blendshape()
+        modeling.copy_vertex_pos_blendshape(self.mode)
         return {'FINISHED'}
 
+
+class CYATOOLS_OT_modeling_copy_vertex_pos_paste_to_blendshape(Operator):
+    """他モデルから頂点をコピーして、選択中のブレンドシェイプにペーストする
+    ブレンドシェイプのモデルをアクティブに"""
+    bl_idname = "cyatools.modeling_copy_vertex_pos_paste_to_blendshape"
+    bl_label = "copy vtx to blendshape"
+
+    def execute(self, context):
+        modeling.copy_vertex_pos_paste_to_blendshape()
+        return {'FINISHED'}
+
+
+# class CYATOOLS_OT_modeling_paste_vertex_pos_blendshape(Operator):
+#     """ブレンドシェイプに頂点の位置をペースト"""
+#     bl_idname = "cyatools.modeling_paste_vertex_pos_blendshape"
+#     bl_label = "paste vtx blend"
+#     def execute(self, context):
+#         modeling.paste_vertex_pos_blendshape()
+#         return {'FINISHED'}
 
 
 class CYATOOLS_OT_modeling_normal_180deg(Operator):
@@ -1550,6 +1638,15 @@ class CYATOOLS_OT_modeling_normal_180deg(Operator):
     def execute(self, context):
         modeling.normal_180deg()
         return {'FINISHED'}
+
+class CYATOOLS_OT_modeling_normal_clear(Operator):
+    """自動スムーズにして角度を180度に設定"""
+    bl_idname = "cyatools.modeling_normal_clear"
+    bl_label = "normal clear"
+    def execute(self, context):
+        modeling.normal_clear()
+        return {'FINISHED'}
+
 
 class CYATOOLS_OT_modeling_extract_missingparts(Operator):
     """欠損を生成する 頂点グループに名前をつけて自動でカット
@@ -1620,7 +1717,9 @@ class CYATOOLS_OT_anim_remove_transform_key(Operator):
 #         return {'FINISHED'}
 
 class CYATOOLS_OT_blendshape_save_vtxpos_delta(Operator):
-    """頂点の位置の差分を取得して保存する"""
+    """頂点の位置の差分を取得して保存する
+    変形後、変形前の順に選択して選択して実行(変形前をアクティブ)
+    """
     bl_idname = "cyatools.blendshape_save_vtxpos_delta"
     bl_label = "save vtxpos delta"
 
@@ -1640,14 +1739,15 @@ class CYATOOLS_OT_blendshape_save_vtxpos_delta(Operator):
 
 class CYATOOLS_MT_blendshape_import_vtxpos_delta(Operator):
     bl_idname = "cyatools.blendshape_import_vtxpos_delta"
-    bl_label = "import"
+    bl_label = ""
 
     filepath : bpy.props.StringProperty(subtype="FILE_PATH")
     filename : StringProperty()
     directory : StringProperty(subtype="FILE_PATH")
+    mode : IntProperty()
 
     def execute(self, context):
-        blendshape.import_vtxpos_delta(self.filepath)
+        blendshape.import_vtxpos_delta(self.filepath,self.mode)
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -1655,6 +1755,26 @@ class CYATOOLS_MT_blendshape_import_vtxpos_delta(Operator):
         return {'RUNNING_MODAL'}
 
 
+class CYATOOLS_OT_blendshape_setup_mob_face(Operator):
+    """インゲームのタ－ゲット用シェイプキーの作成"""
+    bl_idname = "cyatools.blendshape_setup_mob_face"
+    bl_label = "setup"
+    mode : IntProperty()
+
+    def execute(self, context):
+        blendshape.setup_mob_face(self.mode)
+        return {'FINISHED'}
+
+class CYATOOLS_OT_blendshape_setup_mob_face2(Operator):
+    """モブのインゲームフェイシャルターゲットをインポート
+    E:/data/project/YKS/Characters/Data/Mob/FacialData/"""
+    bl_idname = "cyatools.blendshape_setup_mob_face2"
+    bl_label = "import target"
+    mode : IntProperty()
+
+    def execute(self, context):
+        blendshape.setup_mob_face2(self.mode)
+        return {'FINISHED'}
 
 
 class CYATOOLS_OT_blendshape_keep_pos(Operator):
@@ -1760,9 +1880,10 @@ class CYATOOLS_OT_blendshape_mob_extruct(Operator):
     余分なターゲットを削除して、ターゲット名を修正する
     """
     bl_idname = "cyatools.blendshape_mob_extruct"
-    bl_label = "mob extruct"
+    bl_label = ""
+    mode : IntProperty()
     def execute(self, context):
-        blendshape.mob_extruct0()
+        blendshape.mob_extruct0(self.mode)
         return {'FINISHED'}
 
 #モブバリエーションの一括抽出
@@ -2305,9 +2426,11 @@ class CYATOOLS_OT_scenesetup_match_render_to_view(Operator):
 class CYATOOLS_OT_scenesetup_mob_offset(Operator):
     """モブの位置オフセットの設定"""
     bl_idname = "cyatools.scenesetup_mob_offset"
-    bl_label = "mob_offset"
+    bl_label = ""
+    mode : IntProperty()
+
     def execute(self, context):
-        scenesetup.mob_offset()
+        scenesetup.mob_offset(self.mode)
         return {'FINISHED'}
 
 
@@ -2432,12 +2555,14 @@ classes = (
     CYATOOLS_OT_modeling_select_linked_faces,
     CYATOOLS_OT_modeling_mirror_l_to_r,
     CYATOOLS_OT_modeling_copy_vertex_pos,
-    CYATOOLS_OT_modeling_paste_vertex_pos,
-    CYATOOLS_OT_modeling_paste_vertex_pos_blendshape,
+    #CYATOOLS_OT_modeling_paste_vertex_pos,
+    #CYATOOLS_OT_modeling_paste_vertex_pos_blendshape,
     CYATOOLS_OT_modeling_copy_vertex_pos_blendshape,
+    CYATOOLS_OT_modeling_copy_vertex_pos_paste_to_blendshape,
 
 
     CYATOOLS_OT_modeling_normal_180deg,
+    CYATOOLS_OT_modeling_normal_clear,
     CYATOOLS_OT_modeling_extract_missingparts,
     CYATOOLS_OT_modeling_extract_missingparts2,
 
@@ -2465,6 +2590,8 @@ classes = (
     CYATOOLS_OT_modifier_send_to,
     CYATOOLS_OT_modifier_apply_all,
     CYATOOLS_OT_modifier_remove,
+
+    CYATOOLS_OT_modifier_simple,
 
     # constraint
     CYATOOLS_OT_constraint_asign,
@@ -2542,6 +2669,9 @@ classes = (
     #CYATOOLS_OT_blendshape_paste_vertex_pos,
     CYATOOLS_OT_blendshape_save_vtxpos_delta,
     CYATOOLS_MT_blendshape_import_vtxpos_delta,
+    CYATOOLS_OT_blendshape_setup_mob_face,
+    CYATOOLS_OT_blendshape_setup_mob_face2,
+
     CYATOOLS_OT_blendshape_keep_pos,
     CYATOOLS_OT_blendshape_restore_pos,
     CYATOOLS_OT_blendshape_remove_all_keys,

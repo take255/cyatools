@@ -229,15 +229,17 @@ def match_render_to_view():
     for v in visible:
         print(v)
 
-def mob_offset():
+def mob_offset(mode):
     props = bpy.context.scene.cyatools_oa
     mob_offset = props.mob_offset
 
-    val = MOB_TYPE_DATA[mob_offset]
-    print(val)
+    if mode == 0:
+        val = float(MOB_TYPE_DATA[mob_offset])
+    elif mode == 1:
+        val = -float(MOB_TYPE_DATA[mob_offset])
 
     for ob in utils.selected():
-        ob.location.z = float(val)
+        ob.location.z = val
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True, properties=True)
 
 
